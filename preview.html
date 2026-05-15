@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brahmani Jewellers | Premium Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/framer-motion@10.12.4/dist/framer-motion.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: { light: '#F3E5AB', DEFAULT: '#D4AF37', dark: '#B8860B' },
+                        maroon: { light: '#5D1414', DEFAULT: '#3B0A0A', dark: '#2A0707' },
+                        royalBlack: '#0A0A0A',
+                    },
+                    fontFamily: {
+                        serif: ['Playfair Display', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes shine { to { background-position: 200% center; } }
+        .gold-gradient {
+            background: linear-gradient(45deg, #B8860B, #D4AF37, #F3E5AB, #D4AF37, #B8860B);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 4s linear infinite;
+        }
+        .royal-card {
+            background: rgba(59, 10, 10, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            transition: all 0.3s ease;
+        }
+        .royal-card:hover {
+            border-color: rgba(212, 175, 55, 0.8);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-royalBlack text-white antialiased selection:bg-gold selection:text-black">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { motion, AnimatePresence } = FramerMotion;
+
+        // Components (Simplified for Single File)
+        const Navbar = () => {
+            const [scrolled, setScrolled] = useState(false);
+            useEffect(() => {
+                const handleScroll = () => setScrolled(window.scrollY > 50);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            return (
+                <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? 'bg-royalBlack/90 backdrop-blur-md py-3 border-b border-gold/20' : 'bg-transparent py-5'}`}>
+                    <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                            <i data-lucide="gem" class="text-gold w-8 h-8"></i>
+                            <div className="flex flex-col">
+                                <span className="text-2xl font-serif font-bold tracking-widest gold-gradient uppercase">Brahmani</span>
+                                <span className="text-[10px] text-gold/80 tracking-[0.3em] uppercase -mt-1">Jewellers</span>
+                            </div>
+                        </div>
+                        <div className="hidden md:flex gap-8 text-sm tracking-widest uppercase">
+                            <a href="#" className="text-gold">Home</a>
+                            <a href="#gallery" className="hover:text-gold transition-colors">Gallery</a>
+                            <a href="#about" className="hover:text-gold transition-colors">About</a>
+                            <a href="#contact" className="hover:text-gold transition-colors">Contact</a>
+                        </div>
+                        <button className="px-6 py-2 border border-gold text-gold text-xs tracking-widest uppercase hover:bg-gold hover:text-black transition-all">Portal</button>
+                    </div>
+                </nav>
+            );
+        };
+
+        const Hero = () => (
+            <section className="relative h-screen flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center">
+                    <div className="absolute inset-0 bg-gradient-to-r from-royalBlack via-royalBlack/70 to-transparent"></div>
+                </div>
+                <div className="relative z-10 max-w-7xl mx-auto px-4 w-full">
+                    <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1 }}>
+                        <span className="text-gold tracking-[1em] uppercase text-sm mb-4 block">The Art of Fine Jewellery</span>
+                        <h1 className="text-5xl md:text-8xl font-serif font-bold leading-tight mb-6">
+                            Elegance <br /> <span className="gold-gradient italic">That Defines You</span>
+                        </h1>
+                        <p className="text-gray-300 text-lg mb-10 max-w-lg">Handcrafted masterpieces in gold and silver, designed to celebrate your unique story.</p>
+                        <div className="flex gap-4">
+                            <button className="px-10 py-4 bg-gold text-black font-bold uppercase tracking-widest hover:bg-gold-light transition-all">Explore Gold</button>
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
+        );
+
+        const Rates = () => {
+            const [rates] = useState({ gold22K: 62500, gold24K: 68200, silver: 740 });
+            return (
+                <section className="py-24 bg-maroon/10">
+                    <div className="max-w-7xl mx-auto px-4">
+                        <div className="text-center mb-16">
+                            <h2 className="text-4xl font-serif font-bold">Market <span className="gold-gradient">Live Rates</span></h2>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {[
+                                { t: "Gold 22K (10g)", v: rates.gold22K },
+                                { t: "Gold 24K (10g)", v: rates.gold24K },
+                                { t: "Silver (10g)", v: rates.silver }
+                            ].map((r, i) => (
+                                <div key={i} className="royal-card p-8 text-center rounded-lg">
+                                    <h3 className="text-gold/80 text-xs tracking-widest uppercase mb-2">{r.t}</h3>
+                                    <span className="text-3xl font-serif font-bold">₹{r.v.toLocaleString()}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const Gallery = () => {
+            const items = [
+                'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=800&q=80',
+                'https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?auto=format&fit=crop&w=800&q=80',
+                'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80',
+                'https://images.unsplash.com/photo-1626784215021-2e39ccf971cd?auto=format&fit=crop&w=800&q=80'
+            ];
+            return (
+                <section id="gallery" className="py-24">
+                    <div className="max-w-7xl mx-auto px-4">
+                        <h2 className="text-4xl font-serif font-bold text-center mb-16">Design <span className="gold-gradient">Gallery</span></h2>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                            {items.map((img, i) => (
+                                <motion.div key={i} whileHover={{ y: -10 }} className="aspect-[4/5] overflow-hidden rounded-sm border border-gold/20">
+                                    <img src={img} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const App = () => (
+            <div>
+                <Navbar />
+                <Hero />
+                <Rates />
+                <Gallery />
+                <footer className="py-10 border-t border-gold/10 text-center text-[10px] text-gray-500 tracking-[0.3em] uppercase">
+                    &copy; 2024 Brahmani Jewellers. Designed for Luxury.
+                </footer>
+            </div>
+        );
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+        // Initialize icons
+        setTimeout(() => lucide.createIcons(), 100);
+    </script>
+</body>
+</html>

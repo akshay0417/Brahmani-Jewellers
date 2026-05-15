@@ -1,0 +1,289 @@
+import React, { useState } from 'react';
+import api from '../api';
+import Hero from '../components/Hero';
+import RatesSection from '../components/RatesSection';
+import { motion } from 'framer-motion';
+import { MapPin, Phone, MessageSquare, CheckCircle, Map, Star, Send, User, Mail } from 'lucide-react';
+
+const About = () => (
+  <section className="py-24 bg-cream transition-colors duration-300" id="about">
+    <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+      {/* Left side: Image */}
+      <motion.div
+        initial={{ opacity: 0, x: -50 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true }}
+        className="relative order-2 md:order-1"
+      >
+        <div className="absolute -inset-4 border-2 border-ochre/40 translate-x-4 translate-y-4 rounded-lg"></div>
+        <img 
+          src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+          alt="Brahmani Jewellers Showroom" 
+          className="relative z-10 w-full rounded-lg shadow-2xl hover:scale-[1.02] transition-transform duration-500 object-cover aspect-[4/5]"
+        />
+        {/* Years of trust badge */}
+        <div className="absolute -bottom-6 -right-6 z-20 bg-ochre text-coffee p-6 rounded-lg shadow-xl text-center">
+          <span className="block text-4xl font-bold font-serif">10+</span>
+          <span className="text-sm font-medium uppercase tracking-wider">Years of Trust</span>
+        </div>
+      </motion.div>
+
+      {/* Right side: Text Content */}
+      <motion.div
+        initial={{ opacity: 0, x: 50 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true }}
+        className="order-1 md:order-2"
+      >
+        <h2 className="text-4xl md:text-5xl font-serif font-bold mb-6 text-coffee shadow-sm transition-colors duration-300">
+          About <span className="text-ochre">Brahmani Jewellers</span>
+        </h2>
+        <div className="w-20 h-1 bg-ochre mb-8"></div>
+        
+        <div className="text-coffee/80 leading-relaxed mb-8 text-lg transition-colors duration-300 space-y-4">
+          <p>“Elegance that defines you” — celebrating over 35 years of excellence, trust, and timeless craftsmanship in jewellery design. Each piece we create reflects our legacy of purity, precision, and passion, making every moment you cherish even more special with a touch of true elegance.</p>
+        </div>
+
+        <div className="flex flex-col gap-4 mb-8">
+          {[
+            "Trusted Jewellery",
+            "Certified Gold & Silver",
+            "Latest Designs"
+          ].map((item, idx) => (
+            <div key={idx} className="flex items-center gap-3">
+              <CheckCircle className="text-ochre w-6 h-6 flex-shrink-0" />
+              <span className="text-coffee font-medium text-lg transition-colors duration-300">{item}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-cream-alt border-l-4 border-ochre p-6 rounded-r-lg space-y-4 transition-colors duration-300">
+          <div className="flex items-start gap-4">
+            <Map className="text-ochre w-6 h-6 mt-1 flex-shrink-0" />
+            <div>
+              <p className="text-sm text-coffee/60 uppercase tracking-wider font-semibold mb-1 transition-colors duration-300">Our Location</p>
+              <p className="text-coffee transition-colors duration-300">Choksi Bazar, Azad Chowk, Amraiwadi, Ahmedabad</p>
+            </div>
+          </div>
+          <div className="w-full h-px bg-coffee/10 transition-colors duration-300"></div>
+          <div className="flex items-start gap-4">
+            <Phone className="text-ochre w-6 h-6 mt-1 flex-shrink-0" />
+            <div>
+              <p className="text-sm text-coffee/60 uppercase tracking-wider font-semibold mb-1 transition-colors duration-300">Contact Us</p>
+              <p className="text-coffee font-semibold text-lg transition-colors duration-300">+91 9925811771</p>
+            </div>
+          </div>
+        </div>
+
+      </motion.div>
+    </div>
+  </section>
+);
+
+const Categories = () => (
+  <section className="py-24 bg-cream-alt transition-colors duration-300" id="categories">
+    <div className="max-w-7xl mx-auto px-4">
+      <div className="text-center mb-16">
+        <h2 className="text-4xl font-serif font-bold mb-4 text-coffee transition-colors duration-300">Our <span className="text-ochre">Collections</span></h2>
+        <p className="text-coffee/70 transition-colors duration-300">Explore our intricately designed jewellery categories</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {[
+          { title: "Gold Jewellery", image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", desc: "Hallmarked pure gold designs" },
+          { title: "Silver Ornaments", image: "https://images.unsplash.com/photo-1599643477874-5c866f5c5339?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", desc: "Elegant & traditional silver wear" },
+          { title: "Rudraksha", image: "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", desc: "Authentic & certified Rudraksha" },
+        ].map((cat, idx) => (
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.2 }}
+            className="group relative h-96 rounded-xl overflow-hidden cursor-pointer shadow-xl shadow-coffee/5"
+          >
+            <img src={cat.image} alt={cat.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+            <div className="absolute inset-0 bg-gradient-to-t from-coffee/90 via-coffee/40 to-transparent flex flex-col justify-end p-8">
+              <h3 className="text-2xl font-serif text-cream mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{cat.title}</h3>
+              <p className="text-cream/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">{cat.desc}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+const Testimonials = () => (
+  <section className="py-24 bg-cream border-y border-ochre/10 transition-colors duration-300">
+    <div className="max-w-7xl mx-auto px-4">
+      <div className="text-center mb-16">
+        <h2 className="text-4xl font-serif font-bold mb-4 text-coffee transition-colors duration-300">Customer <span className="text-ochre">Reviews</span></h2>
+        <p className="text-coffee/70 transition-colors duration-300 mb-8">What our trusted family of customers say about us</p>
+        <motion.a 
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          href="https://www.google.com/maps/search/Brahmani+Jewellers+Amraiwadi+Ahmedabad"
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-3 px-8 py-3 bg-white text-coffee border border-coffee/10 shadow-md hover:shadow-lg rounded-full font-bold uppercase tracking-widest text-sm transition-all duration-300"
+        >
+          <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" className="w-5 h-5" />
+          Review Us on Google
+        </motion.a>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {[
+          { name: "Rahul Patel", review: "Best place for authentic gold jewellery in Amraiwadi. The designs are unique and the trust they have built over years is remarkable.", rating: 5 },
+          { name: "Sneha Shah", review: "Purchased a silver set and absolutely loved the craftsmanship. They maintain pure transparency with rates.", rating: 5 },
+          { name: "Vikram Singh", review: "Great customer service and premium collection. Got my Rudraksha from here, absolutely certified and genuine.", rating: 4 },
+        ].map((item, idx) => (
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ delay: idx * 0.1 }}
+            className="bg-cream-alt p-8 rounded-xl text-center flex flex-col justify-between shadow-md border border-ochre/20"
+          >
+            <div>
+              <div className="flex justify-center gap-1 mb-6">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} size={18} className={i < item.rating ? "text-ochre fill-ochre" : "text-coffee/30"} />
+                ))}
+              </div>
+              <p className="text-coffee/80 italic mb-8 transition-colors duration-300">"{item.review}"</p>
+            </div>
+            <div>
+              <div className="w-12 h-px bg-ochre/50 mx-auto mb-4"></div>
+              <h4 className="text-ochre font-serif tracking-widest uppercase text-sm">{item.name}</h4>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+const Contact = () => {
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [status, setStatus] = useState({ type: '', text: '' });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus({ type: '', text: '' });
+    if (!formData.name || !formData.email || !formData.message) {
+      setStatus({ type: 'error', text: 'Please fill all fields' });
+      return;
+    }
+    try {
+      await api.post('/messages', formData);
+      setStatus({ type: 'success', text: 'Message sent successfully!' });
+      setFormData({ name: '', email: '', message: '' });
+    } catch (err) {
+      setStatus({ type: 'error', text: err.response?.data?.message || 'Error sending message' });
+    }
+  };
+
+  return (
+    <section className="py-24 bg-cream-alt relative overflow-hidden transition-colors duration-300" id="contact">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-serif font-bold mb-4 text-coffee transition-colors duration-300">Get In <span className="text-ochre">Touch</span></h2>
+          <p className="text-coffee/70 transition-colors duration-300">Visit us or reach out for personalized design consultations</p>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+          {/* Contact Info & Map */}
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="bg-cream border border-ochre/20 p-6 rounded-lg flex items-start gap-4 shadow-sm">
+                <Phone className="text-ochre flex-shrink-0 mt-1" />
+                <div>
+                  <h4 className="text-coffee font-serif mb-1 transition-colors duration-300">Call Us</h4>
+                  <p className="text-coffee/70 text-sm mb-2 transition-colors duration-300">+91 9925811771</p>
+                  <a href="tel:+919925811771" className="text-ochre text-xs uppercase tracking-wider hover:underline">Call Now</a>
+                </div>
+              </div>
+              <div className="bg-cream border border-ochre/20 p-6 rounded-lg flex items-start gap-4 shadow-sm">
+                <MessageSquare className="text-ochre flex-shrink-0 mt-1" />
+                <div>
+                  <h4 className="text-coffee font-serif mb-1 transition-colors duration-300">WhatsApp</h4>
+                  <p className="text-coffee/70 text-sm mb-2 transition-colors duration-300">Chat with Experts</p>
+                  <a href="https://wa.me/919925811771" className="text-ochre text-xs uppercase tracking-wider hover:underline">Message</a>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-cream p-2 rounded-xl border border-ochre/20 overflow-hidden h-[300px] shadow-sm">
+              <iframe 
+                src="https://maps.google.com/maps?q=Brahmani%20Jewellers,%20Choksi%20Bazar,%20Azad%20Chowk,%20Amraiwadi,%20Ahmedabad&t=&z=17&ie=UTF8&iwloc=&output=embed" 
+                width="100%" 
+                height="100%" 
+                style={{ border: 0, filter: 'sepia(20%) hue-rotate(340deg) saturate(120%)' }} 
+                allowFullScreen="" 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </div>
+          </div>
+
+          {/* Contact Form */}
+          <motion.div 
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            className="bg-cream border border-ochre/20 p-10 rounded-2xl shadow-sm"
+          >
+            <h3 className="text-2xl font-serif text-coffee mb-6 transition-colors duration-300">Send A Message</h3>
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              {status.text && (
+                <div className={`p-3 rounded text-sm ${status.type === 'error' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'}`}>
+                  {status.text}
+                </div>
+              )}
+              <div>
+                <label className="block text-sm text-coffee/70 mb-2 transition-colors duration-300">Your Name</label>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-ochre w-5 h-5 transition-colors duration-300" />
+                  <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-cream-alt border border-ochre/30 rounded-lg py-3 pl-12 pr-4 text-coffee focus:outline-none focus:border-ochre focus:ring-1 focus:ring-ochre transition-colors" placeholder="Your Full Name" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-coffee/70 mb-2 transition-colors duration-300">Email Address</label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-ochre w-5 h-5 transition-colors duration-300" />
+                  <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-cream-alt border border-ochre/30 rounded-lg py-3 pl-12 pr-4 text-coffee focus:outline-none focus:border-ochre focus:ring-1 focus:ring-ochre transition-colors" placeholder="your@email.com" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-coffee/70 mb-2 transition-colors duration-300">Message</label>
+                <textarea value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} className="w-full bg-cream-alt border border-ochre/30 rounded-lg py-3 px-4 text-coffee focus:outline-none focus:border-ochre focus:ring-1 focus:ring-ochre transition-colors min-h-[120px]" placeholder="Tell us what you're looking for..."></textarea>
+              </div>
+              <button type="submit" className="w-full bg-ochre text-coffee font-bold uppercase tracking-widest py-4 rounded-lg flex justify-center items-center gap-2 hover:bg-ochre/90 transition-colors">
+                Send Message <Send size={18} />
+              </button>
+            </form>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const Home = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <Hero />
+      <RatesSection />
+      <Categories />
+      <About />
+      <Testimonials />
+      <Contact />
+    </motion.div>
+  );
+};
+
+export default Home;
