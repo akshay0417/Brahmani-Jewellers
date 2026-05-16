@@ -186,6 +186,25 @@ router.post('/auth/login', async (req, res) => {
   }
 });
 
+// Change Password
+router.put('/auth/change-password', auth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  try {
+    const user = await User.findById(req.user);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) return res.status(400).json({ message: 'Current password is incorrect' });
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Request OTP for Login
 router.post('/auth/request-otp', async (req, res) => {
   const { identifier } = req.body;

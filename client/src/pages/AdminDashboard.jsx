@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogOut, Upload, Trash2, TrendingUp, Image as ImageIcon, CheckCircle, AlertCircle, User, MessageSquare } from 'lucide-react';
+import { LogOut, Upload, Trash2, TrendingUp, Image as ImageIcon, CheckCircle, AlertCircle, User, MessageSquare, Lock } from 'lucide-react';
 
 const AdminDashboard = () => {
   const [rates, setRates] = useState({ isManual: true, goldImpFine: '', silverFine: '', manualGold24K: '', manualGold22K: '', manualGold18K: '', manualSilver90: '' });
@@ -15,6 +15,7 @@ const AdminDashboard = () => {
   const [purity, setPurity] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '' });
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
@@ -138,6 +139,22 @@ const AdminDashboard = () => {
       setStatus({ type: 'success', message: 'User deleted successfully' });
     } catch (err) {
       setStatus({ type: 'error', message: err.response?.data?.message || 'Error deleting user' });
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (!passwordData.currentPassword || !passwordData.newPassword) return;
+    setLoading(true);
+    try {
+      await api.put('/auth/change-password', passwordData, config);
+      setStatus({ type: 'success', message: 'Password updated successfully!' });
+      setPasswordData({ currentPassword: '', newPassword: '' });
+    } catch (err) {
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Error updating password' });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
     }
   };
 
@@ -356,6 +373,41 @@ const AdminDashboard = () => {
               </div>
               <button disabled={loading || !newImage} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 transition-all disabled:opacity-50 rounded-sm">
                 {loading ? 'Uploading...' : 'Add to Collection'}
+              </button>
+            </form>
+          </section>
+
+          {/* Security Management */}
+          <section className="bg-cream-alt p-8 rounded-lg shadow-sm border border-ochre/10 transition-colors duration-300 lg:col-span-2">
+            <div className="flex items-center gap-3 mb-6">
+              <Lock className="text-ochre" size={24} />
+              <h2 className="text-xl font-serif font-bold text-coffee uppercase tracking-widest">Security Settings</h2>
+            </div>
+            <form onSubmit={handlePasswordChange} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+              <div className="space-y-2">
+                <label className="text-xs text-coffee/70 uppercase tracking-widest">Current Password</label>
+                <input
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                  className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                  placeholder="Enter current password"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-coffee/70 uppercase tracking-widest">New Password</label>
+                <input
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                  placeholder="Enter new password"
+                  required
+                />
+              </div>
+              <button disabled={loading} className="w-full py-3 bg-coffee text-cream font-bold uppercase tracking-widest hover:bg-ochre transition-all rounded-sm shadow-md">
+                {loading ? 'Updating...' : 'Update Password'}
               </button>
             </form>
           </section>
