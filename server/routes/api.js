@@ -395,6 +395,40 @@ router.post('/auth/verify-otp', async (req, res) => {
     user.otpExpiry = undefined;
     await user.save();
 
+    // Send Welcome Email if it's the first time
+    if (!user.lastLogin && user.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+          port: process.env.EMAIL_PORT || 587,
+          secure: process.env.EMAIL_PORT == 465,
+          auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+        });
+        await transporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: user.email,
+          subject: 'Account Created Successfully - Brahmani Jewellers',
+          html: `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid #EBA938; padding: 30px; background-color: #FFF6E6;">
+              <h2 style="color: #3D2B1F; text-align: center; border-bottom: 1px solid #EBA938; padding-bottom: 10px;">Welcome to Brahmani Jewellers</h2>
+              <p>Dear <strong>${user.name}</strong>,</p>
+              <p>We are delighted to inform you that your account has been successfully created at <strong>Brahmani Jewellers</strong>.</p>
+              <p>You can now explore our exclusive collection of gold and silver jewelry and shop directly from our platform.</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="https://brahmani-jewellers.vercel.app/login" style="background-color: #3D2B1F; color: #EBA938; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Login to Your Account</a>
+              </div>
+              <p style="font-size: 0.9em; color: #666;">If you have any questions, feel free to contact us via WhatsApp or Phone.</p>
+              <hr style="border: 0; border-top: 1px solid #EBA938; margin: 20px 0;" />
+              <p style="text-align: center; font-size: 0.8em;">&copy; 2026 Brahmani Jewellers. All rights reserved.</p>
+            </div>
+          `
+        });
+        console.log(`[WELCOME EMAIL] Sent to ${user.email}`);
+      } catch (emailErr) {
+        console.error(`[WELCOME EMAIL ERROR]`, emailErr);
+      }
+    }
+
     user.lastLogin = new Date();
     await user.save();
 
