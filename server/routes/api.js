@@ -20,6 +20,7 @@ const Gallery = require('../models/Gallery');
 const User = require('../models/User');
 const Message = require('../models/Message');
 const Cart = require('../models/Cart');
+const Order = require('../models/Order');
 
 // Multer Config for Local Uploads
 const fs = require('fs');
@@ -665,6 +666,70 @@ router.delete('/cart/remove/:productId', auth, async (req, res) => {
     
     const updatedCart = await Cart.findOne({ user: req.user }).populate('items.product');
     res.json(updatedCart);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// --- ORDER ROUTES ---
+
+// Place a new order
+router.post('/orders', auth, async (req, res) => {
+  const { items, totalAmount, shippingAddress, paymentMethod } = req.body;
+  try {
+    if (!items || items.length === 0) return res.status(400).json({ message: 'No items in order' });
+
+    const newOrder = new Order({
+      user: req.user,
+      items,
+      totalAmount,
+      shippingAddress,
+      paymentMethod
+    });
+
+    await newOrder.save();
+
+    // Clear the cart after placing order
+    await Cart.findOneAndDelete({ user: req.user });
+
+    res.status(201).json({ message: 'Order placed successfully!', order: newOrder });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get User Orders
+router.get('/orders/my', auth, async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.user }).sort({ createdAt: -1 }).populate('items.product');
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get All Orders (Admin only)
+router.get('/admin/orders', auth, isAdmin, async (req, res) => {
+  try {
+    const orders = await Order.find().sort({ createdAt: -1 }).populate('user', 'name email mobile').populate('items.product');
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Update Order Status (Admin only)
+router.put('/admin/orders/:id', auth, isAdmin, async (req, res) => {
+  const { status, paymentStatus } = req.body;
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    if (status) order.status = status;
+    if (paymentStatus) order.paymentStatus = paymentStatus;
+
+    await order.save();
+    res.json(order);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -242,8 +242,11 @@ const Navbar = () => {
                     <span className="text-2xl font-bold text-coffee">₹{cartTotal.toLocaleString('en-IN')}</span>
                   </div>
                   <p className="text-[10px] text-coffee/40 uppercase tracking-widest text-center mb-4 italic">* Taxes and shipping calculated at checkout</p>
-                  <button className="w-full py-4 bg-coffee text-cream font-bold uppercase tracking-widest rounded-sm hover:bg-coffee/90 transition-all flex items-center justify-center gap-3 shadow-lg">
-                    Proceed to Checkout <ChevronRight size={18} />
+                  <button 
+                    onClick={() => { setIsCartOpen(false); navigate('/cart'); }}
+                    className="w-full py-4 bg-coffee text-cream font-bold uppercase tracking-widest rounded-sm hover:bg-coffee/90 transition-all flex items-center justify-center gap-3 shadow-lg"
+                  >
+                    View Cart & Checkout <ChevronRight size={18} />
                   </button>
                 </div>
               )}

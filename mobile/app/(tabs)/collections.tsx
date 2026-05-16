@@ -1,12 +1,55 @@
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, SafeAreaView, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { useAuth } from '../../context/AuthContext';
+import axios from 'axios';
+
+// Replace with your actual backend URL for mobile testing
+const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
 
 export default function CollectionsScreen() {
-  const dummyProducts = [
-    { id: 1, name: "Bridal Gold Necklace", price: "₹2,45,000", image: "https://images.unsplash.com/photo-1599643478514-4a4e08d50d02?w=500&q=80" },
-    { id: 2, name: "Diamond Solitaire Ring", price: "₹85,000", image: "https://images.unsplash.com/photo-1605100804763-247f67b8548e?w=500&q=80" },
-    { id: 3, name: "Traditional Gold Bangles", price: "₹1,20,000", image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=500&q=80" },
-    { id: 4, name: "Ruby Drop Earrings", price: "₹45,000", image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=500&q=80" },
-  ];
+  const { user } = useAuth();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  const fetchItems = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/gallery`);
+      setItems(response.data);
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Could not fetch collections");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addToCart = async (productId) => {
+    if (!user || !user.token) {
+      Alert.alert("Login Required", "Please login to add items to cart");
+      return;
+    }
+
+    try {
+      await axios.post(`${API_URL}/cart/add`, { productId, quantity: 1 }, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      Alert.alert("Success", "Item added to cart");
+    } catch (error) {
+      Alert.alert("Error", "Could not add to cart");
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.safeArea, { justifyContent: 'center' }]}>
+        <ActivityIndicator size="large" color="#EBA938" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -15,13 +58,13 @@ export default function CollectionsScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.grid}>
-          {dummyProducts.map(item => (
-            <View key={item.id} style={styles.card}>
-              <Image source={{ uri: item.image }} style={styles.image} />
+          {items.map(item => (
+            <View key={item._id} style={styles.card}>
+              <Image source={{ uri: item.imageUrl }} style={styles.image} />
               <View style={styles.cardInfo}>
-                <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
-                <Text style={styles.itemPrice}>{item.price}</Text>
-                <TouchableOpacity style={styles.button}>
+                <Text style={styles.itemName} numberOfLines={1}>{item.category} Ornament</Text>
+                <Text style={styles.itemPrice}>₹{(item.price || 0).toLocaleString('en-IN')}</Text>
+                <TouchableOpacity style={styles.button} onPress={() => addToCart(item._id)}>
                   <Text style={styles.buttonText}>Add to Cart</Text>
                 </TouchableOpacity>
               </View>
@@ -42,7 +85,7 @@ const styles = StyleSheet.create({
   card: { width: '48%', backgroundColor: '#FCF0DA', borderRadius: 12, marginBottom: 16, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(235, 169, 56, 0.2)' },
   image: { width: '100%', height: 150 },
   cardInfo: { padding: 12 },
-  itemName: { fontSize: 14, fontWeight: '600', color: '#3D2B1F', marginBottom: 4 },
+  itemName: { fontSize: 14, fontWeight: '600', color: '#3D2B1F', marginBottom: 4, textTransform: 'capitalize' },
   itemPrice: { fontSize: 16, fontWeight: 'bold', color: '#EBA938', marginBottom: 12 },
   button: { backgroundColor: '#3D2B1F', paddingVertical: 8, borderRadius: 6, alignItems: 'center' },
   buttonText: { color: '#FFF6E6', fontWeight: 'bold', fontSize: 12 }

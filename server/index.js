@@ -4,6 +4,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 const apiRoutes = require('./routes/api');
+const User = require('./models/User');
+const bcrypt = require('bcryptjs');
 
 dotenv.config();
 
@@ -29,8 +31,28 @@ const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
 mongoose.connect(MONGODB_URI)
-  .then(() => {
+  .then(async () => {
     console.log('Connected to MongoDB');
+    
+    // Create default admin if not exists
+    try {
+      const adminExists = await User.findOne({ role: 'admin' });
+      if (!adminExists) {
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+        const newAdmin = new User({
+          name: 'Brahmani Admin',
+          email: 'info.brahmanijewellers@gmail.com',
+          mobile: '9925811771',
+          password: hashedPassword,
+          role: 'admin'
+        });
+        await newAdmin.save();
+        console.log('Default Admin created: info.brahmanijewellers@gmail.com / admin123');
+      }
+    } catch (err) {
+      console.error('Error creating default admin:', err.message);
+    }
+
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });

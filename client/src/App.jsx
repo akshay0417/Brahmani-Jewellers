@@ -12,6 +12,8 @@ import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ResetPassword from './pages/ResetPassword';
 import Shop from './pages/Shop';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function App() {
@@ -79,6 +81,8 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/dashboard" element={<UserDashboard />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
         </Routes>
       </AnimatePresence>
       {!hideHeaderFooter && <Footer />}
