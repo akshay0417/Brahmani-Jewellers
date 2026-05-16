@@ -22,6 +22,40 @@ const Message = require('../models/Message');
 const Cart = require('../models/Cart');
 const Order = require('../models/Order');
 
+// Email Helper Function
+const sendEmail = async (to, subject, html) => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.log('[EMAIL] Credentials missing in .env. Skipping email.');
+    return;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Use SSL
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    },
+    tls: {
+      rejectUnauthorized: false
+    }
+  });
+
+  try {
+    await transporter.sendMail({
+      from: `"Brahmani Jewellers" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html
+    });
+    console.log(`[EMAIL] Successfully sent to ${to}`);
+  } catch (err) {
+    console.error(`[EMAIL ERROR] Failed to send to ${to}:`, err);
+    throw err;
+  }
+};
+
 // Multer Config for Local Uploads
 const fs = require('fs');
 const path = require('path');
@@ -79,53 +113,29 @@ router.post('/auth/register', async (req, res) => {
     console.log(`[MOCK OTP] Your OTP for ${mobile} / ${email} is ${otp}`);
 
     if (email) {
-      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-        try {
-          const transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-            port: process.env.EMAIL_PORT || 587,
-            secure: process.env.EMAIL_PORT == 465,
-            auth: {
-              user: process.env.EMAIL_USER,
-              pass: process.env.EMAIL_PASS
-            }
-          });
-          await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Welcome to Brahmani Jewellers! Account Created Successfully',
-            html: `
-              <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; padding: 20px;">
-                <div style="text-align: center; border-bottom: 2px solid #f4f4f4; padding-bottom: 10px; margin-bottom: 20px;">
-                  <h2 style="color: #d4af37; margin: 0;">Welcome to Brahmani Jewellers!</h2>
-                </div>
-                <p>Dear <strong>${name}</strong>,</p>
-                <p>Your account has been successfully created. We are thrilled to have you with us!</p>
-                <p>Here are your account details:</p>
-                <ul style="background-color: #fefefe; border: 1px solid #eee; padding: 15px 30px; border-radius: 5px;">
-                  <li style="margin-bottom: 8px;"><strong>User ID:</strong> ${email}</li>
-                  ${mobile ? `<li><strong>Mobile:</strong> ${mobile}</li>` : ''}
-                </ul>
-                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: center; border: 1px dashed #ccc;">
-                  <h3 style="margin-top: 0; color: #444;">Verification Step</h3>
-                  <p>To finalize and verify your registration, please use the following One-Time Password (OTP):</p>
-                  <h1 style="letter-spacing: 4px; color: #d4af37; margin: 10px 0;">${otp}</h1>
-                  <p style="font-size: 0.85em; color: #777; margin-bottom: 0;">This OTP is valid for 10 minutes.</p>
-                </div>
-                <p style="font-size: 0.9em;">If you did not initiate this registration, please safely ignore this email.</p>
-                <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; font-size: 0.9em; color: #555;">
-                  <p style="margin: 0;">Best Regards,</p>
-                  <p style="margin: 5px 0 0 0;"><strong>Brahmani Jewellers Team</strong></p>
-                </div>
-              </div>
-            `
-          });
-          console.log(`[EMAIL] OTP successfully sent to ${email}`);
-        } catch (emailErr) {
-          console.error(`[EMAIL ERROR] Failed to send email:`, emailErr);
-        }
-      } else {
-        console.log(`[EMAIL] Credentials not found in .env. Skipping email.`);
+      try {
+        const welcomeHtml = `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; padding: 20px;">
+            <div style="text-align: center; border-bottom: 2px solid #f4f4f4; padding-bottom: 10px; margin-bottom: 20px;">
+              <h2 style="color: #d4af37; margin: 0;">Welcome to Brahmani Jewellers!</h2>
+            </div>
+            <p>Dear <strong>${name}</strong>,</p>
+            <p>Your account has been successfully created. We are thrilled to have you with us!</p>
+            <p>To finalize your registration, please use the following One-Time Password (OTP):</p>
+            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: center; border: 1px dashed #ccc;">
+              <h1 style="letter-spacing: 4px; color: #d4af37; margin: 10px 0;">${otp}</h1>
+              <p style="font-size: 0.85em; color: #777; margin-bottom: 0;">This OTP is valid for 10 minutes.</p>
+            </div>
+            <p style="font-size: 0.9em;">If you did not initiate this registration, please safely ignore this email.</p>
+            <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; font-size: 0.9em; color: #555;">
+              <p style="margin: 0;">Best Regards,</p>
+              <p style="margin: 5px 0 0 0;"><strong>Brahmani Jewellers Team</strong></p>
+            </div>
+          </div>
+        `;
+        await sendEmail(email, 'Welcome to Brahmani Jewellers - Verify Your Account', welcomeHtml);
+      } catch (err) {
+        // Continue even if email fails during development
       }
     }
     
@@ -234,30 +244,22 @@ router.post('/auth/request-otp', async (req, res) => {
     console.log(`[MOCK OTP] Your OTP for ${identifier} is ${otp}`);
 
     if (email) {
-      // Send Email OTP
-      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-        try {
-          const transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-            port: process.env.EMAIL_PORT || 587,
-            secure: process.env.EMAIL_PORT == 465,
-            auth: {
-              user: process.env.EMAIL_USER,
-              pass: process.env.EMAIL_PASS
-            }
-          });
-          await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Your Brahmani Jewellers Login OTP',
-            text: `Your OTP for login is: ${otp}. It is valid for 10 minutes.`
-          });
-          console.log(`[EMAIL] Login OTP successfully sent to ${email}`);
-        } catch (emailErr) {
-          console.error(`[EMAIL ERROR] Failed to send email to ${email}:`, emailErr);
-        }
-      } else {
-        console.log(`[EMAIL] Credentials missing in .env. Skipping email.`);
+      try {
+        const otpHtml = `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; padding: 20px;">
+            <h2 style="color: #d4af37; text-align: center;">Login Verification</h2>
+            <p>Hello,</p>
+            <p>You requested a login OTP for your Brahmani Jewellers account.</p>
+            <div style="background-color: #f9f9f9; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px solid #eee;">
+              <h1 style="letter-spacing: 5px; color: #333; margin: 0;">${otp}</h1>
+              <p style="color: #888; font-size: 0.8em; margin-top: 10px;">This code expires in 10 minutes.</p>
+            </div>
+            <p>If you didn't request this, please ignore this email.</p>
+          </div>
+        `;
+        await sendEmail(email, 'Your Login OTP - Brahmani Jewellers', otpHtml);
+      } catch (err) {
+        // Log handled in helper
       }
       res.json({ message: `OTP sent to your email address` });
     } else {
@@ -302,31 +304,26 @@ router.post('/auth/forgot-password', async (req, res) => {
     user.resetTokenExpiry = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
     await user.save();
 
-    const clientUrl = req.headers.origin || 'http://localhost:5173';
+    const clientUrl = req.headers.origin || 'https://brahmani-jewellers.vercel.app';
     const resetUrl = `${clientUrl}/reset-password?token=${resetToken}`;
-    console.log(`[MOCK EMAIL] Password Reset Link for ${email}: ${resetUrl}`);
-
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      try {
-        const transporter = nodemailer.createTransport({
-          host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-          port: process.env.EMAIL_PORT || 587,
-          secure: process.env.EMAIL_PORT == 465,
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-          }
-        });
-        await transporter.sendMail({
-          from: process.env.EMAIL_USER,
-          to: email,
-          subject: 'Reset your Brahmani Jewellers Password',
-          text: `You requested a password reset. Please click the link to reset your password: ${resetUrl}\n\nThis link will expire in 30 minutes.`
-        });
-        console.log(`[EMAIL] Password reset link successfully sent to ${email}`);
-      } catch (emailErr) {
-        console.error(`[EMAIL ERROR] Failed to send email to ${email}:`, emailErr);
-      }
+    
+    try {
+      const resetHtml = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; padding: 20px;">
+          <h2 style="color: #d4af37; text-align: center;">Password Reset Request</h2>
+          <p>Hello,</p>
+          <p>You requested to reset your password for Brahmani Jewellers.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" style="background-color: #d4af37; color: white; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Reset Password</a>
+          </div>
+          <p>If the button doesn't work, copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; color: #888;">${resetUrl}</p>
+          <p>If you didn't request this, please ignore this email.</p>
+        </div>
+      `;
+      await sendEmail(email, 'Password Reset Request - Brahmani Jewellers', resetHtml);
+    } catch (err) {
+      // Handled in helper
     }
 
     res.json({ message: 'If an account with that email exists, we have sent a password reset link.' });
@@ -396,36 +393,23 @@ router.post('/auth/verify-otp', async (req, res) => {
     await user.save();
 
     // Send Welcome Email if it's the first time
-    if (!user.lastLogin && user.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    if (!user.lastLogin && user.email) {
       try {
-        const transporter = nodemailer.createTransport({
-          host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-          port: process.env.EMAIL_PORT || 587,
-          secure: process.env.EMAIL_PORT == 465,
-          auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-        });
-        await transporter.sendMail({
-          from: process.env.EMAIL_USER,
-          to: user.email,
-          subject: 'Account Created Successfully - Brahmani Jewellers',
-          html: `
-            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid #EBA938; padding: 30px; background-color: #FFF6E6;">
-              <h2 style="color: #3D2B1F; text-align: center; border-bottom: 1px solid #EBA938; padding-bottom: 10px;">Welcome to Brahmani Jewellers</h2>
-              <p>Dear <strong>${user.name}</strong>,</p>
-              <p>We are delighted to inform you that your account has been successfully created at <strong>Brahmani Jewellers</strong>.</p>
-              <p>You can now explore our exclusive collection of gold and silver jewelry and shop directly from our platform.</p>
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="https://brahmani-jewellers.vercel.app/login" style="background-color: #3D2B1F; color: #EBA938; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Login to Your Account</a>
-              </div>
-              <p style="font-size: 0.9em; color: #666;">If you have any questions, feel free to contact us via WhatsApp or Phone.</p>
-              <hr style="border: 0; border-top: 1px solid #EBA938; margin: 20px 0;" />
-              <p style="text-align: center; font-size: 0.8em;">&copy; 2026 Brahmani Jewellers. All rights reserved.</p>
+        const welcomeHtml = `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid #EBA938; padding: 30px; background-color: #FFF6E6;">
+            <h2 style="color: #3D2B1F; text-align: center; border-bottom: 1px solid #EBA938; padding-bottom: 10px;">Welcome to Brahmani Jewellers</h2>
+            <p>Dear <strong>${user.name}</strong>,</p>
+            <p>Your account has been successfully created at <strong>Brahmani Jewellers</strong>.</p>
+            <p>You can now explore our exclusive collection of gold and silver jewelry and shop directly from our platform.</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="https://brahmani-jewellers.vercel.app/login" style="background-color: #3D2B1F; color: #EBA938; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Login to Your Account</a>
             </div>
-          `
-        });
-        console.log(`[WELCOME EMAIL] Sent to ${user.email}`);
-      } catch (emailErr) {
-        console.error(`[WELCOME EMAIL ERROR]`, emailErr);
+            <p style="font-size: 0.9em; color: #666;">If you have any questions, feel free to contact us via WhatsApp or Phone.</p>
+          </div>
+        `;
+        await sendEmail(user.email, 'Account Created Successfully - Brahmani Jewellers', welcomeHtml);
+      } catch (err) {
+        // Handled in helper
       }
     }
 
