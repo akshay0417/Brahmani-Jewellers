@@ -7,6 +7,7 @@ import { Lock, Mail, User, Gem, Phone } from 'lucide-react';
 const Register = () => {
   const [formData, setFormData] = useState({ name: '', email: '', mobile: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -49,7 +50,10 @@ const Register = () => {
     try {
       const { confirmPassword, ...registerData } = formData;
       const res = await api.post('/auth/register', registerData);
-      navigate('/login', { state: { identifier: res.data.identifier || formData.mobile, step: 2, successMsg: res.data.message } });
+      setSuccess('Registration successful! Redirecting to verification...');
+      setTimeout(() => {
+        navigate('/login', { state: { identifier: res.data.identifier || formData.mobile, step: 2, successMsg: res.data.message } });
+      }, 2000);
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
@@ -75,6 +79,11 @@ const Register = () => {
         {error && (
           <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded mb-6 text-sm text-center">
             {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-green-500/10 border border-green-500/50 text-green-600 p-3 rounded mb-6 text-sm text-center">
+            {success}
           </div>
         )}
 
