@@ -400,13 +400,14 @@ const AdminDashboard = () => {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Making Charges (₹)</label>
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Making Charges (%)</label>
                   <input
                     type="number"
+                    step="0.01"
                     value={makingCharges}
                     onChange={(e) => setMakingCharges(e.target.value)}
                     className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
-                    placeholder="e.g. 5000"
+                    placeholder="e.g. 15 for 15%"
                   />
                 </div>
                 <div className="space-y-2">

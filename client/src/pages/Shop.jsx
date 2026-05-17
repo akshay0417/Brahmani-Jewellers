@@ -44,15 +44,16 @@ const Shop = () => {
 
     const weight = parseFloat(item.weight);
     const basePrice = (ratePer10g / 10) * weight;
-    const making = item.makingCharges || 0;
+    const makingPercent = item.makingCharges || 0;
+    const makingAmount = basePrice * (makingPercent / 100);
     const other = item.otherCharges || 0;
-    const subtotal = basePrice + making + other;
+    const subtotal = basePrice + makingAmount + other;
     const gst = subtotal * 0.03;
     const final = Math.round(subtotal + gst);
 
     return {
       final,
-      breakdown: { basePrice, making, other, gst, subtotal }
+      breakdown: { basePrice, makingPercent, makingAmount, other, gst, subtotal }
     };
   };
 
@@ -162,7 +163,7 @@ const Shop = () => {
                         <div className="bg-cream-alt p-4 rounded-lg border border-ochre/20 mb-8 space-y-2">
                           <h4 className="text-xs font-bold uppercase tracking-widest text-coffee mb-3 border-b border-ochre/20 pb-2">Price Breakdown</h4>
                           <div className="flex justify-between text-sm"><span className="text-coffee/70">Gold/Silver Value</span><span className="text-coffee font-medium">₹{Math.round(pData.breakdown.basePrice).toLocaleString('en-IN')}</span></div>
-                          <div className="flex justify-between text-sm"><span className="text-coffee/70">Making Charges</span><span className="text-coffee font-medium">₹{Math.round(pData.breakdown.making).toLocaleString('en-IN')}</span></div>
+                          <div className="flex justify-between text-sm"><span className="text-coffee/70">Making Charges ({pData.breakdown.makingPercent}%)</span><span className="text-coffee font-medium">₹{Math.round(pData.breakdown.makingAmount).toLocaleString('en-IN')}</span></div>
                           {pData.breakdown.other > 0 && <div className="flex justify-between text-sm"><span className="text-coffee/70">Other Charges</span><span className="text-coffee font-medium">₹{Math.round(pData.breakdown.other).toLocaleString('en-IN')}</span></div>}
                           <div className="flex justify-between text-sm"><span className="text-coffee/70">GST (3%)</span><span className="text-coffee font-medium">₹{Math.round(pData.breakdown.gst).toLocaleString('en-IN')}</span></div>
                         </div>
