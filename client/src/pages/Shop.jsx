@@ -34,17 +34,17 @@ const Shop = () => {
     if (item.price) return { final: item.price, breakdown: null };
     if (!rates || !item.weight || !item.purity) return { final: 0, breakdown: null };
 
-    let ratePer10g = 0;
+    let ratePerGram = 0;
     const p = (item.purity || '').toUpperCase();
-    if (p.includes('24')) ratePer10g = rates.gold24K;
-    else if (p.includes('22')) ratePer10g = rates.gold22K;
-    else if (p.includes('18')) ratePer10g = rates.gold18K;
-    else if (p.includes('90') || p.includes('SILVER')) ratePer10g = rates.silver90;
+    if (p.includes('24')) ratePerGram = rates.gold24K / 10;
+    else if (p.includes('22')) ratePerGram = rates.gold22K / 10;
+    else if (p.includes('18')) ratePerGram = rates.gold18K / 10;
+    else if (p.includes('90') || p.includes('SILVER')) ratePerGram = rates.silver90 / 1000;
 
-    if (!ratePer10g) return { final: 0, breakdown: null };
+    if (!ratePerGram) return { final: 0, breakdown: null };
 
     const weight = parseFloat(item.weight);
-    const basePrice = (ratePer10g / 10) * weight;
+    const basePrice = ratePerGram * weight;
     const makingPercent = item.makingCharges || 0;
     const makingAmount = basePrice * (makingPercent / 100);
     const other = item.otherCharges || 0;
