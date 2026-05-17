@@ -36,7 +36,12 @@ const Login = () => {
       const dashboardPath = res.data.user.role === 'admin' ? '/admin/dashboard' : '/dashboard';
       navigate(dashboardPath);
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      if (err.response?.status === 403 && err.response?.data?.unverified) {
+        setLoginMethod('otp');
+        setError('Your account is not verified. Please request an OTP to verify.');
+      } else {
+        setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }

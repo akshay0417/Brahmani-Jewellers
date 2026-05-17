@@ -31,8 +31,8 @@ const sendEmail = async (to, subject, html) => {
 
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Use SSL
+    port: process.env.EMAIL_PORT || 587,
+    secure: process.env.EMAIL_PORT == 465, // Use SSL for 465, STARTTLS for 587
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
@@ -186,6 +186,10 @@ router.post('/auth/login', async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+
+    if (!user.isVerified) {
+      return res.status(403).json({ message: 'Please verify your account with OTP first.', unverified: true });
+    }
 
     user.lastLogin = new Date();
     await user.save();
@@ -391,6 +395,7 @@ router.post('/auth/verify-otp', async (req, res) => {
     // Clear OTP
     user.otp = undefined;
     user.otpExpiry = undefined;
+    user.isVerified = true;
     await user.save();
 
     // Send Welcome Email if it's the first time
