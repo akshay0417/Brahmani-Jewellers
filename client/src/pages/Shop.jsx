@@ -73,7 +73,12 @@ const Shop = () => {
         onClick={() => setSelectedProduct(item)}
       >
         <div className="aspect-[3/4] overflow-hidden relative bg-cream-alt">
-          <img src={item.imageUrl} alt={item.category} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+          <img 
+            src={item.imageUrl} 
+            alt={item.category} 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+            onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
+          />
           <div className="absolute top-4 right-4 flex flex-col gap-2">
             <button onClick={(e) => { e.stopPropagation(); /* Wishlist logic */ }} className="p-2 bg-cream/80 backdrop-blur-md rounded-full text-coffee hover:text-ochre transition-colors">
               <Heart size={18} />
