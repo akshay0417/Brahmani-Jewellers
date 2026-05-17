@@ -78,8 +78,13 @@ const Gallery = () => {
                     className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
                     onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
                   />
-                  <div className="absolute inset-0 bg-coffee/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <span className="text-cream font-serif text-2xl uppercase tracking-widest border border-cream/50 px-6 py-2 backdrop-blur-sm">View</span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-coffee/90 via-coffee/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-end p-6">
+                    <span className="text-ochre uppercase tracking-[0.2em] text-xs font-bold mb-2">
+                      {item.subCategory ? `${item.subCategory} • ${item.category}` : `${item.category} Collection`}
+                    </span>
+                    <button className="px-6 py-2 border border-ochre text-cream hover:bg-ochre hover:text-coffee transition-colors rounded-sm uppercase tracking-widest text-xs font-bold">
+                      View Details
+                    </button>
                   </div>
                 </motion.div>
               ))}

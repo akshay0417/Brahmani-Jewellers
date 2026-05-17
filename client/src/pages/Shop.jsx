@@ -95,7 +95,7 @@ const Shop = () => {
           </div>
         </div>
         <div className="p-5 text-center">
-          <span className="text-[10px] text-ochre uppercase tracking-[0.2em] font-bold mb-1 block">{item.category} Collection</span>
+          <span className="text-[10px] text-ochre uppercase tracking-[0.2em] font-bold mb-1 block">{item.subCategory ? `${item.subCategory} • ${item.category}` : `${item.category} Collection`}</span>
           <h3 className="font-serif text-lg text-coffee mb-2 tracking-wide">Heritage Masterpiece</h3>
           <div className="flex flex-col items-center justify-center gap-1">
             <span className="text-xl font-bold text-coffee">₹{priceData.final.toLocaleString('en-IN')}</span>
@@ -161,6 +161,7 @@ const Shop = () => {
                     <>
                       <div className="space-y-4 mb-8">
                         <div className="flex justify-between border-b border-ochre/10 py-2"><span className="text-xs uppercase tracking-widest text-coffee/60 font-bold">Category</span><span className="text-sm font-serif text-coffee capitalize">{selectedProduct.category}</span></div>
+                        {selectedProduct.subCategory && <div className="flex justify-between border-b border-ochre/10 py-2"><span className="text-xs uppercase tracking-widest text-coffee/60 font-bold">Item Type</span><span className="text-sm font-serif text-coffee capitalize">{selectedProduct.subCategory}</span></div>}
                         {selectedProduct.weight && <div className="flex justify-between border-b border-ochre/10 py-2"><span className="text-xs uppercase tracking-widest text-coffee/60 font-bold">Weight</span><span className="text-sm font-serif text-coffee">{selectedProduct.weight} Grams</span></div>}
                         {selectedProduct.purity && <div className="flex justify-between border-b border-ochre/10 py-2"><span className="text-xs uppercase tracking-widest text-coffee/60 font-bold">Purity</span><span className="text-sm font-serif text-coffee">{selectedProduct.purity}</span></div>}
                       </div>

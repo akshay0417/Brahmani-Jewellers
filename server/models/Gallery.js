@@ -4,6 +4,7 @@ const GallerySchema = new mongoose.Schema({
   imageUrl: { type: String, required: true },
   targetPage: { type: String, enum: ['shop', 'collection', 'both'], default: 'both' },
   category: { type: String, enum: ['gold', 'silver', 'rudraksha', 'antique'], required: true },
+  subCategory: { type: String }, // e.g., 'Ring', 'Chain', 'Bracelet'
   weight: { type: Number }, // numeric weight in grams
   purity: { type: String }, // e.g., '24K', '22K', '18K', '90%'
   makingCharges: { type: Number, default: 0 },

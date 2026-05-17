@@ -11,6 +11,7 @@ const AdminDashboard = () => {
   const [messages, setMessages] = useState([]);
   const [newImage, setNewImage] = useState(null);
   const [category, setCategory] = useState('gold');
+  const [subCategory, setSubCategory] = useState('');
   const [targetPage, setTargetPage] = useState('both');
   const [weight, setWeight] = useState('');
   const [purity, setPurity] = useState('22K');
@@ -93,6 +94,7 @@ const AdminDashboard = () => {
     const formData = new FormData();
     formData.append('image', newImage);
     formData.append('category', category);
+    formData.append('subCategory', subCategory);
     formData.append('targetPage', targetPage);
     formData.append('weight', weight);
     formData.append('purity', purity);
@@ -351,18 +353,30 @@ const AdminDashboard = () => {
                   onChange={(e) => setNewImage(e.target.files[0])}
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Select Category</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
-                >
-                  <option value="gold">Gold Jewellery</option>
-                  <option value="silver">Silver Jewellery</option>
-                  <option value="rudraksha">Rudraksha</option>
-                  <option value="antique">Antique Items</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Select Category</label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                  >
+                    <option value="gold">Gold Jewellery</option>
+                    <option value="silver">Silver Jewellery</option>
+                    <option value="rudraksha">Rudraksha</option>
+                    <option value="antique">Antique Items</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Item Type (e.g. Ring, Chain)</label>
+                  <input
+                    type="text"
+                    value={subCategory}
+                    onChange={(e) => setSubCategory(e.target.value)}
+                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                    placeholder="Optional: Ring, Bracelet..."
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Target Page</label>
@@ -500,6 +514,11 @@ const AdminDashboard = () => {
                       <Trash2 size={20} />
                     </button>
                   </div>
+                  {item.subCategory && (
+                    <div className="absolute top-2 left-2 bg-cream/90 backdrop-blur-sm text-coffee text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-sm shadow-sm">
+                      {item.subCategory}
+                    </div>
+                  )}
                   <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-cream-alt/90 text-coffee text-[10px] uppercase font-bold tracking-wider rounded-sm shadow-sm backdrop-blur-sm">
                     {item.category} {item.weight && `| ${item.weight}`} {item.purity && `| ${item.purity}`} {item.price && `| ₹${item.price}`}
                   </div>
@@ -631,6 +650,21 @@ const AdminDashboard = () => {
                     <input type="radio" value="collection" checked={editingItem.targetPage === 'collection'} onChange={() => setEditingItem({ ...editingItem, targetPage: 'collection' })} className="accent-ochre" />
                     <span className="text-sm text-coffee">Collection</span>
                   </label>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest">Select Category</label>
+                  <select value={editingItem.category || 'gold'} onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre">
+                    <option value="gold">Gold Jewellery</option>
+                    <option value="silver">Silver Jewellery</option>
+                    <option value="rudraksha">Rudraksha</option>
+                    <option value="antique">Antique Items</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest">Item Type</label>
+                  <input type="text" value={editingItem.subCategory || ''} onChange={(e) => setEditingItem({ ...editingItem, subCategory: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre" placeholder="e.g. Ring, Chain" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
