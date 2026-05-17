@@ -66,15 +66,7 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ 
   storage: storage,
@@ -569,9 +561,8 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'No image uploaded' });
 
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const host = req.get('host');
-    const imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+    const b64 = Buffer.from(req.file.buffer).toString('base64');
+    const imageUrl = `data:${req.file.mimetype};base64,${b64}`;
 
     const newItem = new Gallery({
       imageUrl: imageUrl,
