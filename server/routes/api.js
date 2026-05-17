@@ -583,6 +583,28 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
   }
 });
 
+// Edit Image/Details (Admin only)
+router.put('/gallery/:id', auth, isAdmin, async (req, res) => {
+  const { category, weight, purity, price, targetPage, makingCharges, otherCharges } = req.body;
+  try {
+    const item = await Gallery.findById(req.params.id);
+    if (!item) return res.status(404).json({ message: 'Item not found' });
+
+    if (category) item.category = category;
+    if (targetPage) item.targetPage = targetPage;
+    if (weight !== undefined) item.weight = parseFloat(weight) || 0;
+    if (purity) item.purity = purity;
+    if (price !== undefined) item.price = price ? Number(price) : undefined;
+    if (makingCharges !== undefined) item.makingCharges = parseFloat(makingCharges) || 0;
+    if (otherCharges !== undefined) item.otherCharges = parseFloat(otherCharges) || 0;
+
+    await item.save();
+    res.json(item);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Delete Image (Admin only)
 router.delete('/gallery/:id', auth, isAdmin, async (req, res) => {
   try {

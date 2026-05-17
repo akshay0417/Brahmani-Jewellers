@@ -19,6 +19,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '' });
+  const [editingItem, setEditingItem] = useState(null);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
@@ -113,6 +114,22 @@ const AdminDashboard = () => {
       setStatus({ type: 'success', message: 'Image uploaded successfully!' });
     } catch (err) {
       setStatus({ type: 'error', message: err.response?.data?.message || 'Upload failed.' });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    }
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await api.put(`/gallery/${editingItem._id}`, editingItem, config);
+      setStatus({ type: 'success', message: 'Item updated successfully!' });
+      setEditingItem(null);
+      fetchData();
+    } catch (err) {
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Update failed.' });
     } finally {
       setLoading(false);
       setTimeout(() => setStatus({ type: '', message: '' }), 3000);
@@ -475,8 +492,11 @@ const AdminDashboard = () => {
               {gallery.map((item) => (
                 <div key={item._id} className="relative group rounded-md overflow-hidden aspect-square border border-ochre/20 shadow-sm">
                   <img src={item.imageUrl} alt="Design" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-coffee/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <button onClick={() => deleteImage(item._id)} className="p-3 bg-red-600/90 rounded-full text-white hover:bg-red-600 transform hover:scale-110 transition-all shadow-lg">
+                  <div className="absolute inset-0 bg-coffee/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+                    <button onClick={() => setEditingItem(item)} className="p-3 bg-blue-600/90 rounded-full text-white hover:bg-blue-600 transform hover:scale-110 transition-all shadow-lg" title="Edit">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button onClick={() => deleteImage(item._id)} className="p-3 bg-red-600/90 rounded-full text-white hover:bg-red-600 transform hover:scale-110 transition-all shadow-lg" title="Delete">
                       <Trash2 size={20} />
                     </button>
                   </div>
@@ -585,6 +605,64 @@ const AdminDashboard = () => {
           </div>
         </section>
       </div>
+
+      {editingItem && (
+        <div className="fixed inset-0 z-[100] bg-coffee/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-cream rounded-xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-serif font-bold text-coffee uppercase tracking-widest">Edit Design</h3>
+              <button onClick={() => setEditingItem(null)} className="text-coffee/50 hover:text-ochre">
+                <X size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs text-coffee/70 uppercase tracking-widest">Target Page</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" value="both" checked={editingItem.targetPage === 'both'} onChange={() => setEditingItem({ ...editingItem, targetPage: 'both' })} className="accent-ochre" />
+                    <span className="text-sm text-coffee">Both</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" value="shop" checked={editingItem.targetPage === 'shop'} onChange={() => setEditingItem({ ...editingItem, targetPage: 'shop' })} className="accent-ochre" />
+                    <span className="text-sm text-coffee">Shop</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" value="collection" checked={editingItem.targetPage === 'collection'} onChange={() => setEditingItem({ ...editingItem, targetPage: 'collection' })} className="accent-ochre" />
+                    <span className="text-sm text-coffee">Collection</span>
+                  </label>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest">Weight (Grams)</label>
+                  <input type="number" step="0.01" value={editingItem.weight || ''} onChange={(e) => setEditingItem({ ...editingItem, weight: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest">Purity</label>
+                  <select value={editingItem.purity || ''} onChange={(e) => setEditingItem({ ...editingItem, purity: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre">
+                    <option value="24K">24K Gold</option>
+                    <option value="22K">22K Gold</option>
+                    <option value="18K">18K Gold</option>
+                    <option value="90%">90% Silver</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest">Making Charges (%)</label>
+                  <input type="number" step="0.01" value={editingItem.makingCharges || ''} onChange={(e) => setEditingItem({ ...editingItem, makingCharges: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest">Other Charges (₹)</label>
+                  <input type="number" value={editingItem.otherCharges || ''} onChange={(e) => setEditingItem({ ...editingItem, otherCharges: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre" />
+                </div>
+              </div>
+              <button disabled={loading} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 rounded-sm mt-4">
+                {loading ? 'Saving...' : 'Save Changes'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
