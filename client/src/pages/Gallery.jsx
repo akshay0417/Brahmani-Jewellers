@@ -30,14 +30,14 @@ const Gallery = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="pt-48 pb-24 min-h-screen px-4 bg-[#111111] text-cream"
+      className="pt-48 pb-24 min-h-screen px-4 bg-cream text-coffee"
     >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <motion.span initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-ochre tracking-[0.5em] uppercase text-xs font-bold mb-4 block">Exhibition</motion.span>
-          <h1 className="text-5xl font-serif font-bold mb-4 text-cream">Our <span className="text-ochre italic">Masterpieces</span></h1>
+          <h1 className="text-5xl font-serif font-bold mb-4 text-coffee">Our <span className="text-ochre italic">Masterpieces</span></h1>
           <div className="w-24 h-1 bg-ochre mx-auto mb-8"></div>
-          <p className="text-cream/70 max-w-2xl mx-auto">A pure visual showcase of our finest artistry. Browse our heritage designs and draw inspiration for your next bespoke creation.</p>
+          <p className="text-coffee/70 max-w-2xl mx-auto">A pure visual showcase of our finest artistry. Browse our heritage designs and draw inspiration for your next bespoke creation.</p>
         </div>
 
         {/* Filters */}
@@ -46,7 +46,7 @@ const Gallery = () => {
             <button
               key={cat}
               onClick={() => setFilter(cat)}
-              className={`pb-2 uppercase tracking-[0.2em] text-sm font-bold transition-all duration-300 ${filter === cat ? 'text-ochre border-b-2 border-ochre' : 'text-cream/50 hover:text-cream'}`}
+              className={`pb-2 uppercase tracking-[0.2em] text-sm font-bold transition-all duration-300 ${filter === cat ? 'text-ochre border-b-2 border-ochre' : 'text-coffee/50 hover:text-coffee'}`}
             >
               {cat}
             </button>
@@ -67,7 +67,7 @@ const Gallery = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   whileHover={{ scale: 1.02 }}
-                  className="group relative cursor-zoom-in overflow-hidden rounded-lg break-inside-avoid shadow-2xl"
+                  className="group relative cursor-zoom-in overflow-hidden rounded-lg break-inside-avoid shadow-xl border border-ochre/10"
                   onClick={() => setSelectedItem(item)}
                 >
                   <img
@@ -76,8 +76,8 @@ const Gallery = () => {
                     className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
                     onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
                   />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <span className="text-ochre font-serif text-2xl uppercase tracking-widest border border-ochre/50 px-6 py-2 backdrop-blur-sm">View</span>
+                  <div className="absolute inset-0 bg-coffee/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <span className="text-cream font-serif text-2xl uppercase tracking-widest border border-cream/50 px-6 py-2 backdrop-blur-sm">View</span>
                   </div>
                 </motion.div>
               ))}
@@ -93,11 +93,11 @@ const Gallery = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4 md:p-10 backdrop-blur-xl"
+            className="fixed inset-0 z-[100] bg-coffee/95 flex flex-col items-center justify-center p-4 md:p-10 backdrop-blur-md"
             onClick={() => setSelectedItem(null)}
           >
             <button
-              className="absolute top-10 right-10 text-white/50 hover:text-ochre transition-colors z-50 p-4"
+              className="absolute top-10 right-10 text-cream/50 hover:text-ochre transition-colors z-50 p-4"
               onClick={() => setSelectedItem(null)}
             >
               <X size={40} />
@@ -109,7 +109,7 @@ const Gallery = () => {
                 exit={{ scale: 0.8, opacity: 0, y: 50 }}
                 src={selectedItem.imageUrl}
                 alt="Preview"
-                className="max-w-full max-h-[75vh] object-contain shadow-2xl rounded-sm ring-1 ring-white/10"
+                className="max-w-full max-h-[75vh] object-contain shadow-2xl rounded-sm ring-1 ring-cream/10 bg-cream-alt"
                 onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
               />
               <motion.div 
@@ -120,7 +120,7 @@ const Gallery = () => {
               >
                 <h3 className="text-2xl font-serif text-ochre mb-2 tracking-widest uppercase">{selectedItem.category} Design</h3>
                 {(selectedItem.weight || selectedItem.purity) && (
-                  <p className="text-white/60 text-sm tracking-widest uppercase">
+                  <p className="text-cream/80 text-sm tracking-widest uppercase">
                     {selectedItem.weight && `Weight: ${selectedItem.weight}`} 
                     {selectedItem.weight && selectedItem.purity && ` • `}
                     {selectedItem.purity && `Purity: ${selectedItem.purity}`}
@@ -130,7 +130,7 @@ const Gallery = () => {
                   href={`https://wa.me/917621967577?text=${encodeURIComponent("Hello! I love this design from your exhibition: " + selectedItem.imageUrl)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-6 inline-block border border-ochre text-ochre px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-ochre hover:text-black transition-colors"
+                  className="mt-6 inline-block border border-ochre text-cream px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-ochre hover:text-coffee transition-colors"
                 >
                   Inquire Design
                 </a>
