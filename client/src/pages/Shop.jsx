@@ -35,10 +35,11 @@ const Shop = () => {
     if (!rates || !item.weight || !item.purity) return { final: 0, breakdown: null };
 
     let ratePer10g = 0;
-    if (item.purity === '24K') ratePer10g = rates.gold24K;
-    else if (item.purity === '22K') ratePer10g = rates.gold22K;
-    else if (item.purity === '18K') ratePer10g = rates.gold18K;
-    else if (item.purity === '90%') ratePer10g = rates.silver90;
+    const p = (item.purity || '').toUpperCase();
+    if (p.includes('24')) ratePer10g = rates.gold24K;
+    else if (p.includes('22')) ratePer10g = rates.gold22K;
+    else if (p.includes('18')) ratePer10g = rates.gold18K;
+    else if (p.includes('90') || p.includes('SILVER')) ratePer10g = rates.silver90;
 
     if (!ratePer10g) return { final: 0, breakdown: null };
 
