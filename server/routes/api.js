@@ -134,7 +134,7 @@ router.post('/auth/register', async (req, res) => {
             </div>
           </div>
         `;
-        await sendEmail(email, 'Welcome to Brahmani Jewellers - Verify Your Account', welcomeHtml);
+        sendEmail(email, 'Welcome to Brahmani Jewellers - Verify Your Account', welcomeHtml).catch(console.error);
       } catch (err) {
         // Continue even if email fails during development
       }
@@ -144,12 +144,15 @@ router.post('/auth/register', async (req, res) => {
       if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_NUMBER) {
         try {
           const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-          await twilioClient.messages.create({
+          twilioClient.messages.create({
             body: `Your Brahmani Jewellers Registration OTP is: ${otp}`,
             from: process.env.TWILIO_WHATSAPP_NUMBER,
             to: `+91${mobile}`
+          }).then(() => {
+            console.log(`[SMS/WA] OTP successfully sent to ${mobile}`);
+          }).catch((smsErr) => {
+            console.error(`[SMS/WA ERROR] Failed to send to ${mobile}:`, smsErr);
           });
-          console.log(`[SMS/WA] OTP successfully sent to ${mobile}`);
         } catch (smsErr) {
           console.error(`[SMS/WA ERROR] Failed to send to ${mobile}:`, smsErr);
         }
@@ -262,7 +265,7 @@ router.post('/auth/request-otp', async (req, res) => {
             <p>If you didn't request this, please ignore this email.</p>
           </div>
         `;
-        await sendEmail(email, 'Your Login OTP - Brahmani Jewellers', otpHtml);
+        sendEmail(email, 'Your Login OTP - Brahmani Jewellers', otpHtml).catch(console.error);
       } catch (err) {
         // Log handled in helper
       }
@@ -272,12 +275,15 @@ router.post('/auth/request-otp', async (req, res) => {
       if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_NUMBER) {
         try {
           const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-          await twilioClient.messages.create({
+          twilioClient.messages.create({
             body: `Your Brahmani Jewellers Login OTP is: ${otp}`,
             from: process.env.TWILIO_WHATSAPP_NUMBER,
             to: `+91${mobile}` // Assuming Indian numbers, adjust as needed
+          }).then(() => {
+            console.log(`[SMS/WA] Login OTP successfully sent to ${mobile}`);
+          }).catch((smsErr) => {
+            console.error(`[SMS/WA ERROR] Failed to send to ${mobile}:`, smsErr);
           });
-          console.log(`[SMS/WA] Login OTP successfully sent to ${mobile}`);
         } catch (smsErr) {
           console.error(`[SMS/WA ERROR] Failed to send to ${mobile}:`, smsErr);
         }
@@ -326,7 +332,7 @@ router.post('/auth/forgot-password', async (req, res) => {
           <p>If you didn't request this, please ignore this email.</p>
         </div>
       `;
-      await sendEmail(email, 'Password Reset Request - Brahmani Jewellers', resetHtml);
+      sendEmail(email, 'Password Reset Request - Brahmani Jewellers', resetHtml).catch(console.error);
     } catch (err) {
       // Handled in helper
     }
@@ -413,7 +419,7 @@ router.post('/auth/verify-otp', async (req, res) => {
             <p style="font-size: 0.9em; color: #666;">If you have any questions, feel free to contact us via WhatsApp or Phone.</p>
           </div>
         `;
-        await sendEmail(user.email, 'Account Created Successfully - Brahmani Jewellers', welcomeHtml);
+        sendEmail(user.email, 'Account Created Successfully - Brahmani Jewellers', welcomeHtml).catch(console.error);
       } catch (err) {
         // Handled in helper
       }
