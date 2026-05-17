@@ -634,6 +634,10 @@ const AdminDashboard = () => {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2 col-span-2 sm:col-span-1">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest text-red-500 font-bold">Fixed Price (₹ - CLEAR this for Live Rate)</label>
+                  <input type="number" value={editingItem.price ?? ''} onChange={(e) => setEditingItem({ ...editingItem, price: e.target.value })} className="w-full bg-cream-alt border border-red-200 p-3 rounded-sm text-coffee outline-none focus:border-red-500" placeholder="Leave empty for Live Rate" />
+                </div>
                 <div className="space-y-2">
                   <label className="text-xs text-coffee/70 uppercase tracking-widest">Weight (Grams)</label>
                   <input type="number" step="0.01" value={editingItem.weight ?? ''} onChange={(e) => setEditingItem({ ...editingItem, weight: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre" />
