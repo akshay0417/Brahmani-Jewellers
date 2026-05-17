@@ -31,7 +31,7 @@ const Navbar = () => {
     { name: 'Home', path: '/' },
     { name: 'Shop', path: '/shop' },
     { name: 'Collection', path: '/gallery' },
-    { name: 'About', path: '/#about' },
+    { name: 'About', path: '/about' },
   ];
 
   const handleSubmit = async (e) => {
