@@ -155,9 +155,12 @@ const Gallery = () => {
                 transition={{ delay: 0.2 }}
                 className="mt-8 text-center"
               >
-                <h3 className="text-2xl font-serif text-ochre mb-2 tracking-widest uppercase">{selectedItem.category} Design</h3>
-                {(selectedItem.weight || selectedItem.purity) && (
-                  <p className="text-cream/80 text-sm tracking-widest uppercase">
+                <h3 className="text-2xl font-serif text-ochre mb-2 tracking-widest uppercase">{selectedItem.name || `${selectedItem.category} Design`}</h3>
+                {selectedItem.description && <p className="text-cream/80 text-sm italic mb-2 max-w-lg mx-auto">{selectedItem.description}</p>}
+                {(selectedItem.weight || selectedItem.purity || selectedItem.subCategory) && (
+                  <p className="text-cream/60 text-xs tracking-widest uppercase mt-2">
+                    {selectedItem.subCategory && `${selectedItem.subCategory}`}
+                    {selectedItem.subCategory && (selectedItem.weight || selectedItem.purity) && ` • `}
                     {selectedItem.weight && `Weight: ${selectedItem.weight}`} 
                     {selectedItem.weight && selectedItem.purity && ` • `}
                     {selectedItem.purity && `Purity: ${selectedItem.purity}`}

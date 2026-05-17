@@ -557,7 +557,7 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
     next();
   });
 }, async (req, res) => {
-  const { category, subCategory, weight, purity, price, targetPage, makingCharges, otherCharges } = req.body;
+  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges } = req.body;
   try {
     if (!req.file) return res.status(400).json({ message: 'No image uploaded' });
 
@@ -568,6 +568,8 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
       imageUrl: imageUrl,
       category,
       subCategory,
+      name,
+      description,
       targetPage: targetPage || 'both',
       weight: parseFloat(weight) || 0,
       purity,
@@ -586,13 +588,15 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
 
 // Edit Image/Details (Admin only)
 router.put('/gallery/:id', auth, isAdmin, async (req, res) => {
-  const { category, subCategory, weight, purity, price, targetPage, makingCharges, otherCharges } = req.body;
+  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges } = req.body;
   try {
     const item = await Gallery.findById(req.params.id);
     if (!item) return res.status(404).json({ message: 'Item not found' });
 
     if (category) item.category = category;
     if (subCategory !== undefined) item.subCategory = subCategory;
+    if (name !== undefined) item.name = name;
+    if (description !== undefined) item.description = description;
     if (targetPage) item.targetPage = targetPage;
     if (weight !== undefined) item.weight = parseFloat(weight) || 0;
     if (purity) item.purity = purity;

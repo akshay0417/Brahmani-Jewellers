@@ -12,6 +12,8 @@ const AdminDashboard = () => {
   const [newImage, setNewImage] = useState(null);
   const [category, setCategory] = useState('gold');
   const [subCategory, setSubCategory] = useState('');
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [targetPage, setTargetPage] = useState('both');
   const [weight, setWeight] = useState('');
   const [purity, setPurity] = useState('22K');
@@ -95,6 +97,8 @@ const AdminDashboard = () => {
     formData.append('image', newImage);
     formData.append('category', category);
     formData.append('subCategory', subCategory);
+    formData.append('name', name);
+    formData.append('description', description);
     formData.append('targetPage', targetPage);
     formData.append('weight', weight);
     formData.append('purity', purity);
@@ -377,6 +381,26 @@ const AdminDashboard = () => {
                     placeholder="Optional: Ring, Bracelet..."
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Item Name (Optional)</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                  placeholder="e.g. Royal Heritage Necklace"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Description (Optional)</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows="2"
+                  className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors resize-none"
+                  placeholder="A timeless piece of heritage..."
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Target Page</label>
@@ -666,6 +690,14 @@ const AdminDashboard = () => {
                   <label className="text-xs text-coffee/70 uppercase tracking-widest">Item Type</label>
                   <input type="text" value={editingItem.subCategory || ''} onChange={(e) => setEditingItem({ ...editingItem, subCategory: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre" placeholder="e.g. Ring, Chain" />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-coffee/70 uppercase tracking-widest">Item Name</label>
+                <input type="text" value={editingItem.name || ''} onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre" placeholder="e.g. Royal Heritage Necklace" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-coffee/70 uppercase tracking-widest">Description</label>
+                <textarea value={editingItem.description || ''} onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })} rows="2" className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre resize-none" placeholder="A timeless piece..." />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2 col-span-2 sm:col-span-1">

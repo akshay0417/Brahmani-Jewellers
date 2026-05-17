@@ -101,7 +101,7 @@ const Shop = () => {
         </div>
         <div className="p-5 text-center">
           <span className="text-[10px] text-ochre uppercase tracking-[0.2em] font-bold mb-1 block">{item.subCategory ? `${item.subCategory} • ${item.category}` : `${item.category} Collection`}</span>
-          <h3 className="font-serif text-lg text-coffee mb-2 tracking-wide">Heritage Masterpiece</h3>
+          <h3 className="font-serif text-lg text-coffee mb-2 tracking-wide truncate px-2">{item.name || 'Heritage Masterpiece'}</h3>
           <div className="flex flex-col items-center justify-center gap-1">
             <span className="text-xl font-bold text-coffee">₹{priceData.final.toLocaleString('en-IN')}</span>
             {priceData.breakdown && <span className="text-[10px] text-coffee/50 uppercase tracking-widest">(Incl. 3% GST)</span>}
@@ -188,8 +188,9 @@ const Shop = () => {
               <div className="w-full md:w-1/2 bg-cream-alt"><img src={selectedProduct.imageUrl} alt="Product" className="w-full h-full object-contain" /></div>
               <div className="w-full md:w-1/2 p-10 flex flex-col justify-center">
                 <span className="text-ochre tracking-[0.3em] uppercase text-xs font-bold mb-2 block">{selectedProduct.category} Collection</span>
-                <h2 className="text-4xl font-serif font-bold text-coffee mb-4">Royal Heritage Ornament</h2>
+                <h2 className="text-4xl font-serif font-bold text-coffee mb-4">{selectedProduct.name || 'Royal Heritage Ornament'}</h2>
                 <div className="w-12 h-1 bg-ochre mb-6"></div>
+                {selectedProduct.description && <p className="text-coffee/70 mb-6 italic">{selectedProduct.description}</p>}
                 
                 {(() => {
                   const pData = calculatePrice(selectedProduct);
