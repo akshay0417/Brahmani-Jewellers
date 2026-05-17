@@ -2,10 +2,13 @@ const mongoose = require('mongoose');
 
 const GallerySchema = new mongoose.Schema({
   imageUrl: { type: String, required: true },
+  targetPage: { type: String, enum: ['shop', 'collection', 'both'], default: 'both' },
   category: { type: String, enum: ['gold', 'silver', 'rudraksha', 'antique'], required: true },
-  weight: { type: String },
-  purity: { type: String },
-  price: { type: Number },
+  weight: { type: Number }, // numeric weight in grams
+  purity: { type: String }, // e.g., '24K', '22K', '18K', '90%'
+  makingCharges: { type: Number, default: 0 },
+  otherCharges: { type: Number, default: 0 },
+  price: { type: Number }, // Fallback fixed price if not calculated
   createdAt: { type: Date, default: Date.now }
 });
 

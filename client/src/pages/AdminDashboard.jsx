@@ -11,8 +11,11 @@ const AdminDashboard = () => {
   const [messages, setMessages] = useState([]);
   const [newImage, setNewImage] = useState(null);
   const [category, setCategory] = useState('gold');
+  const [targetPage, setTargetPage] = useState('both');
   const [weight, setWeight] = useState('');
-  const [purity, setPurity] = useState('');
+  const [purity, setPurity] = useState('22K');
+  const [makingCharges, setMakingCharges] = useState('');
+  const [otherCharges, setOtherCharges] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '' });
@@ -89,9 +92,12 @@ const AdminDashboard = () => {
     const formData = new FormData();
     formData.append('image', newImage);
     formData.append('category', category);
+    formData.append('targetPage', targetPage);
     formData.append('weight', weight);
     formData.append('purity', purity);
     formData.append('price', rates.price || '');
+    formData.append('makingCharges', makingCharges);
+    formData.append('otherCharges', otherCharges);
 
     try {
       await api.post('/gallery', formData, {
@@ -99,7 +105,9 @@ const AdminDashboard = () => {
       });
       setNewImage(null);
       setWeight('');
-      setPurity('');
+      setPurity('22K');
+      setMakingCharges('');
+      setOtherCharges('');
       setRates({ ...rates, price: '' });
       fetchData();
       setStatus({ type: 'success', message: 'Image uploaded successfully!' });
@@ -339,6 +347,23 @@ const AdminDashboard = () => {
                   <option value="antique">Antique Items</option>
                 </select>
               </div>
+              <div className="space-y-2">
+                <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Target Page</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" value="both" checked={targetPage === 'both'} onChange={() => setTargetPage('both')} className="accent-ochre" />
+                    <span className="text-sm text-coffee">Both</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" value="shop" checked={targetPage === 'shop'} onChange={() => setTargetPage('shop')} className="accent-ochre" />
+                    <span className="text-sm text-coffee">Shop (with price)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" value="collection" checked={targetPage === 'collection'} onChange={() => setTargetPage('collection')} className="accent-ochre" />
+                    <span className="text-sm text-coffee">Collection (Exhibition)</span>
+                  </label>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Price (₹ - Optional)</label>
@@ -351,23 +376,47 @@ const AdminDashboard = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Weight (e.g. 10g)</label>
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Weight (Grams)</label>
                   <input
-                    type="text"
+                    type="number"
+                    step="0.01"
                     value={weight}
                     onChange={(e) => setWeight(e.target.value)}
                     className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
-                    placeholder="Enter weight"
+                    placeholder="e.g. 10.5"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Purity (e.g. 22K)</label>
-                  <input
-                    type="text"
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Purity</label>
+                  <select
                     value={purity}
                     onChange={(e) => setPurity(e.target.value)}
                     className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
-                    placeholder="Enter purity"
+                  >
+                    <option value="24K">24K Gold</option>
+                    <option value="22K">22K Gold</option>
+                    <option value="18K">18K Gold</option>
+                    <option value="90%">90% Silver</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Making Charges (₹)</label>
+                  <input
+                    type="number"
+                    value={makingCharges}
+                    onChange={(e) => setMakingCharges(e.target.value)}
+                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                    placeholder="e.g. 5000"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Other Charges (₹)</label>
+                  <input
+                    type="number"
+                    value={otherCharges}
+                    onChange={(e) => setOtherCharges(e.target.value)}
+                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                    placeholder="e.g. 500"
                   />
                 </div>
               </div>

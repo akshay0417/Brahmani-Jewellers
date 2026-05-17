@@ -557,7 +557,7 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
     next();
   });
 }, async (req, res) => {
-  const { category, weight, purity, price } = req.body;
+  const { category, weight, purity, price, targetPage, makingCharges, otherCharges } = req.body;
   try {
     if (!req.file) return res.status(400).json({ message: 'No image uploaded' });
 
@@ -567,9 +567,12 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
     const newItem = new Gallery({
       imageUrl: imageUrl,
       category,
-      weight,
+      targetPage: targetPage || 'both',
+      weight: parseFloat(weight) || 0,
       purity,
-      price: price ? Number(price) : undefined
+      price: price ? Number(price) : undefined,
+      makingCharges: parseFloat(makingCharges) || 0,
+      otherCharges: parseFloat(otherCharges) || 0
     });
 
     await newItem.save();

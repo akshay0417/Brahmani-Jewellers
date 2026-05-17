@@ -23,7 +23,9 @@ const Gallery = () => {
     fetchGallery();
   }, []);
 
-  const filteredItems = filter === 'all' ? items : items.filter(item => item.category === filter);
+  const filteredItems = filter === 'all' 
+    ? items.filter(item => item.targetPage === 'collection' || item.targetPage === 'both' || !item.targetPage) 
+    : items.filter(item => item.category === filter && (item.targetPage === 'collection' || item.targetPage === 'both' || !item.targetPage));
 
   return (
     <motion.div
