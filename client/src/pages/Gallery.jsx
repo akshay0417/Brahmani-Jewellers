@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search, Filter } from 'lucide-react';
-import { useCart } from '../context/CartContext';
+import { X } from 'lucide-react';
 
 const Gallery = () => {
-  const { addToCart } = useCart();
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState('all');
   const [selectedItem, setSelectedItem] = useState(null);
@@ -17,15 +15,7 @@ const Gallery = () => {
         const res = await api.get('/gallery');
         setItems(res.data);
       } catch (err) {
-        // Fallback for demo
-        setItems([
-          { _id: '1', imageUrl: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=800&q=80', category: 'gold' },
-          { _id: '2', imageUrl: 'https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?auto=format&fit=crop&w=800&q=80', category: 'gold' },
-          { _id: '3', imageUrl: 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80', category: 'silver' },
-          { _id: '4', imageUrl: 'https://images.unsplash.com/photo-1626784215021-2e39ccf971cd?auto=format&fit=crop&w=800&q=80', category: 'silver' },
-          { _id: '5', imageUrl: 'https://images.unsplash.com/photo-1598560912005-59a0d5c1-8ce?auto=format&fit=crop&w=800&q=80', category: 'gold' },
-          { _id: '6', imageUrl: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=800&q=80', category: 'gold' },
-        ]);
+        setItems([]);
       } finally {
         setLoading(false);
       }
@@ -40,65 +30,60 @@ const Gallery = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="pt-48 pb-24 min-h-screen px-4 bg-cream"
+      className="pt-48 pb-24 min-h-screen px-4 bg-[#111111] text-cream"
     >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-serif font-bold mb-4 text-coffee transition-colors duration-300">Our <span className="text-ochre">Collection</span></h1>
-          <p className="text-coffee/70 max-w-2xl mx-auto transition-colors duration-300">Explore our curated collection of heritage jewellery, where each piece tells a story of elegance and craftsmanship.</p>
+          <motion.span initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-ochre tracking-[0.5em] uppercase text-xs font-bold mb-4 block">Exhibition</motion.span>
+          <h1 className="text-5xl font-serif font-bold mb-4 text-cream">Our <span className="text-ochre italic">Masterpieces</span></h1>
+          <div className="w-24 h-1 bg-ochre mx-auto mb-8"></div>
+          <p className="text-cream/70 max-w-2xl mx-auto">A pure visual showcase of our finest artistry. Browse our heritage designs and draw inspiration for your next bespoke creation.</p>
         </div>
 
         {/* Filters */}
-        <div className="flex justify-center gap-4 mb-12 flex-wrap">
+        <div className="flex justify-center gap-6 mb-16 flex-wrap">
           {['all', 'gold', 'silver', 'rudraksha', 'antique'].map((cat) => (
             <button
               key={cat}
               onClick={() => setFilter(cat)}
-              className={`px-8 py-2 rounded-full border border-ochre/30 uppercase tracking-widest text-xs transition-all duration-300 ${filter === cat ? 'bg-ochre text-coffee border-ochre' : 'text-ochre hover:bg-ochre/10'}`}
+              className={`pb-2 uppercase tracking-[0.2em] text-sm font-bold transition-all duration-300 ${filter === cat ? 'text-ochre border-b-2 border-ochre' : 'text-cream/50 hover:text-cream'}`}
             >
               {cat}
             </button>
           ))}
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          <AnimatePresence mode="popLayout">
-            {filteredItems.map((item) => (
-              <motion.div
-                layout
-                key={item._id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                whileHover={{ y: -10 }}
-                className="group relative cursor-pointer overflow-hidden rounded-sm"
-                onClick={() => setSelectedItem(item)}
-              >
-                <div className="aspect-[4/5] overflow-hidden bg-cream-alt">
+        {/* Gallery Grid - Masonry style approximation */}
+        {loading ? (
+           <div className="flex justify-center py-20"><div className="w-12 h-12 border-4 border-ochre border-t-transparent rounded-full animate-spin"></div></div>
+        ) : (
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
+            <AnimatePresence>
+              {filteredItems.map((item) => (
+                <motion.div
+                  layout
+                  key={item._id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  whileHover={{ scale: 1.02 }}
+                  className="group relative cursor-zoom-in overflow-hidden rounded-lg break-inside-avoid shadow-2xl"
+                  onClick={() => setSelectedItem(item)}
+                >
                   <img
                     src={item.imageUrl}
                     alt={item.category}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90"
+                    className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
+                    onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
                   />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-coffee/90 via-coffee/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
-                  <div>
-                    <span className="text-ochre text-xs uppercase tracking-[0.2em]">{item.category} Collection</span>
-                    <h3 className="text-cream font-serif text-lg tracking-wider capitalize">Brahmani Heritage Ornament</h3>
-                    {(item.weight || item.purity || item.price) && (
-                      <p className="text-cream/80 text-sm mt-1">
-                        {item.weight && `Weight: ${item.weight}`} 
-                        {item.purity && ` | Purity: ${item.purity}`}
-                        {item.price && ` | Price: ₹${item.price.toLocaleString('en-IN')}`}
-                      </p>
-                    )}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <span className="text-ochre font-serif text-2xl uppercase tracking-widest border border-ochre/50 px-6 py-2 backdrop-blur-sm">View</span>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
       </div>
 
       {/* Lightbox */}
@@ -108,46 +93,48 @@ const Gallery = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-coffee/95 flex flex-col items-center justify-center p-4 md:p-10"
+            className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4 md:p-10 backdrop-blur-xl"
             onClick={() => setSelectedItem(null)}
           >
             <button
-              className="absolute top-10 right-10 text-cream hover:text-ochre transition-colors z-50"
+              className="absolute top-10 right-10 text-white/50 hover:text-ochre transition-colors z-50 p-4"
               onClick={() => setSelectedItem(null)}
             >
               <X size={40} />
             </button>
             <div className="relative flex flex-col items-center max-w-full max-h-full" onClick={(e) => e.stopPropagation()}>
               <motion.img
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
+                initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.8, opacity: 0, y: 50 }}
                 src={selectedItem.imageUrl}
                 alt="Preview"
-                className="max-w-full max-h-[70vh] object-contain shadow-2xl border border-ochre/10 mb-4 rounded-sm"
+                className="max-w-full max-h-[75vh] object-contain shadow-2xl rounded-sm ring-1 ring-white/10"
+                onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
               />
-              {(selectedItem.weight || selectedItem.purity) && (
-                <div className="text-cream text-lg font-serif mb-6 flex gap-6">
-                  {selectedItem.weight && <span>Weight: <span className="text-ochre">{selectedItem.weight}</span></span>}
-                  {selectedItem.purity && <span>Purity: <span className="text-ochre">{selectedItem.purity}</span></span>}
-                </div>
-              )}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  className="bg-cream text-coffee px-8 py-3 rounded-full font-serif tracking-wider uppercase hover:bg-cream-alt transition-colors shadow-lg border border-ochre/30 flex items-center justify-center"
-                  onClick={() => { addToCart(selectedItem._id); setSelectedItem(null); }}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mt-8 text-center"
+              >
+                <h3 className="text-2xl font-serif text-ochre mb-2 tracking-widest uppercase">{selectedItem.category} Design</h3>
+                {(selectedItem.weight || selectedItem.purity) && (
+                  <p className="text-white/60 text-sm tracking-widest uppercase">
+                    {selectedItem.weight && `Weight: ${selectedItem.weight}`} 
+                    {selectedItem.weight && selectedItem.purity && ` • `}
+                    {selectedItem.purity && `Purity: ${selectedItem.purity}`}
+                  </p>
+                )}
+                <a
+                  href={`https://wa.me/917621967577?text=${encodeURIComponent("Hello! I love this design from your exhibition: " + selectedItem.imageUrl)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 inline-block border border-ochre text-ochre px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-ochre hover:text-black transition-colors"
                 >
-                  Add to Cart
-                </button>
-                  <a
-                    href={`https://wa.me/917621967577?text=${encodeURIComponent("Hello! I'm interested in buying this design: " + selectedItem.imageUrl + (selectedItem.weight ? " (Weight: " + selectedItem.weight + ")" : "") + (selectedItem.purity ? " (Purity: " + selectedItem.purity + ")" : "") + (selectedItem.price ? " (Price: ₹" + selectedItem.price + ")" : ""))}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-ochre text-coffee px-8 py-3 rounded-full font-serif tracking-wider uppercase hover:bg-ochre/90 transition-colors shadow-lg flex items-center justify-center"
-                  >
-                    Buy via WhatsApp
-                  </a>
-              </div>
+                  Inquire Design
+                </a>
+              </motion.div>
             </div>
           </motion.div>
         )}
