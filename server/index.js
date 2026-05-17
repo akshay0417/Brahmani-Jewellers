@@ -10,6 +10,7 @@ const bcrypt = require('bcryptjs');
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Middleware
 app.use(cors({

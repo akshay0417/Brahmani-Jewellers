@@ -569,7 +569,7 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'No image uploaded' });
 
-    const protocol = req.protocol;
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
     const host = req.get('host');
     const imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
 
