@@ -9,6 +9,7 @@ const Shop = () => {
   const [items, setItems] = useState([]);
   const [rates, setRates] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [subFilter, setSubFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -59,7 +60,11 @@ const Shop = () => {
   };
 
   const shopCategories = ['all', 'gold', 'silver', 'antique', 'rudraksha'];
-  const filteredItems = filter === 'all' ? items : items.filter(item => item.category === filter);
+  const filteredItems = items.filter(item => {
+    if (filter !== 'all' && item.category !== filter) return false;
+    if (subFilter && item.subCategory !== subFilter) return false;
+    return true;
+  });
 
   const ProductCard = ({ item }) => {
     const priceData = calculatePrice(item);
@@ -121,9 +126,40 @@ const Shop = () => {
         </div>
 
         <div className="flex flex-wrap justify-center gap-4 mb-16">
-          {shopCategories.map(cat => (
-            <button key={cat} onClick={() => setFilter(cat)} className={`px-10 py-3 rounded-full border border-ochre/20 text-xs font-bold uppercase tracking-widest transition-all duration-300 ${filter === cat ? 'bg-ochre text-coffee border-ochre shadow-lg' : 'text-coffee hover:bg-ochre/10'}`}>{cat}</button>
-          ))}
+          {shopCategories.map(cat => {
+            const isGoldOrSilver = cat === 'gold' || cat === 'silver';
+            const subCats = isGoldOrSilver ? [...new Set(items.filter(i => i.category === cat && i.subCategory).map(i => i.subCategory))] : [];
+
+            return (
+              <div key={cat} className="relative group">
+                <button 
+                  onClick={() => { setFilter(cat); setSubFilter(''); }} 
+                  className={`px-10 py-3 rounded-full border border-ochre/20 text-xs font-bold uppercase tracking-widest transition-all duration-300 ${filter === cat && !subFilter ? 'bg-ochre text-coffee border-ochre shadow-lg' : 'text-coffee hover:bg-ochre/10'}`}
+                >
+                  {cat}
+                </button>
+                
+                {isGoldOrSilver && subCats.length > 0 && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-cream border border-ochre/20 rounded-md shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden">
+                    <div className="flex flex-col">
+                      <button onClick={() => { setFilter(cat); setSubFilter(''); }} className={`px-4 py-3 text-xs uppercase tracking-widest text-left transition-colors ${filter === cat && !subFilter ? 'bg-ochre/10 text-ochre font-bold' : 'text-coffee hover:bg-ochre/5'}`}>
+                        All {cat}
+                      </button>
+                      {subCats.map(sub => (
+                        <button 
+                          key={sub} 
+                          onClick={() => { setFilter(cat); setSubFilter(sub); }} 
+                          className={`px-4 py-3 text-xs uppercase tracking-widest text-left transition-colors ${subFilter === sub ? 'bg-ochre/10 text-ochre font-bold' : 'text-coffee hover:bg-ochre/5'}`}
+                        >
+                          {sub}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">

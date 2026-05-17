@@ -6,6 +6,7 @@ import { X } from 'lucide-react';
 const Gallery = () => {
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [subFilter, setSubFilter] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,9 +24,13 @@ const Gallery = () => {
     fetchGallery();
   }, []);
 
-  const filteredItems = filter === 'all' 
-    ? items.filter(item => item.targetPage === 'collection' || item.targetPage === 'both' || !item.targetPage) 
-    : items.filter(item => item.category === filter && (item.targetPage === 'collection' || item.targetPage === 'both' || !item.targetPage));
+  const filteredItems = items.filter(item => {
+    const isCollection = item.targetPage === 'collection' || item.targetPage === 'both' || !item.targetPage;
+    if (!isCollection) return false;
+    if (filter !== 'all' && item.category !== filter) return false;
+    if (subFilter && item.subCategory !== subFilter) return false;
+    return true;
+  });
 
   return (
     <motion.div
@@ -44,15 +49,40 @@ const Gallery = () => {
 
         {/* Filters */}
         <div className="flex justify-center gap-6 mb-16 flex-wrap">
-          {['all', 'gold', 'silver', 'rudraksha', 'antique'].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setFilter(cat)}
-              className={`pb-2 uppercase tracking-[0.2em] text-sm font-bold transition-all duration-300 ${filter === cat ? 'text-ochre border-b-2 border-ochre' : 'text-coffee/50 hover:text-coffee'}`}
-            >
-              {cat}
-            </button>
-          ))}
+          {['all', 'gold', 'silver', 'rudraksha', 'antique'].map((cat) => {
+            const isGoldOrSilver = cat === 'gold' || cat === 'silver';
+            const subCats = isGoldOrSilver ? [...new Set(items.filter(i => i.category === cat && i.subCategory && (i.targetPage === 'collection' || i.targetPage === 'both' || !i.targetPage)).map(i => i.subCategory))] : [];
+
+            return (
+              <div key={cat} className="relative group pb-2">
+                <button
+                  onClick={() => { setFilter(cat); setSubFilter(''); }}
+                  className={`uppercase tracking-[0.2em] text-sm font-bold transition-all duration-300 ${filter === cat && !subFilter ? 'text-ochre border-b-2 border-ochre pb-1' : 'text-coffee/50 hover:text-coffee'}`}
+                >
+                  {cat}
+                </button>
+                
+                {isGoldOrSilver && subCats.length > 0 && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-48 bg-cream border border-ochre/20 rounded-md shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden">
+                    <div className="flex flex-col">
+                      <button onClick={() => { setFilter(cat); setSubFilter(''); }} className={`px-4 py-3 text-xs uppercase tracking-widest text-left transition-colors ${filter === cat && !subFilter ? 'bg-ochre/10 text-ochre font-bold' : 'text-coffee hover:bg-ochre/5'}`}>
+                        All {cat}
+                      </button>
+                      {subCats.map(sub => (
+                        <button 
+                          key={sub} 
+                          onClick={() => { setFilter(cat); setSubFilter(sub); }} 
+                          className={`px-4 py-3 text-xs uppercase tracking-widest text-left transition-colors ${subFilter === sub ? 'bg-ochre/10 text-ochre font-bold' : 'text-coffee hover:bg-ochre/5'}`}
+                        >
+                          {sub}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Gallery Grid - Masonry style approximation */}
