@@ -32,17 +32,19 @@ const Subscriber = require('../models/Subscriber');
 
 // Email Helper Function
 const sendEmail = async (to, subject, html) => {
+  const customHost = process.env.EMAIL_HOST || 'smtp.gmail.com';
+  const customPort = parseInt(process.env.EMAIL_PORT) || 465;
   const customUser = process.env.EMAIL_USER;
   const customPass = process.env.EMAIL_PASS;
   
   // 1. Try sending via the custom environment variables configured on the Render Dashboard
   if (customUser && customPass) {
-    console.log(`[EMAIL SETUP] Attempting custom SMTP send via smtp.gmail.com:465 using ${customUser}...`);
+    console.log(`[EMAIL SETUP] Attempting custom SMTP send via ${customHost}:${customPort} using ${customUser}...`);
     try {
       const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
+        host: customHost,
+        port: customPort,
+        secure: customPort === 465,
         auth: {
           user: customUser,
           pass: customPass
@@ -66,17 +68,17 @@ const sendEmail = async (to, subject, html) => {
   }
 
   // 2. Fallback: Force send using our 100% verified working Google App Credentials
-  const emailUser = 'info.brahmanijewellers@gmail.com';
-  const emailPass = 'drwcqzjagditmxke';
-  console.log(`[EMAIL SETUP] Attempting fallback SMTP send via smtp.gmail.com:465 using ${emailUser}...`);
+  const fallbackUser = 'info.brahmanijewellers@gmail.com';
+  const fallbackPass = 'drwcqzjagditmxke';
+  console.log(`[EMAIL SETUP] Attempting fallback SMTP send via smtp.gmail.com:465 using ${fallbackUser}...`);
 
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
     secure: true,
     auth: {
-      user: emailUser,
-      pass: emailPass
+      user: fallbackUser,
+      pass: fallbackPass
     },
     family: 4, // Force IPv4 to prevent Render IPv6 timeout
     tls: {
@@ -86,7 +88,7 @@ const sendEmail = async (to, subject, html) => {
 
   try {
     await transporter.sendMail({
-      from: `"Brahmani Jewellers" <${emailUser}>`,
+      from: `"Brahmani Jewellers" <${fallbackUser}>`,
       to,
       subject,
       html
