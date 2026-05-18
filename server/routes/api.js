@@ -137,13 +137,21 @@ router.post('/auth/register', async (req, res) => {
             </div>
             
             <p style="font-size: 16px; margin-bottom: 10px;">Dear <strong>${name}</strong>,</p>
-            <p style="font-size: 15px; color: #5C4A3E; margin-bottom: 25px;">Thank you for registering an account with Brahmani Jewellers. To complete your registration and secure your profile, please verify your email address by clicking the button below.</p>
+            <p style="font-size: 15px; color: #5C4A3E; margin-bottom: 25px;">Thank you for registering an account with Brahmani Jewellers. To complete your registration and secure your profile, please verify your email address by clicking the button below or using the OTP verification code.</p>
             
+            <!-- OTP Verification Code Card -->
+            <div style="background-color: #FCF0DA; padding: 20px; text-align: center; border-radius: 8px; margin: 25px 0; border: 1px solid #EBA938;">
+              <p style="margin: 0 0 10px 0; color: #3D2B1F; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Your OTP Verification Code</p>
+              <h1 style="letter-spacing: 5px; color: #3D2B1F; margin: 0; font-size: 2.2em; font-family: monospace;">${otp}</h1>
+              <p style="color: #666; font-size: 12px; margin-top: 10px; margin-bottom: 0;">This verification code is valid for 10 minutes.</p>
+            </div>
+
+            <!-- Verification Button Link -->
             <div style="text-align: center; margin: 35px 0;">
-              <a href="${verifyUrl}" style="background-color: #3D2B1F; color: #FFFDF9; border: 1px solid #d4af37; padding: 14px 35px; text-decoration: none; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; border-radius: 4px; display: inline-block; box-shadow: 0 4px 10px rgba(61, 43, 31, 0.15);">Verify Email Address</a>
+              <a href="${verifyUrl}" style="background-color: #3D2B1F; color: #FFFDF9; border: 1px solid #d4af37; padding: 14px 35px; text-decoration: none; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; border-radius: 4px; display: inline-block; box-shadow: 0 4px 10px rgba(61, 43, 31, 0.15);">Verify Email Address Directly</a>
             </div>
             
-            <p style="font-size: 13px; color: #7A695D; text-align: center; margin-top: 10px; margin-bottom: 25px;">This verification link is valid for 24 hours.</p>
+            <p style="font-size: 13px; color: #7A695D; text-align: center; margin-top: 10px; margin-bottom: 25px;">The verification button link is valid for 24 hours.</p>
             
             <div style="background-color: #FDF9F3; border-left: 3px solid #d4af37; padding: 15px; margin-bottom: 30px; border-radius: 0 8px 8px 0;">
               <p style="margin: 0; font-size: 13px; color: #5C4A3E; font-style: italic;">Alternatively, you can copy and paste the following URL into your browser:</p>
@@ -362,8 +370,20 @@ router.post('/auth/request-otp', async (req, res) => {
     await user.save();
 
     console.log(`[MOCK OTP] Your OTP for ${identifier} is ${otp}`);
+    let sentToEmail = false;
+    let sentToMobile = false;
 
-    if (user.email) {
+    if (email && user.email) {
+      sentToEmail = true;
+    } else if (mobile && user.mobile) {
+      sentToMobile = true;
+    } else if (user.email) {
+      sentToEmail = true;
+    } else if (user.mobile) {
+      sentToMobile = true;
+    }
+
+    if (sentToEmail) {
       // Send Email Asynchronously in the Background to eliminate client-side buffering!
       const otpHtml = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid #EBA938; border-radius: 8px; padding: 25px; background-color: #FFF6E6;">
@@ -372,7 +392,7 @@ router.post('/auth/request-otp', async (req, res) => {
           <p>Dear <strong>${user.name}</strong>,</p>
           <p>You requested a login OTP for your Brahmani Jewellers account.</p>
           <div style="background-color: #FCF0DA; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px solid #EBA938;">
-            <h1 style="letter-spacing: 5px; color: #3D2B1F; margin: 0; font-size: 2.2em;">${otp}</h1>
+            <h1 style="letter-spacing: 5px; color: #3D2B1F; margin: 0; font-size: 2.2em; font-family: monospace;">${otp}</h1>
             <p style="color: #666; font-size: 0.9em; margin-top: 10px;">This code will expire in 10 minutes.</p>
           </div>
           <p style="font-size: 0.9em; color: #666;">If you didn't request this, please ignore this email or contact support.</p>
@@ -385,7 +405,7 @@ router.post('/auth/request-otp', async (req, res) => {
       // Mask the email for security (e.g. akshay@gmail.com becomes ak***@gmail.com)
       const maskedEmail = user.email.replace(/(.{2})(.*)(@.*)/, "$1***$3");
       res.json({ message: `OTP has been successfully sent to your registered email: ${maskedEmail}` });
-    } else {
+    } else if (sentToMobile) {
       // Send WhatsApp/SMS OTP Asynchronously in the Background to eliminate client-side buffering!
       if (process.env.FAST2SMS_API_KEY) {
         axios.get('https://www.fast2sms.com/dev/bulkV2', {
@@ -393,12 +413,12 @@ router.post('/auth/request-otp', async (req, res) => {
             authorization: process.env.FAST2SMS_API_KEY,
             variables_values: otp,
             route: 'otp',
-            numbers: mobile || user.mobile
+            numbers: user.mobile
           }
         }).then(() => {
-          console.log(`[Fast2SMS] Login OTP successfully sent to ${mobile || user.mobile}`);
+          console.log(`[Fast2SMS] Login OTP successfully sent to ${user.mobile}`);
         }).catch((smsErr) => {
-          console.error(`[Fast2SMS ERROR] Failed to send to ${mobile || user.mobile}:`, smsErr.message);
+          console.error(`[Fast2SMS ERROR] Failed to send to ${user.mobile}:`, smsErr.message);
         });
       } else if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_NUMBER) {
         try {
@@ -406,19 +426,21 @@ router.post('/auth/request-otp', async (req, res) => {
           twilioClient.messages.create({
             body: `Your Brahmani Jewellers Login OTP is: ${otp}`,
             from: process.env.TWILIO_WHATSAPP_NUMBER,
-            to: `+91${mobile || user.mobile}`
+            to: `+91${user.mobile}`
           }).then(() => {
-            console.log(`[SMS/WA] Login OTP successfully sent to ${mobile || user.mobile}`);
+            console.log(`[SMS/WA] Login OTP successfully sent to ${user.mobile}`);
           }).catch((smsErr) => {
-            console.error(`[SMS/WA ERROR] Failed to send to ${mobile || user.mobile}:`, smsErr);
+            console.error(`[SMS/WA ERROR] Failed to send to ${user.mobile}:`, smsErr);
           });
         } catch (smsErr) {
-          console.error(`[SMS/WA ERROR] Failed to send to ${mobile || user.mobile}:`, smsErr);
+          console.error(`[SMS/WA ERROR] Failed to send to ${user.mobile}:`, smsErr);
         }
       } else {
-        console.log(`[SMS/WA] Twilio credentials missing in .env. Skipping SMS.`);
+        console.log(`[SMS/WA] Twilio credentials not found in .env. Skipping SMS.`);
       }
-      res.json({ message: `OTP sent to your registered mobile number` });
+      
+      const maskedMobile = user.mobile.replace(/(.{2})(.*)(.{2})/, "$1******$3");
+      res.json({ message: `OTP has been successfully sent to your registered mobile number: ${maskedMobile}` });
     }
   } catch (err) {
     console.error(err);
@@ -773,6 +795,56 @@ router.post('/messages', async (req, res) => {
     }
     const newMessage = new Message({ name, email, message });
     await newMessage.save();
+
+    // Send luxurious golden email notification to the agent/admin
+    try {
+      const adminEmail = 'info.brahmanijewellers@gmail.com';
+      const notificationHtml = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid #EBA938; border-radius: 8px; padding: 25px; background-color: #FFF6E6;">
+          <div style="text-align: center; border-bottom: 1px solid #EBA938; padding-bottom: 15px; margin-bottom: 20px;">
+            <h1 style="color: #3D2B1F; margin: 0; font-family: 'Georgia', serif; font-size: 1.8em; letter-spacing: 1px;">Brahmani Jewellers</h1>
+            <p style="color: #EBA938; margin: 5px 0 0 0; text-transform: uppercase; font-size: 0.8em; letter-spacing: 2px;">New Customer Message</p>
+          </div>
+          
+          <p>Dear Admin,</p>
+          <p>A new customer has sent a direct message through the online contact form. Here are the details:</p>
+          
+          <div style="background-color: #FCF0DA; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid rgba(235, 169, 56, 0.3);">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 6px 0; font-weight: bold; width: 120px; color: #3D2B1F; vertical-align: top;">Name:</td>
+                <td style="padding: 6px 0; color: #5C4A3E;">${name}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; font-weight: bold; color: #3D2B1F; vertical-align: top;">Email:</td>
+                <td style="padding: 6px 0; color: #5C4A3E;"><a href="mailto:${email}" style="color: #EBA938; text-decoration: none;">${email}</a></td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; font-weight: bold; color: #3D2B1F; vertical-align: top;">Date:</td>
+                <td style="padding: 6px 0; color: #5C4A3E;">${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 0 6px 0; font-weight: bold; color: #3D2B1F; vertical-align: top;" colspan="2">Message:</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; background-color: #FFFDF9; border: 1px solid rgba(61, 43, 31, 0.1); border-radius: 4px; color: #5C4A3E; white-space: pre-wrap;" colspan="2">${message}</td>
+              </tr>
+            </table>
+          </div>
+          
+          <p style="font-size: 0.9em; color: #666; text-align: center; margin-top: 25px; border-top: 1px solid rgba(61, 43, 31, 0.1); padding-top: 15px;">
+            This inquiry was sent automatically from the Brahmani Jewellers web application contact portal.
+          </p>
+        </div>
+      `;
+      // Send email to admin asynchronously to avoid blocking client response
+      sendEmail(adminEmail, `New Customer Message from ${name}`, notificationHtml).catch(err => {
+        console.error('[MESSAGE EMAIL ERROR]:', err);
+      });
+    } catch (emailErr) {
+      console.error('[MESSAGE EMAIL SETUP ERROR]:', emailErr);
+    }
+
     res.status(201).json({ message: 'Message sent successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });

@@ -52,7 +52,14 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const rateRes = await api.get('/rates');
+      const [rateRes, galleryRes, usersRes, messagesRes, subscribersRes] = await Promise.all([
+        api.get('/rates'),
+        api.get('/gallery'),
+        api.get('/users', config),
+        api.get('/messages', config),
+        api.get('/subscribers', config)
+      ]);
+
       if (rateRes.data) setRates({ 
         isManual: rateRes.data.isManual ?? true,
         goldImpFine: rateRes.data.goldImpFine || '',
@@ -63,19 +70,12 @@ const AdminDashboard = () => {
         manualSilver90: rateRes.data.silver90 || ''
       });
       
-      const galleryRes = await api.get('/gallery');
-      setGallery(galleryRes.data);
-
-      const usersRes = await api.get('/users', config);
+      if (galleryRes.data) setGallery(galleryRes.data);
       if (usersRes.data) setUsers(usersRes.data);
-
-      const messagesRes = await api.get('/messages', config);
       if (messagesRes.data) setMessages(messagesRes.data);
-
-      const subscribersRes = await api.get('/subscribers', config);
       if (subscribersRes.data) setSubscribers(subscribersRes.data);
     } catch (err) {
-      console.error(err);
+      console.error("Error loading dashboard data", err);
     }
   };
 
