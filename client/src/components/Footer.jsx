@@ -13,19 +13,17 @@ const Footer = () => {
               {useImageLogo ? (
                 <img 
                   src="/logo.png" 
-                  alt="Brahmani Jewellers" 
+                  alt="Brahmani Jewellers Logo" 
                   onError={() => setUseImageLogo(false)} 
-                  className="h-10 w-auto object-contain transition-transform duration-300 hover:scale-105" 
+                  className="h-9 w-9 object-contain transition-transform duration-300 hover:scale-105" 
                 />
               ) : (
-                <>
-                  <Gem className="text-ochre" size={32} />
-                  <div className="flex flex-col">
-                    <span className="text-2xl font-serif font-bold tracking-widest text-coffee uppercase italic transition-colors duration-300">Brahmani</span>
-                    <span className="text-[10px] text-ochre/80 tracking-[0.3em] uppercase -mt-1">Jewellers</span>
-                  </div>
-                </>
+                <Gem className="text-ochre" size={32} />
               )}
+              <div className="flex flex-col">
+                <span className="text-2xl font-serif font-bold tracking-widest text-coffee uppercase italic transition-colors duration-300">Brahmani</span>
+                <span className="text-[10px] text-ochre/80 tracking-[0.3em] uppercase -mt-1">Jewellers</span>
+              </div>
             </Link>
             <p className="text-coffee/80 text-sm leading-relaxed mb-6 italic transition-colors duration-300">
               "Elegance that defines you" - Celebrating over 25 years of excellence in jewellery design and trust.
