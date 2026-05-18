@@ -353,27 +353,31 @@ router.post('/auth/request-otp', async (req, res) => {
 
     console.log(`[MOCK OTP] Your OTP for ${identifier} is ${otp}`);
 
-    if (email) {
+    if (user.email) {
       try {
         const otpHtml = `
-          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; padding: 20px;">
-            <h2 style="color: #d4af37; text-align: center;">Login Verification</h2>
-            <p>Hello,</p>
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid #EBA938; border-radius: 8px; padding: 25px; background-color: #FFF6E6;">
+            <h2 style="color: #3D2B1F; text-align: center; border-bottom: 1px solid #EBA938; padding-bottom: 10px;">Brahmani Jewellers</h2>
+            <h3 style="color: #3D2B1F; text-align: center;">Login Verification Code</h3>
+            <p>Dear <strong>${user.name}</strong>,</p>
             <p>You requested a login OTP for your Brahmani Jewellers account.</p>
-            <div style="background-color: #f9f9f9; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px solid #eee;">
-              <h1 style="letter-spacing: 5px; color: #333; margin: 0;">${otp}</h1>
-              <p style="color: #888; font-size: 0.8em; margin-top: 10px;">This code expires in 10 minutes.</p>
+            <div style="background-color: #FCF0DA; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px solid #EBA938;">
+              <h1 style="letter-spacing: 5px; color: #3D2B1F; margin: 0; font-size: 2.2em;">${otp}</h1>
+              <p style="color: #666; font-size: 0.9em; margin-top: 10px;">This code will expire in 10 minutes.</p>
             </div>
-            <p>If you didn't request this, please ignore this email.</p>
+            <p style="font-size: 0.9em; color: #666;">If you didn't request this, please ignore this email or contact support.</p>
           </div>
         `;
-        sendEmail(email, 'Your Login OTP - Brahmani Jewellers', otpHtml).catch(console.error);
+        await sendEmail(user.email, 'Your Login OTP - Brahmani Jewellers', otpHtml);
       } catch (err) {
-        // Log handled in helper
+        console.error(`[OTP EMAIL ERROR]:`, err);
       }
-      res.json({ message: `OTP sent to your email address` });
+      
+      // Mask the email for security (e.g. akshay@gmail.com becomes ak***@gmail.com)
+      const maskedEmail = user.email.replace(/(.{2})(.*)(@.*)/, "$1***$3");
+      res.json({ message: `OTP has been successfully sent to your registered email: ${maskedEmail}` });
     } else {
-      // Send WhatsApp/SMS OTP
+      // Send WhatsApp/SMS OTP if no email exists
       if (process.env.FAST2SMS_API_KEY) {
         try {
           await axios.get('https://www.fast2sms.com/dev/bulkV2', {
@@ -381,12 +385,12 @@ router.post('/auth/request-otp', async (req, res) => {
               authorization: process.env.FAST2SMS_API_KEY,
               variables_values: otp,
               route: 'otp',
-              numbers: mobile
+              numbers: mobile || user.mobile
             }
           });
-          console.log(`[Fast2SMS] Login OTP successfully sent to ${mobile}`);
+          console.log(`[Fast2SMS] Login OTP successfully sent to ${mobile || user.mobile}`);
         } catch (smsErr) {
-          console.error(`[Fast2SMS ERROR] Failed to send to ${mobile}:`, smsErr.message);
+          console.error(`[Fast2SMS ERROR] Failed to send to ${mobile || user.mobile}:`, smsErr.message);
         }
       } else if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_NUMBER) {
         try {
@@ -394,19 +398,19 @@ router.post('/auth/request-otp', async (req, res) => {
           twilioClient.messages.create({
             body: `Your Brahmani Jewellers Login OTP is: ${otp}`,
             from: process.env.TWILIO_WHATSAPP_NUMBER,
-            to: `+91${mobile}` // Assuming Indian numbers, adjust as needed
+            to: `+91${mobile || user.mobile}`
           }).then(() => {
-            console.log(`[SMS/WA] Login OTP successfully sent to ${mobile}`);
+            console.log(`[SMS/WA] Login OTP successfully sent to ${mobile || user.mobile}`);
           }).catch((smsErr) => {
-            console.error(`[SMS/WA ERROR] Failed to send to ${mobile}:`, smsErr);
+            console.error(`[SMS/WA ERROR] Failed to send to ${mobile || user.mobile}:`, smsErr);
           });
         } catch (smsErr) {
-          console.error(`[SMS/WA ERROR] Failed to send to ${mobile}:`, smsErr);
+          console.error(`[SMS/WA ERROR] Failed to send to ${mobile || user.mobile}:`, smsErr);
         }
       } else {
         console.log(`[SMS/WA] Twilio credentials missing in .env. Skipping SMS.`);
       }
-      res.json({ message: `OTP sent to your mobile number` });
+      res.json({ message: `OTP sent to your registered mobile number` });
     }
   } catch (err) {
     console.error(err);
