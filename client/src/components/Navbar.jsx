@@ -65,7 +65,7 @@ const Navbar = () => {
                   src="/logo.png" 
                   alt="Brahmani Jewellers Logo" 
                   onError={() => setUseImageLogo(false)} 
-                  className="h-9 w-9 object-contain transition-transform duration-300 hover:scale-105" 
+                  className="h-12 w-12 object-contain transition-transform duration-300 hover:scale-105" 
                 />
               ) : (
                 <Gem className="text-ochre group-hover:rotate-12 transition-transform duration-500" size={32} />
