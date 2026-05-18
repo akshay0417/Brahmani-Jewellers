@@ -1,0 +1,8 @@
+Brahmani Jewellers Logo Instructions:
+
+1. Copy your logo file (e.g. your customized logo).
+2. Save it in this exact folder:
+   c:\Users\aksha\OneDrive\Desktop\trial\brahmani-jewellers\client\public\
+3. Name the file "logo.png" (all lowercase).
+
+Once you place your logo.png in this folder, the website's Navbar, Footer, and other pages will automatically load and display your logo!

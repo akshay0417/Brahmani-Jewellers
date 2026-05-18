@@ -18,6 +18,7 @@ const Navbar = () => {
 
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [status, setStatus] = useState({ type: '', text: '' });
+  const [useImageLogo, setUseImageLogo] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -59,15 +60,26 @@ const Navbar = () => {
             
             {/* Left Section: Brand */}
             <Link to="/" className="flex items-center gap-3 group">
-              <Gem className="text-ochre group-hover:rotate-12 transition-transform duration-500" size={32} />
-              <div className="flex flex-col">
-                <span className="text-xl md:text-2xl font-serif font-bold tracking-[0.1em] text-coffee uppercase leading-none">
-                  Brahmani
-                </span>
-                <span className="text-[9px] md:text-xs font-serif font-light text-ochre tracking-[0.3em] uppercase leading-none mt-1">
-                  Jewellers
-                </span>
-              </div>
+              {useImageLogo ? (
+                <img 
+                  src="/logo.png" 
+                  alt="Brahmani Jewellers" 
+                  onError={() => setUseImageLogo(false)} 
+                  className="h-10 md:h-12 w-auto object-contain transition-transform duration-300 hover:scale-105" 
+                />
+              ) : (
+                <>
+                  <Gem className="text-ochre group-hover:rotate-12 transition-transform duration-500" size={32} />
+                  <div className="flex flex-col">
+                    <span className="text-xl md:text-2xl font-serif font-bold tracking-[0.1em] text-coffee uppercase leading-none">
+                      Brahmani
+                    </span>
+                    <span className="text-[9px] md:text-xs font-serif font-light text-ochre tracking-[0.3em] uppercase leading-none mt-1">
+                      Jewellers
+                    </span>
+                  </div>
+                </>
+              )}
             </Link>
 
             {/* Right Section: Navigation & Actions */}

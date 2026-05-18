@@ -6,6 +6,7 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const nodemailer = require('nodemailer');
 const twilio = require('twilio');
+const axios = require('axios');
 const auth = require('../middleware/auth');
 const isAdmin = require('../middleware/isAdmin');
 
@@ -98,31 +99,52 @@ router.post('/auth/register', async (req, res) => {
 
     const newUser = new User({ name, email: email ? email.toLowerCase() : undefined, mobile, password: hashedPassword, country, state, city });
     
+    // Generate OTP for mobile/fallback verification
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     newUser.otp = otp;
     newUser.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+    // Generate secure crypto verification token for email link
+    const crypto = require('crypto');
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    newUser.verificationToken = verificationToken;
+    newUser.verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     await newUser.save();
 
     console.log(`[MOCK OTP] Your OTP for ${mobile} / ${email} is ${otp}`);
 
     if (email) {
       try {
+        const backendUrl = `${req.protocol}://${req.get('host')}`;
+        const verifyUrl = `${backendUrl}/api/auth/verify-email?token=${verificationToken}`;
+        
         const welcomeHtml = `
-          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; padding: 20px;">
-            <div style="text-align: center; border-bottom: 2px solid #f4f4f4; padding-bottom: 10px; margin-bottom: 20px;">
-              <h2 style="color: #d4af37; margin: 0;">Welcome to Brahmani Jewellers!</h2>
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 40px 30px; background-color: #FFFDF9; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <div style="text-align: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 20px; margin-bottom: 30px;">
+              <h1 style="color: #3D2B1F; font-size: 28px; font-weight: 700; letter-spacing: 2px; margin: 0; text-transform: uppercase;">Brahmani Jewellers</h1>
+              <p style="color: #d4af37; font-size: 12px; letter-spacing: 4px; margin: 5px 0 0 0; text-transform: uppercase;">Purity & Trust Since 1992</p>
             </div>
-            <p>Dear <strong>${name}</strong>,</p>
-            <p>Your account has been successfully created. We are thrilled to have you with us!</p>
-            <p>To finalize your registration, please use the following One-Time Password (OTP):</p>
-            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: center; border: 1px dashed #ccc;">
-              <h1 style="letter-spacing: 4px; color: #d4af37; margin: 10px 0;">${otp}</h1>
-              <p style="font-size: 0.85em; color: #777; margin-bottom: 0;">This OTP is valid for 10 minutes.</p>
+            
+            <p style="font-size: 16px; margin-bottom: 10px;">Dear <strong>${name}</strong>,</p>
+            <p style="font-size: 15px; color: #5C4A3E; margin-bottom: 25px;">Thank you for registering an account with Brahmani Jewellers. To complete your registration and secure your profile, please verify your email address by clicking the button below.</p>
+            
+            <div style="text-align: center; margin: 35px 0;">
+              <a href="${verifyUrl}" style="background-color: #3D2B1F; color: #FFFDF9; border: 1px solid #d4af37; padding: 14px 35px; text-decoration: none; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; border-radius: 4px; display: inline-block; box-shadow: 0 4px 10px rgba(61, 43, 31, 0.15);">Verify Email Address</a>
             </div>
-            <p style="font-size: 0.9em;">If you did not initiate this registration, please safely ignore this email.</p>
-            <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; font-size: 0.9em; color: #555;">
-              <p style="margin: 0;">Best Regards,</p>
-              <p style="margin: 5px 0 0 0;"><strong>Brahmani Jewellers Team</strong></p>
+            
+            <p style="font-size: 13px; color: #7A695D; text-align: center; margin-top: 10px; margin-bottom: 25px;">This verification link is valid for 24 hours.</p>
+            
+            <div style="background-color: #FDF9F3; border-left: 3px solid #d4af37; padding: 15px; margin-bottom: 30px; border-radius: 0 8px 8px 0;">
+              <p style="margin: 0; font-size: 13px; color: #5C4A3E; font-style: italic;">Alternatively, you can copy and paste the following URL into your browser:</p>
+              <p style="margin: 5px 0 0 0; font-size: 12px; color: #d4af37; word-break: break-all;"><a href="${verifyUrl}" style="color: #d4af37; text-decoration: underline;">${verifyUrl}</a></p>
+            </div>
+            
+            <p style="font-size: 14px; color: #5C4A3E; margin-bottom: 0;">If you did not create this account, please safely disregard this message.</p>
+            
+            <div style="margin-top: 40px; border-top: 1px solid rgba(212, 175, 55, 0.2); padding-top: 25px; font-size: 13px; color: #7A695D; text-align: center;">
+              <p style="margin: 0; font-weight: bold; color: #3D2B1F;">Brahmani Jewellers Team</p>
+              <p style="margin: 5px 0 0 0;">For inquiries: <a href="mailto:info.brahmanijewellers@gmail.com" style="color: #d4af37; text-decoration: none;">info.brahmanijewellers@gmail.com</a></p>
             </div>
           </div>
         `;
@@ -133,7 +155,21 @@ router.post('/auth/register', async (req, res) => {
     }
     
     if (mobile) {
-      if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_NUMBER) {
+      if (process.env.FAST2SMS_API_KEY) {
+        try {
+          await axios.get('https://www.fast2sms.com/dev/bulkV2', {
+            params: {
+              authorization: process.env.FAST2SMS_API_KEY,
+              variables_values: otp,
+              route: 'otp',
+              numbers: mobile
+            }
+          });
+          console.log(`[Fast2SMS] OTP successfully sent to ${mobile}`);
+        } catch (smsErr) {
+          console.error(`[Fast2SMS ERROR] Failed to send to ${mobile}:`, smsErr.message);
+        }
+      } else if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_NUMBER) {
         try {
           const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
           twilioClient.messages.create({
@@ -153,11 +189,85 @@ router.post('/auth/register', async (req, res) => {
       }
     }
 
-    res.status(201).json({ message: `User registered successfully.`, identifier: mobile || email });
+    res.status(201).json({ message: `User registered successfully. A verification email has been sent.`, identifier: mobile || email });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
+
+// Verify Email Link
+router.get('/auth/verify-email', async (req, res) => {
+  const { token } = req.query;
+  try {
+    let clientUrl = process.env.FRONTEND_URL || 'https://brahmani-jewellers.vercel.app';
+    const host = req.get('host') || '';
+    if (host.includes('localhost') || host.includes('127.0.0.1') || host.includes('192.168')) {
+      clientUrl = 'http://localhost:5173';
+    }
+
+    if (!token) {
+      return res.status(400).send(`
+        <div style="font-family: Arial, sans-serif; text-align: center; margin-top: 100px; padding: 20px;">
+          <h2 style="color: #d9534f;">Verification Failed</h2>
+          <p>Verification token is missing.</p>
+          <a href="${clientUrl}/login" style="background-color: #3D2B1F; color: #EBA938; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">Go to Login</a>
+        </div>
+      `);
+    }
+
+    const user = await User.findOne({
+      verificationToken: token,
+      verificationTokenExpiry: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.redirect(`${clientUrl}/login?verified=false&message=Invalid or expired verification link.`);
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpiry = undefined;
+    
+    // Clear OTP details since user is now successfully verified
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+
+    await user.save();
+
+    // Send Welcome Email if it's the first time
+    if (!user.lastLogin && user.email) {
+      try {
+        const welcomeHtml = `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid #EBA938; padding: 30px; background-color: #FFF6E6;">
+            <h2 style="color: #3D2B1F; text-align: center; border-bottom: 1px solid #EBA938; padding-bottom: 10px;">Welcome to Brahmani Jewellers</h2>
+            <p>Dear <strong>${user.name}</strong>,</p>
+            <p>Your account has been successfully created and verified at <strong>Brahmani Jewellers</strong>.</p>
+            <p>You can now explore our exclusive collection of gold and silver jewelry and shop directly from our platform.</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${clientUrl}/login" style="background-color: #3D2B1F; color: #EBA938; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Login to Your Account</a>
+            </div>
+            <p style="font-size: 0.9em; color: #666;">If you have any questions, feel free to contact us via WhatsApp or Phone.</p>
+          </div>
+        `;
+        sendEmail(user.email, 'Account Created Successfully - Brahmani Jewellers', welcomeHtml).catch(console.error);
+      } catch (err) {
+        // Handled
+      }
+    }
+
+    // Redirect to login page with success message
+    return res.redirect(`${clientUrl}/login?verified=true&message=Your account has been verified successfully! Please log in.`);
+  } catch (err) {
+    console.error('[VERIFY EMAIL ERROR]:', err);
+    res.status(500).send(`
+      <div style="font-family: Arial, sans-serif; text-align: center; margin-top: 100px; padding: 20px;">
+        <h2 style="color: #d9534f;">Server Error</h2>
+        <p>An error occurred while verifying your email. Please try again later.</p>
+      </div>
+    `);
+  }
+});
+
 
 // User Login (Password)
 router.post('/auth/login', async (req, res) => {
@@ -183,7 +293,7 @@ router.post('/auth/login', async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     if (!user.isVerified) {
-      return res.status(403).json({ message: 'Please verify your account with OTP first.', unverified: true });
+      return res.status(403).json({ message: 'Your account is not verified yet. Please click the verification link sent to your email or verify via OTP.', unverified: true });
     }
 
     user.lastLogin = new Date();
@@ -264,7 +374,21 @@ router.post('/auth/request-otp', async (req, res) => {
       res.json({ message: `OTP sent to your email address` });
     } else {
       // Send WhatsApp/SMS OTP
-      if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_NUMBER) {
+      if (process.env.FAST2SMS_API_KEY) {
+        try {
+          await axios.get('https://www.fast2sms.com/dev/bulkV2', {
+            params: {
+              authorization: process.env.FAST2SMS_API_KEY,
+              variables_values: otp,
+              route: 'otp',
+              numbers: mobile
+            }
+          });
+          console.log(`[Fast2SMS] Login OTP successfully sent to ${mobile}`);
+        } catch (smsErr) {
+          console.error(`[Fast2SMS ERROR] Failed to send to ${mobile}:`, smsErr.message);
+        }
+      } else if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_NUMBER) {
         try {
           const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
           twilioClient.messages.create({

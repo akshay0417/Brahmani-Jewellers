@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, SafeAreaView, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, ScrollView, Image } from 'react-native';
 
 export default function AboutScreen() {
   return (
@@ -8,7 +8,13 @@ export default function AboutScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.card}>
-          <Text style={styles.logoText}>Brahmani <Text style={{color: '#EBA938'}}>JEWELLERS</Text></Text>
+          <View style={{ alignItems: 'center', marginBottom: 16 }}>
+            <Image 
+              source={require('../../assets/images/logo.png')} 
+              style={{ width: 100, height: 100, resizeMode: 'contain', marginBottom: 12 }} 
+            />
+            <Text style={styles.logoText}>Brahmani <Text style={{color: '#EBA938'}}>JEWELLERS</Text></Text>
+          </View>
           <Text style={styles.desc}>
             Welcome to Brahmani Jewellers, your trusted destination for exquisite jewellery. 
             We specialize in crafting timeless pieces that celebrate life's most precious moments.

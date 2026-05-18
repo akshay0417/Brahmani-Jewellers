@@ -50,10 +50,10 @@ const Register = () => {
     try {
       const { confirmPassword, ...registerData } = formData;
       const res = await api.post('/auth/register', registerData);
-      setSuccess('Registration successful! Redirecting to verification...');
+      setSuccess('Registration successful! Please check your email for the verification link.');
       setTimeout(() => {
-        navigate('/login', { state: { identifier: res.data.identifier || formData.mobile, step: 2, successMsg: res.data.message } });
-      }, 2000);
+        navigate('/login', { state: { identifier: res.data.identifier || formData.email || formData.mobile, step: 1, successMsg: res.data.message } });
+      }, 3000);
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {

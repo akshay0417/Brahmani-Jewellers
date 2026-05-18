@@ -1,19 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Gem, Instagram, Facebook, Twitter, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
+  const [useImageLogo, setUseImageLogo] = useState(true);
   return (
     <footer className="bg-cream border-t border-ochre/10 pt-20 pb-10 px-4 transition-colors duration-300">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-6">
-              <Gem className="text-ochre" size={32} />
-              <div className="flex flex-col">
-                <span className="text-2xl font-serif font-bold tracking-widest text-coffee uppercase italic transition-colors duration-300">Brahmani</span>
-                <span className="text-[10px] text-ochre/80 tracking-[0.3em] uppercase -mt-1">Jewellers</span>
-              </div>
+              {useImageLogo ? (
+                <img 
+                  src="/logo.png" 
+                  alt="Brahmani Jewellers" 
+                  onError={() => setUseImageLogo(false)} 
+                  className="h-10 w-auto object-contain transition-transform duration-300 hover:scale-105" 
+                />
+              ) : (
+                <>
+                  <Gem className="text-ochre" size={32} />
+                  <div className="flex flex-col">
+                    <span className="text-2xl font-serif font-bold tracking-widest text-coffee uppercase italic transition-colors duration-300">Brahmani</span>
+                    <span className="text-[10px] text-ochre/80 tracking-[0.3em] uppercase -mt-1">Jewellers</span>
+                  </div>
+                </>
+              )}
             </Link>
             <p className="text-coffee/80 text-sm leading-relaxed mb-6 italic transition-colors duration-300">
               "Elegance that defines you" - Celebrating over 25 years of excellence in jewellery design and trust.

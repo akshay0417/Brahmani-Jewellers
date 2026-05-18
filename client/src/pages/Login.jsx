@@ -25,6 +25,20 @@ const Login = () => {
     }
   }, [location.state]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const verified = params.get('verified');
+    const msg = params.get('message');
+    if (verified === 'true') {
+      setSuccessMsg(msg || 'Your account has been successfully verified! You can now log in.');
+      setLoginMethod('password');
+    } else if (verified === 'false' && msg) {
+      setError(msg);
+    } else if (msg) {
+      setSuccessMsg(msg);
+    }
+  }, [location.search]);
+
   const handlePasswordLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
