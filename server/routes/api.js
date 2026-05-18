@@ -12,7 +12,7 @@ const isAdmin = require('../middleware/isAdmin');
 
 // API Health Check
 router.get('/', (req, res) => {
-  res.json({ message: 'Brahmani Jewellers API is running successfully! ✅', status: 'online' });
+  res.json({ message: 'Brahmani Jewellers API is running successfully! ✅', status: 'online', version: '1.2.0-newsletter-live' });
 });
 
 // Models

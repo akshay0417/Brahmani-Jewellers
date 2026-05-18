@@ -21,7 +21,7 @@ app.use(express.json());
 
 // Routes
 app.get('/', (req, res) => {
-  res.send('<h1>Brahmani Jewellers Backend API is running successfully! ✅</h1>');
+  res.send('<h1>Brahmani Jewellers Backend API is running successfully! ✅ (Version: 1.2.0-newsletter-live)</h1>');
 });
 
 app.use('/api', apiRoutes);
