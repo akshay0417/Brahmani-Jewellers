@@ -947,6 +947,57 @@ router.delete('/subscribers/:id', auth, isAdmin, async (req, res) => {
   }
 });
 
+// Send a broadcast email to all newsletter subscribers (Admin only)
+router.post('/subscribers/broadcast', auth, isAdmin, async (req, res) => {
+  const { subject, message } = req.body;
+  
+  if (!subject || !message) {
+    return res.status(400).json({ message: 'Subject and message are required.' });
+  }
+
+  try {
+    const subscribers = await Subscriber.find();
+    if (subscribers.length === 0) {
+      return res.status(404).json({ message: 'No subscribers found to send email to.' });
+    }
+
+    // Send emails in parallel to keep it fast
+    const emailPromises = subscribers.map(s => {
+      const broadcastHtml = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 40px 30px; background-color: #FFFDF9; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+          <div style="text-align: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 20px; margin-bottom: 30px;">
+            <h1 style="color: #3D2B1F; font-size: 28px; font-weight: 700; letter-spacing: 2px; margin: 0; text-transform: uppercase;">Brahmani Jewellers</h1>
+            <p style="color: #d4af37; font-size: 12px; letter-spacing: 4px; margin: 5px 0 0 0; text-transform: uppercase;">Purity & Trust Since 1992</p>
+          </div>
+          
+          <h2 style="color: #3D2B1F; font-size: 18px; margin-bottom: 20px; border-left: 3px solid #d4af37; padding-left: 10px;">${subject}</h2>
+          
+          <div style="font-size: 15px; color: #5C4A3E; margin-bottom: 30px; white-space: pre-wrap;">${message}</div>
+          
+          <div style="background-color: #FDF9F3; border-top: 1px solid rgba(212, 175, 55, 0.2); padding: 20px; margin-top: 30px; text-align: center; border-radius: 8px;">
+            <p style="margin: 0; font-size: 13px; color: #7A695D;">You received this email because you subscribed to updates from Brahmani Jewellers.</p>
+            <p style="margin: 5px 0 0 0; font-size: 12px; color: #d4af37;">Visit our website: <a href="https://brahmanijewellers.vercel.app" style="color: #d4af37; text-decoration: underline;">brahmanijewellers.vercel.app</a></p>
+          </div>
+          
+          <div style="margin-top: 30px; text-align: center; font-size: 13px; color: #7A695D;">
+            <p style="margin: 0; font-weight: bold; color: #3D2B1F;">Brahmani Jewellers Team</p>
+            <p style="margin: 5px 0 0 0;">Inquiries: <a href="mailto:info.brahmanijewellers@gmail.com" style="color: #d4af37; text-decoration: none;">info.brahmanijewellers@gmail.com</a></p>
+          </div>
+        </div>
+      `;
+      return sendEmail(s.email, subject, broadcastHtml).catch(err => {
+        console.error(`[BROADCAST ERROR] Failed to send to ${s.email}:`, err);
+      });
+    });
+
+    await Promise.all(emailPromises);
+
+    res.json({ message: `Successfully sent broadcast email to ${subscribers.length} subscribers!` });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // --- CART ROUTES ---
 
 // Get User Cart

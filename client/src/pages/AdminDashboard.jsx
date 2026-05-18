@@ -24,6 +24,9 @@ const AdminDashboard = () => {
   const [status, setStatus] = useState({ type: '', message: '' });
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '' });
   const [editingItem, setEditingItem] = useState(null);
+  const [broadcastSubject, setBroadcastSubject] = useState('');
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [broadcasting, setBroadcasting] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
@@ -185,6 +188,32 @@ const AdminDashboard = () => {
       setStatus({ type: 'success', message: 'Subscriber removed successfully' });
     } catch (err) {
       setStatus({ type: 'error', message: err.response?.data?.message || 'Error deleting subscriber' });
+    }
+  };
+
+  const handleBroadcastSubmit = async (e) => {
+    e.preventDefault();
+    if (!broadcastSubject || !broadcastMessage) {
+      alert("Please fill in both subject and message.");
+      return;
+    }
+    if (!window.confirm(`Are you sure you want to send this broadcast email to all ${subscribers.length} subscribers?`)) return;
+    
+    setBroadcasting(true);
+    setStatus({ type: 'success', message: 'Sending mass emails in the background... Please wait.' });
+    try {
+      const res = await api.post('/subscribers/broadcast', {
+        subject: broadcastSubject,
+        message: broadcastMessage
+      }, config);
+      setStatus({ type: 'success', message: res.data.message || 'Broadcast email sent successfully!' });
+      setBroadcastSubject('');
+      setBroadcastMessage('');
+    } catch (err) {
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Failed to send broadcast email.' });
+    } finally {
+      setBroadcasting(false);
+      setTimeout(() => setStatus({ type: '', message: '' }), 5000);
     }
   };
 
@@ -643,39 +672,84 @@ const AdminDashboard = () => {
             </div>
           </div>
           
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-ochre/20 text-coffee/70 text-sm uppercase tracking-wider">
-                  <th className="py-4 px-4">Email Address</th>
-                  <th className="py-4 px-4">Subscribed Date</th>
-                  <th className="py-4 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {subscribers.length === 0 ? (
-                  <tr>
-                    <td colSpan="3" className="text-center py-8 text-coffee/50">No subscribers found.</td>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left side: Subscribers list */}
+            <div className="lg:col-span-7 overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-ochre/20 text-coffee/70 text-sm uppercase tracking-wider">
+                    <th className="py-4 px-4">Email Address</th>
+                    <th className="py-4 px-4">Subscribed Date</th>
+                    <th className="py-4 px-4 text-right">Actions</th>
                   </tr>
-                ) : (
-                  subscribers.map((s) => (
-                    <tr key={s._id} className="border-b border-ochre/10 hover:bg-ochre/5 transition-colors">
-                      <td className="py-4 px-4 font-medium text-coffee">
-                        <a href={`mailto:${s.email}`} className="hover:text-ochre transition-colors">{s.email}</a>
-                      </td>
-                      <td className="py-4 px-4 text-sm text-coffee/60">
-                        {new Date(s.createdAt).toLocaleString()}
-                      </td>
-                      <td className="py-4 px-4 text-right">
-                        <button onClick={() => handleDeleteSubscriber(s._id)} className="text-red-500/70 hover:text-red-600 transition-colors" title="Delete Subscriber">
-                          <Trash2 size={18} />
-                        </button>
-                      </td>
+                </thead>
+                <tbody>
+                  {subscribers.length === 0 ? (
+                    <tr>
+                      <td colSpan="3" className="text-center py-8 text-coffee/50">No subscribers found.</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    subscribers.map((s) => (
+                      <tr key={s._id} className="border-b border-ochre/10 hover:bg-ochre/5 transition-colors">
+                        <td className="py-4 px-4 font-medium text-coffee">
+                          <a href={`mailto:${s.email}`} className="hover:text-ochre transition-colors">{s.email}</a>
+                        </td>
+                        <td className="py-4 px-4 text-sm text-coffee/60">
+                          {new Date(s.createdAt).toLocaleString()}
+                        </td>
+                        <td className="py-4 px-4 text-right">
+                          <button onClick={() => handleDeleteSubscriber(s._id)} className="text-red-500/70 hover:text-red-600 transition-colors" title="Delete Subscriber">
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Right side: Broadcast Email Campaign Form */}
+            <div className="lg:col-span-5 bg-cream border border-ochre/20 p-6 rounded-lg shadow-inner">
+              <h3 className="text-lg font-serif font-bold text-coffee uppercase tracking-widest mb-4 border-b border-ochre/10 pb-2">
+                📢 Broadcast Campaign
+              </h3>
+              <p className="text-xs text-coffee/60 mb-6 uppercase tracking-wider">
+                Send a premium branded promotion or update directly to all active subscribers.
+              </p>
+              
+              <form onSubmit={handleBroadcastSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest font-bold">Email Subject (વિષય)</label>
+                  <input
+                    type="text"
+                    value={broadcastSubject}
+                    onChange={(e) => setBroadcastSubject(e.target.value)}
+                    required
+                    className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                    placeholder="e.g. Exclusive Diwali Gold Offers! ✨"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest font-bold">Message Content (લખાણ)</label>
+                  <textarea
+                    value={broadcastMessage}
+                    onChange={(e) => setBroadcastMessage(e.target.value)}
+                    required
+                    rows="6"
+                    className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre resize-none transition-colors"
+                    placeholder="Dear Customer, we are pleased to announce..."
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={broadcasting || subscribers.length === 0}
+                  className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 rounded-sm transition-all disabled:opacity-50"
+                >
+                  {broadcasting ? 'Sending Campaign...' : 'Send Broadcast Email 🚀'}
+                </button>
+              </form>
+            </div>
           </div>
         </section>
 
