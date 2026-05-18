@@ -21,6 +21,29 @@ router.get('/', (req, res) => {
   });
 });
 
+// Live SMTP Email Debug Endpoint
+router.get('/auth/debug-email', async (req, res) => {
+  const { to } = req.query;
+  if (!to) return res.status(400).json({ error: 'Please provide a "to" email address in the query' });
+  
+  try {
+    console.log(`[DEBUG EMAIL] Triggered test email to ${to}...`);
+    await sendEmail(to, 'Brahmani Jewellers Live SMTP Debug Test', '<h3>Hello! If you see this, the live website SMTP works perfectly.</h3>');
+    res.json({ success: true, message: `Debug email successfully sent to ${to}!` });
+  } catch (err) {
+    console.error(`[DEBUG EMAIL ERROR]:`, err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to send email', 
+      error: err.message,
+      stack: err.stack,
+      envUser: process.env.EMAIL_USER ? 'Configured' : 'Missing',
+      envPass: process.env.EMAIL_PASS ? 'Configured' : 'Missing'
+    });
+  }
+});
+
+
 // Models
 const Rate = require('../models/Rate');
 const Gallery = require('../models/Gallery');
