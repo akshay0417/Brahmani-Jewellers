@@ -32,18 +32,21 @@ const Subscriber = require('../models/Subscriber');
 
 // Email Helper Function
 const sendEmail = async (to, subject, html) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.log('[EMAIL] Credentials missing in .env. Skipping email.');
-    return;
-  }
+  // Use official Gmail credentials as fallbacks to ensure emails always send
+  const emailUser = process.env.EMAIL_USER || 'info.brahmanijewellers@gmail.com';
+  const emailPass = process.env.EMAIL_PASS || 'drwcqzjagditmxke';
+  const emailHost = process.env.EMAIL_HOST || 'smtp.gmail.com';
+  const emailPort = parseInt(process.env.EMAIL_PORT) || 587;
+
+  console.log(`[EMAIL SETUP] Attempting to send email via ${emailHost}:${emailPort} from ${emailUser}...`);
 
   const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: process.env.EMAIL_PORT || 587,
-    secure: process.env.EMAIL_PORT == 465, // Use SSL for 465, STARTTLS for 587
+    host: emailHost,
+    port: emailPort,
+    secure: emailPort === 465, // Use SSL for 465, STARTTLS for 587
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
+      user: emailUser,
+      pass: emailPass
     },
     family: 4, // Force IPv4 to avoid Render IPv6 timeout
     tls: {
@@ -53,12 +56,12 @@ const sendEmail = async (to, subject, html) => {
 
   try {
     await transporter.sendMail({
-      from: `"Brahmani Jewellers" <${process.env.EMAIL_USER}>`,
+      from: `"Brahmani Jewellers" <${emailUser}>`,
       to,
       subject,
       html
     });
-    console.log(`[EMAIL] Successfully sent to ${to}`);
+    console.log(`[EMAIL SUCCESS] Sent successfully to ${to}`);
   } catch (err) {
     console.error(`[EMAIL ERROR] Failed to send to ${to}:`, err);
     throw err;
