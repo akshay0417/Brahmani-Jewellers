@@ -74,12 +74,20 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="text-ochre font-serif text-lg mb-6 uppercase tracking-widest">Collections</h4>
-            <ul className="space-y-3 text-sm text-coffee/80 transition-colors duration-300">
-              <li><Link to="/gallery" className="hover:text-ochre transition-colors">Authentic Gold</Link></li>
-              <li><Link to="/gallery" className="hover:text-ochre transition-colors">Designer Silver</Link></li>
-              <li><Link to="/gallery" className="hover:text-ochre transition-colors">Bridal Collection</Link></li>
-              <li><Link to="/gallery" className="hover:text-ochre transition-colors">Daily Wear</Link></li>
+            <h4 className="text-ochre font-serif text-lg mb-6 uppercase tracking-widest">Contact Details</h4>
+            <ul className="space-y-4 text-sm text-coffee/80 transition-colors duration-300">
+              <li>
+                <span className="text-[9px] text-coffee/50 uppercase tracking-widest block font-bold">Main Store</span>
+                <a href="tel:+919925811771" className="hover:text-ochre font-semibold transition-colors block mt-0.5">+91 9925811771</a>
+              </li>
+              <li>
+                <span className="text-[9px] text-coffee/50 uppercase tracking-widest block font-bold">Support Line 1</span>
+                <a href="tel:+917621967577" className="hover:text-ochre font-semibold transition-colors block mt-0.5">+91 7621967577</a>
+              </li>
+              <li>
+                <span className="text-[9px] text-coffee/50 uppercase tracking-widest block font-bold">Support Line 2</span>
+                <a href="tel:+918128560408" className="hover:text-ochre font-semibold transition-colors block mt-0.5">+91 8128560408</a>
+              </li>
             </ul>
           </div>
 

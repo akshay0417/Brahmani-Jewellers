@@ -58,7 +58,7 @@ const Navbar = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center relative min-h-[50px] md:min-h-0">
             
-            {/* Left Section: Brand Logo & Sliding Navigation Links */}
+            {/* Left Section: Brand Logo (aligned to left) */}
             <div className="flex-1 flex justify-start items-center">
               <Link to="/" className={`flex items-center group transition-all duration-500 ${scrolled ? 'gap-0' : 'gap-2 sm:gap-3'}`}>
                 {useImageLogo ? (
@@ -84,12 +84,15 @@ const Navbar = () => {
                   </span>
                 </div>
               </Link>
+            </div>
 
+            {/* Right Section: Actions & Sliding Navigation Links (aligned to right) */}
+            <div className="flex-1 flex justify-end items-center gap-4 sm:gap-6">
               {/* Dynamic Sliding Desktop Navigation Links */}
               <div className={`hidden md:flex items-center gap-8 transition-all duration-700 ease-in-out ${
                 scrolled 
-                  ? 'absolute left-1/2 -translate-x-1/2 ml-0 pl-0 border-l-0 border-transparent' 
-                  : 'relative left-0 translate-x-0 ml-8 pl-8 border-l border-ochre/25'
+                  ? 'absolute left-1/2 -translate-x-1/2 mr-0 pr-0 border-r-0 border-transparent' 
+                  : 'relative right-0 translate-x-0 mr-8 pr-8 border-r border-ochre/25'
               }`}>
                 {navLinks.map((link) => (
                   <Link
@@ -114,10 +117,7 @@ const Navbar = () => {
                   Contact
                 </button>
               </div>
-            </div>
 
-            {/* Right Section: Actions (Cart & Auth, aligned to right) */}
-            <div className="flex-1 flex justify-end items-center gap-4 sm:gap-6">
               {/* Desktop Actions */}
               <div className="hidden md:flex items-center gap-6">
                 <button onClick={() => setIsCartOpen(true)} className="relative p-2 text-coffee hover:text-ochre transition-colors">
