@@ -1,9 +1,31 @@
 import React, { useState } from 'react';
 import { Gem, Instagram, Facebook, Twitter, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import api from '../api';
 
 const Footer = () => {
   const [useImageLogo, setUseImageLogo] = useState(true);
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState({ type: '', message: '' });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!email) return;
+    setLoading(true);
+    setStatus({ type: '', message: '' });
+    try {
+      const res = await api.post('/newsletter/subscribe', { email });
+      setStatus({ type: 'success', message: res.data.message });
+      setEmail('');
+      setTimeout(() => setStatus({ type: '', message: '' }), 5000);
+    } catch (err) {
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Subscription failed.' });
+      setTimeout(() => setStatus({ type: '', message: '' }), 5000);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <footer className="bg-cream border-t border-ochre/10 pt-20 pb-10 px-4 transition-colors duration-300">
       <div className="max-w-7xl mx-auto">
@@ -64,16 +86,25 @@ const Footer = () => {
           <div>
             <h4 className="text-ochre font-serif text-lg mb-6 uppercase tracking-widest">Subscribe</h4>
             <p className="text-xs text-coffee/60 mb-4 uppercase tracking-widest italic transition-colors duration-300">Join our VIP list for exclusive previews</p>
-            <div className="flex bg-cream-alt border border-ochre/20 p-1 rounded-sm transition-colors duration-300">
+            <form onSubmit={handleSubscribe} className="flex bg-cream-alt border border-ochre/20 p-1 rounded-sm transition-colors duration-300">
               <input 
                 type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="EMAIL ADDRESS" 
+                required
+                disabled={loading}
                 className="bg-transparent border-none focus:outline-none text-coffee text-xs w-full px-2 placeholder:text-coffee/40"
               />
-              <button className="bg-ochre text-cream p-2 rounded-sm text-xs font-bold transition-all hover:bg-coffee">
+              <button type="submit" disabled={loading} className="bg-ochre text-cream p-2 rounded-sm text-xs font-bold transition-all hover:bg-coffee disabled:opacity-50">
                 <Mail size={16} />
               </button>
-            </div>
+            </form>
+            {status.message && (
+              <p className={`text-[10px] mt-2 font-bold uppercase tracking-wider ${status.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+                {status.message}
+              </p>
+            )}
           </div>
         </div>
 

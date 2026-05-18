@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogOut, Upload, Trash2, TrendingUp, Image as ImageIcon, CheckCircle, AlertCircle, User, MessageSquare, Lock, X } from 'lucide-react';
+import { LogOut, Upload, Trash2, TrendingUp, Image as ImageIcon, CheckCircle, AlertCircle, User, MessageSquare, Lock, X, Mail } from 'lucide-react';
 
 const AdminDashboard = () => {
   const [rates, setRates] = useState({ isManual: true, goldImpFine: '', silverFine: '', manualGold24K: '', manualGold22K: '', manualGold18K: '', manualSilver90: '' });
   const [gallery, setGallery] = useState([]);
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [subscribers, setSubscribers] = useState([]);
   const [newImage, setNewImage] = useState(null);
   const [category, setCategory] = useState('gold');
   const [subCategory, setSubCategory] = useState('');
@@ -70,6 +71,9 @@ const AdminDashboard = () => {
 
       const messagesRes = await api.get('/messages', config);
       if (messagesRes.data) setMessages(messagesRes.data);
+
+      const subscribersRes = await api.get('/subscribers', config);
+      if (subscribersRes.data) setSubscribers(subscribersRes.data);
     } catch (err) {
       console.error(err);
     }
@@ -170,6 +174,17 @@ const AdminDashboard = () => {
       setStatus({ type: 'success', message: 'User deleted successfully' });
     } catch (err) {
       setStatus({ type: 'error', message: err.response?.data?.message || 'Error deleting user' });
+    }
+  };
+
+  const handleDeleteSubscriber = async (id) => {
+    if (!window.confirm('Are you sure you want to remove this subscriber from the newsletter?')) return;
+    try {
+      await api.delete(`/subscribers/${id}`, config);
+      setSubscribers(subscribers.filter((s) => s._id !== id));
+      setStatus({ type: 'success', message: 'Subscriber removed successfully' });
+    } catch (err) {
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Error deleting subscriber' });
     }
   };
 
@@ -603,6 +618,56 @@ const AdminDashboard = () => {
                       </td>
                       <td className="py-4 px-4 text-right">
                         <button onClick={() => handleDeleteUser(u._id)} className="text-red-500/70 hover:text-red-600 transition-colors" title="Delete User">
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* VIP Subscribers Section */}
+        <section className="mt-12 bg-cream-alt p-8 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
+          <div className="flex items-center justify-between mb-8 border-b border-ochre/10 pb-4">
+            <div className="flex items-center gap-3">
+              <Mail className="text-ochre" size={28} />
+              <h2 className="text-2xl font-serif font-bold text-coffee transition-colors duration-300">
+                VIP Newsletter <span className="text-ochre">Subscribers</span>
+              </h2>
+            </div>
+            <div className="bg-ochre/10 text-ochre px-4 py-2 rounded-full font-bold text-sm tracking-widest uppercase">
+              Total Subscribers: {subscribers.length}
+            </div>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-ochre/20 text-coffee/70 text-sm uppercase tracking-wider">
+                  <th className="py-4 px-4">Email Address</th>
+                  <th className="py-4 px-4">Subscribed Date</th>
+                  <th className="py-4 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {subscribers.length === 0 ? (
+                  <tr>
+                    <td colSpan="3" className="text-center py-8 text-coffee/50">No subscribers found.</td>
+                  </tr>
+                ) : (
+                  subscribers.map((s) => (
+                    <tr key={s._id} className="border-b border-ochre/10 hover:bg-ochre/5 transition-colors">
+                      <td className="py-4 px-4 font-medium text-coffee">
+                        <a href={`mailto:${s.email}`} className="hover:text-ochre transition-colors">{s.email}</a>
+                      </td>
+                      <td className="py-4 px-4 text-sm text-coffee/60">
+                        {new Date(s.createdAt).toLocaleString()}
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <button onClick={() => handleDeleteSubscriber(s._id)} className="text-red-500/70 hover:text-red-600 transition-colors" title="Delete Subscriber">
                           <Trash2 size={18} />
                         </button>
                       </td>

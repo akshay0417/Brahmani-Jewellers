@@ -22,6 +22,7 @@ const User = require('../models/User');
 const Message = require('../models/Message');
 const Cart = require('../models/Cart');
 const Order = require('../models/Order');
+const Subscriber = require('../models/Subscriber');
 
 // Email Helper Function
 const sendEmail = async (to, subject, html) => {
@@ -786,6 +787,82 @@ router.delete('/messages/:id', auth, isAdmin, async (req, res) => {
   try {
     await Message.findByIdAndDelete(req.params.id);
     res.json({ message: 'Message deleted' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// --- NEWSLETTER SUBSCRIBER ROUTES ---
+
+// Subscribe to newsletter (Public)
+router.post('/newsletter/subscribe', async (req, res) => {
+  const { email } = req.body;
+  try {
+    if (!email) {
+      return res.status(400).json({ message: 'Email address is required' });
+    }
+
+    // Check if already subscribed
+    const existingSubscriber = await Subscriber.findOne({ email: email.toLowerCase() });
+    if (existingSubscriber) {
+      return res.status(400).json({ message: 'This email is already subscribed to our newsletter' });
+    }
+
+    const newSubscriber = new Subscriber({ email: email.toLowerCase() });
+    await newSubscriber.save();
+
+    // Send luxurious golden welcome email to subscriber
+    try {
+      const welcomeHtml = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid #EBA938; border-radius: 8px; padding: 25px; background-color: #FFF6E6;">
+          <div style="text-align: center; border-bottom: 1px solid #EBA938; padding-bottom: 15px; margin-bottom: 20px;">
+            <h1 style="color: #3D2B1F; margin: 0; font-family: 'Georgia', serif; font-size: 2em; letter-spacing: 2px;">Brahmani Jewellers</h1>
+            <p style="color: #EBA938; margin: 5px 0 0 0; text-transform: uppercase; font-size: 0.8em; letter-spacing: 3px;">Luxury Ornaments & Fine Jewellery</p>
+          </div>
+          <p>Hello,</p>
+          <p>Thank you for subscribing to the <strong>Brahmani Jewellers VIP List</strong>. We are thrilled to have you join our exclusive circle of patrons.</p>
+          <p>As a VIP member, you will be the first to receive:</p>
+          <ul style="padding-left: 20px; color: #3D2B1F;">
+            <li style="margin-bottom: 8px;"><strong>Exclusive Previews</strong> of our latest pure Gold and designer Silver collections.</li>
+            <li style="margin-bottom: 8px;"><strong>Early Access</strong> to seasonal exhibitions and special patron offers.</li>
+            <li style="margin-bottom: 8px;"><strong>Curated Insights</strong> into jewellery care and trends.</li>
+          </ul>
+          <div style="background-color: #FCF0DA; padding: 20px; text-align: center; border-radius: 8px; margin: 25px 0; border: 1px solid rgba(235, 169, 56, 0.3);">
+            <h3 style="color: #3D2B1F; margin: 0 0 10px 0; font-family: 'Georgia', serif;">VIP PATRON STATUS: CONFIRMED</h3>
+            <p style="color: #666; font-size: 0.9em; margin: 0;">You will receive your exclusive updates directly at <strong>${email.toLowerCase()}</strong>.</p>
+          </div>
+          <p style="font-size: 0.95em; color: #3D2B1F;">Should you ever have any enquiries about our collections or bespoke designs, please feel free to reach out to us at <a href="mailto:info.brahmanijewellers@gmail.com" style="color: #EBA938; text-decoration: none; font-weight: bold;">info.brahmanijewellers@gmail.com</a>.</p>
+          <p style="margin-top: 30px; font-style: italic; color: #666; font-size: 0.9em; text-align: center; border-top: 1px solid rgba(61, 43, 31, 0.1); padding-top: 15px;">
+            "Elegance that defines you."
+          </p>
+        </div>
+      `;
+      await sendEmail(email.toLowerCase(), 'VIP Subscription Confirmed - Brahmani Jewellers', welcomeHtml);
+    } catch (err) {
+      console.error('[SUBSCRIBER EMAIL ERROR]:', err);
+    }
+
+    res.status(201).json({ message: 'Successfully subscribed to our VIP newsletter!' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get all newsletter subscribers (Admin only)
+router.get('/subscribers', auth, isAdmin, async (req, res) => {
+  try {
+    const subscribers = await Subscriber.find().sort({ createdAt: -1 });
+    res.json(subscribers);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Delete a newsletter subscriber (Admin only)
+router.delete('/subscribers/:id', auth, isAdmin, async (req, res) => {
+  try {
+    await Subscriber.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Subscriber deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
