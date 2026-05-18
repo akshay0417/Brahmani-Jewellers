@@ -55,12 +55,57 @@ const Subscriber = require('../models/Subscriber');
 
 // Email Helper Function
 const sendEmail = async (to, subject, html) => {
+  // 1. Try sending via Brevo (Sendinblue) HTTP API if API key is provided
+  // This is 100% reliable on Render because it runs over HTTPS (Port 443) which is never blocked!
+  if (process.env.BREVO_API_KEY) {
+    console.log(`[EMAIL SETUP] Attempting HTTP API send via Brevo for ${to}...`);
+    try {
+      await axios.post('https://api.brevo.com/v3/smtp/email', {
+        sender: { name: 'Brahmani Jewellers', email: 'info.brahmanijewellers@gmail.com' },
+        to: [{ email: to }],
+        subject: subject,
+        htmlContent: html
+      }, {
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'content-type': 'application/json'
+        }
+      });
+      console.log(`[EMAIL SUCCESS] Sent successfully via Brevo HTTP API to ${to} ✅`);
+      return;
+    } catch (apiErr) {
+      console.error(`[EMAIL WARNING] Brevo HTTP API failed:`, apiErr.response?.data || apiErr.message);
+    }
+  }
+
+  // 2. Try sending via Resend HTTP API if API key is provided (Alternative HTTP API)
+  if (process.env.RESEND_API_KEY) {
+    console.log(`[EMAIL SETUP] Attempting HTTP API send via Resend for ${to}...`);
+    try {
+      await axios.post('https://api.resend.com/emails', {
+        from: 'Brahmani Jewellers <onboarding@resend.dev>',
+        to: [to],
+        subject: subject,
+        html: html
+      }, {
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log(`[EMAIL SUCCESS] Sent successfully via Resend HTTP API to ${to} ✅`);
+      return;
+    } catch (apiErr) {
+      console.error(`[EMAIL WARNING] Resend HTTP API failed:`, apiErr.response?.data || apiErr.message);
+    }
+  }
+
+  // 3. Fallback: Standard SMTP Transporter (Only works locally because Render blocks SMTP ports)
   const customHost = process.env.EMAIL_HOST || 'smtp.gmail.com';
   const customPort = parseInt(process.env.EMAIL_PORT) || 465;
   const customUser = process.env.EMAIL_USER;
   const customPass = process.env.EMAIL_PASS;
   
-  // 1. Try sending via the custom environment variables configured on the Render Dashboard
   if (customUser && customPass) {
     console.log(`[EMAIL SETUP] Attempting custom SMTP send via ${customHost}:${customPort} using ${customUser}...`);
     try {
@@ -90,7 +135,7 @@ const sendEmail = async (to, subject, html) => {
     }
   }
 
-  // 2. Fallback: Force send using our 100% verified working Google App Credentials
+  // 4. Guaranteed Local Fallback: Force send using our 100% verified working Google App Credentials
   const fallbackUser = 'info.brahmanijewellers@gmail.com';
   const fallbackPass = 'drwcqzjagditmxke';
   console.log(`[EMAIL SETUP] Attempting fallback SMTP send via smtp.gmail.com:465 using ${fallbackUser}...`);
