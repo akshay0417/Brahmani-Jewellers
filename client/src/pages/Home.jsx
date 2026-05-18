@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { MapPin, Phone, MessageSquare, CheckCircle, Map, Star, Send, User, Mail } from 'lucide-react';
 
 const About = () => (
-  <section className="py-24 bg-cream transition-colors duration-300" id="about">
+  <section className="py-16 md:py-20 bg-cream transition-colors duration-300" id="about">
     <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
       {/* Left side: Image */}
       <motion.div
@@ -90,9 +90,9 @@ const About = () => (
 );
 
 const Categories = () => (
-  <section className="py-24 bg-cream-alt transition-colors duration-300" id="categories">
+  <section className="py-16 md:py-20 bg-cream-alt transition-colors duration-300" id="categories">
     <div className="max-w-7xl mx-auto px-4">
-      <div className="text-center mb-16">
+      <div className="text-center mb-10 sm:mb-12">
         <h2 className="text-4xl font-serif font-bold mb-4 text-coffee transition-colors duration-300">Our <span className="text-ochre">Collections</span></h2>
         <p className="text-coffee/70 transition-colors duration-300">Explore our intricately designed jewellery categories</p>
       </div>
@@ -122,9 +122,9 @@ const Categories = () => (
 );
 
 const Testimonials = () => (
-  <section className="py-24 bg-cream border-y border-ochre/10 transition-colors duration-300">
+  <section className="py-16 md:py-20 bg-cream border-y border-ochre/10 transition-colors duration-300">
     <div className="max-w-7xl mx-auto px-4">
-      <div className="text-center mb-16">
+      <div className="text-center mb-10 sm:mb-12">
         <h2 className="text-4xl font-serif font-bold mb-4 text-coffee transition-colors duration-300">Customer <span className="text-ochre">Reviews</span></h2>
         <p className="text-coffee/70 transition-colors duration-300 mb-8">What our trusted family of customers say about us</p>
         <motion.a 
@@ -192,9 +192,9 @@ const Contact = () => {
   };
 
   return (
-    <section className="py-24 bg-cream-alt relative overflow-hidden transition-colors duration-300" id="contact">
+    <section className="py-16 md:py-20 bg-cream-alt relative overflow-hidden transition-colors duration-300" id="contact">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-16">
+        <div className="text-center mb-10 sm:mb-12">
           <h2 className="text-4xl font-serif font-bold mb-4 text-coffee transition-colors duration-300">Get In <span className="text-ochre">Touch</span></h2>
           <p className="text-coffee/70 transition-colors duration-300">Visit us or reach out for personalized design consultations</p>
         </div>

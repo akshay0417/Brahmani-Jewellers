@@ -32,7 +32,7 @@ const RatesSection = () => {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5 }}
       viewport={{ once: true }}
-      className="bg-cream border border-ochre/20 p-8 rounded-lg text-center relative overflow-hidden group shadow-sm hover:border-ochre/60 hover:shadow-md transition-all duration-300"
+      className="bg-cream border border-ochre/20 p-6 sm:p-7 rounded-lg text-center relative overflow-hidden group shadow-sm hover:border-ochre/60 hover:shadow-md transition-all duration-300"
     >
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-ochre to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       <div className="mb-4 inline-flex p-3 rounded-full bg-cream-alt text-ochre">
@@ -47,9 +47,9 @@ const RatesSection = () => {
   );
 
   return (
-    <section className="py-24 bg-cream-alt relative transition-colors duration-300" id="rates">
+    <section className="py-16 md:py-20 bg-cream-alt relative transition-colors duration-300" id="rates">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-16">
+        <div className="text-center mb-10 sm:mb-12">
           <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4 text-coffee transition-colors duration-300">Market <span className="text-ochre">Live Rates</span></h2>
           <div className="flex items-center justify-center gap-2 text-ochre text-sm uppercase tracking-[0.2em]">
             <Clock size={16} />
