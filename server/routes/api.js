@@ -364,44 +364,42 @@ router.post('/auth/request-otp', async (req, res) => {
     console.log(`[MOCK OTP] Your OTP for ${identifier} is ${otp}`);
 
     if (user.email) {
-      try {
-        const otpHtml = `
-          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid #EBA938; border-radius: 8px; padding: 25px; background-color: #FFF6E6;">
-            <h2 style="color: #3D2B1F; text-align: center; border-bottom: 1px solid #EBA938; padding-bottom: 10px;">Brahmani Jewellers</h2>
-            <h3 style="color: #3D2B1F; text-align: center;">Login Verification Code</h3>
-            <p>Dear <strong>${user.name}</strong>,</p>
-            <p>You requested a login OTP for your Brahmani Jewellers account.</p>
-            <div style="background-color: #FCF0DA; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px solid #EBA938;">
-              <h1 style="letter-spacing: 5px; color: #3D2B1F; margin: 0; font-size: 2.2em;">${otp}</h1>
-              <p style="color: #666; font-size: 0.9em; margin-top: 10px;">This code will expire in 10 minutes.</p>
-            </div>
-            <p style="font-size: 0.9em; color: #666;">If you didn't request this, please ignore this email or contact support.</p>
+      // Send Email Asynchronously in the Background to eliminate client-side buffering!
+      const otpHtml = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid #EBA938; border-radius: 8px; padding: 25px; background-color: #FFF6E6;">
+          <h2 style="color: #3D2B1F; text-align: center; border-bottom: 1px solid #EBA938; padding-bottom: 10px;">Brahmani Jewellers</h2>
+          <h3 style="color: #3D2B1F; text-align: center;">Login Verification Code</h3>
+          <p>Dear <strong>${user.name}</strong>,</p>
+          <p>You requested a login OTP for your Brahmani Jewellers account.</p>
+          <div style="background-color: #FCF0DA; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0; border: 1px solid #EBA938;">
+            <h1 style="letter-spacing: 5px; color: #3D2B1F; margin: 0; font-size: 2.2em;">${otp}</h1>
+            <p style="color: #666; font-size: 0.9em; margin-top: 10px;">This code will expire in 10 minutes.</p>
           </div>
-        `;
-        await sendEmail(user.email, 'Your Login OTP - Brahmani Jewellers', otpHtml);
-      } catch (err) {
+          <p style="font-size: 0.9em; color: #666;">If you didn't request this, please ignore this email or contact support.</p>
+        </div>
+      `;
+      sendEmail(user.email, 'Your Login OTP - Brahmani Jewellers', otpHtml).catch((err) => {
         console.error(`[OTP EMAIL ERROR]:`, err);
-      }
+      });
       
       // Mask the email for security (e.g. akshay@gmail.com becomes ak***@gmail.com)
       const maskedEmail = user.email.replace(/(.{2})(.*)(@.*)/, "$1***$3");
       res.json({ message: `OTP has been successfully sent to your registered email: ${maskedEmail}` });
     } else {
-      // Send WhatsApp/SMS OTP if no email exists
+      // Send WhatsApp/SMS OTP Asynchronously in the Background to eliminate client-side buffering!
       if (process.env.FAST2SMS_API_KEY) {
-        try {
-          await axios.get('https://www.fast2sms.com/dev/bulkV2', {
-            params: {
-              authorization: process.env.FAST2SMS_API_KEY,
-              variables_values: otp,
-              route: 'otp',
-              numbers: mobile || user.mobile
-            }
-          });
+        axios.get('https://www.fast2sms.com/dev/bulkV2', {
+          params: {
+            authorization: process.env.FAST2SMS_API_KEY,
+            variables_values: otp,
+            route: 'otp',
+            numbers: mobile || user.mobile
+          }
+        }).then(() => {
           console.log(`[Fast2SMS] Login OTP successfully sent to ${mobile || user.mobile}`);
-        } catch (smsErr) {
+        }).catch((smsErr) => {
           console.error(`[Fast2SMS ERROR] Failed to send to ${mobile || user.mobile}:`, smsErr.message);
-        }
+        });
       } else if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_NUMBER) {
         try {
           const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);

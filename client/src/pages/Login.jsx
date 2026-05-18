@@ -104,7 +104,11 @@ const Login = () => {
         className="relative z-10 w-full max-w-md bg-cream-alt backdrop-blur-xl p-8 rounded-lg border border-ochre/20 shadow-2xl transition-colors duration-300"
       >
         <div className="text-center mb-6">
-          <Gem className="text-ochre mx-auto mb-4" size={48} />
+          <img 
+            src="/logo.png" 
+            alt="Brahmani Jewellers Logo" 
+            className="h-16 w-16 mx-auto mb-4 object-contain transition-transform duration-300 hover:scale-105" 
+          />
           <h2 className="text-3xl font-serif font-bold text-coffee italic uppercase">Welcome Back</h2>
           <p className="text-coffee/70 text-sm mt-2 uppercase tracking-widest transition-colors duration-300">Sign in to your account</p>
         </div>
