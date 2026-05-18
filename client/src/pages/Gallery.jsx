@@ -2,13 +2,24 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 
 const Gallery = () => {
+  const [searchParams] = useSearchParams();
+  const categoryParam = searchParams.get('category');
+
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState('all');
   const [subFilter, setSubFilter] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (categoryParam) {
+      setFilter(categoryParam.toLowerCase());
+      setSubFilter('');
+    }
+  }, [categoryParam]);
 
   useEffect(() => {
     const fetchGallery = async () => {
