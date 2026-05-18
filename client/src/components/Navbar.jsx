@@ -59,22 +59,22 @@ const Navbar = () => {
           <div className="flex justify-between items-center relative min-h-[50px] md:min-h-0">
             
             {/* Left Section: Brand */}
-            <Link to="/" className="flex items-center gap-3 group">
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 group">
               {useImageLogo ? (
                 <img 
                   src="/logo.png" 
                   alt="Brahmani Jewellers Logo" 
                   onError={() => setUseImageLogo(false)} 
-                  className="h-12 w-12 object-contain transition-transform duration-300 hover:scale-105" 
+                  className="h-10 w-10 sm:h-12 sm:w-12 object-contain transition-transform duration-300 hover:scale-105" 
                 />
               ) : (
-                <Gem className="text-ochre group-hover:rotate-12 transition-transform duration-500" size={32} />
+                <Gem className="text-ochre group-hover:rotate-12 transition-transform duration-500 w-7 h-7 sm:w-8 sm:h-8" />
               )}
               <div className="flex flex-col">
-                <span className="text-xl md:text-2xl font-serif font-bold tracking-[0.1em] text-coffee uppercase leading-none">
+                <span className="text-lg sm:text-xl md:text-2xl font-serif font-bold tracking-[0.05em] sm:tracking-[0.1em] text-coffee uppercase leading-none group-hover:text-ochre transition-colors duration-300">
                   Brahmani
                 </span>
-                <span className="text-[9px] md:text-xs font-serif font-light text-ochre tracking-[0.3em] uppercase leading-none mt-1">
+                <span className="text-[8px] sm:text-[9px] md:text-xs font-serif font-semibold text-ochre tracking-[0.2em] sm:tracking-[0.3em] uppercase leading-none mt-1">
                   Jewellers
                 </span>
               </div>
