@@ -64,7 +64,14 @@ const About = () => (
             <Map className="text-ochre w-6 h-6 mt-1 flex-shrink-0" />
             <div>
               <p className="text-sm text-coffee/60 uppercase tracking-wider font-semibold mb-1 transition-colors duration-300">Our Location</p>
-              <p className="text-coffee transition-colors duration-300">Choksi Bazar, Azad Chowk, Amraiwadi, Ahmedabad</p>
+              <a 
+                href="https://maps.app.goo.gl/ey6AtEEev3JdAEo59" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-coffee hover:text-ochre transition-colors duration-300 font-medium underline underline-offset-4 decoration-ochre/30"
+              >
+                Choksi Bazar, Azad Chowk, Amraiwadi, Ahmedabad
+              </a>
             </div>
           </div>
           <div className="w-full h-px bg-coffee/10 transition-colors duration-300"></div>
@@ -216,7 +223,7 @@ const Contact = () => {
             
             <div className="bg-cream p-2 rounded-xl border border-ochre/20 overflow-hidden h-[300px] shadow-sm">
               <iframe 
-                src="https://maps.google.com/maps?q=Brahmani%20Jewellers,%20Choksi%20Bazar,%20Azad%20Chowk,%20Amraiwadi,%20Ahmedabad&t=&z=17&ie=UTF8&iwloc=&output=embed" 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3672.4847954930107!2d72.62886267597148!3d22.99676741753765!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x395e8705e46bfb3f%3A0xe104cfbc17cbb8df!2sBrahmani%20Jewellers!5e0!3m2!1sen!2sin!4v1715800000000!5m2!1sen!2sin" 
                 width="100%" 
                 height="100%" 
                 style={{ border: 0, filter: 'sepia(20%) hue-rotate(340deg) saturate(120%)' }} 

@@ -308,7 +308,14 @@ const Navbar = () => {
                     <Map className="text-ochre flex-shrink-0 mt-1" size={20} />
                     <div>
                       <h4 className="text-coffee font-serif mb-1">Location</h4>
-                      <p className="text-coffee/70 text-sm leading-relaxed">Choksi Bazar, Azad Chowk, Amraiwadi, Ahmedabad</p>
+                      <a 
+                        href="https://maps.app.goo.gl/ey6AtEEev3JdAEo59" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-coffee/70 text-sm leading-relaxed hover:text-ochre transition-colors underline underline-offset-4 decoration-ochre/30"
+                      >
+                        Choksi Bazar, Azad Chowk, Amraiwadi, Ahmedabad
+                      </a>
                     </div>
                   </div>
                 </div>
