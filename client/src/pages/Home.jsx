@@ -202,21 +202,36 @@ const Contact = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           {/* Contact Info & Map */}
           <div className="space-y-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="bg-cream border border-ochre/20 p-6 rounded-lg flex items-start gap-4 shadow-sm">
-                <Phone className="text-ochre flex-shrink-0 mt-1" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-cream border border-ochre/20 p-5 rounded-lg flex items-start gap-3 shadow-sm">
+                <Phone className="text-ochre flex-shrink-0 mt-1" size={20} />
                 <div>
-                  <h4 className="text-coffee font-serif mb-1 transition-colors duration-300">Call Us</h4>
-                  <p className="text-coffee/70 text-sm mb-2 transition-colors duration-300">+91 9925811771</p>
-                  <a href="tel:+919925811771" className="text-ochre text-xs uppercase tracking-wider hover:underline">Call Now</a>
+                  <h4 className="text-coffee font-serif text-sm mb-0.5 transition-colors duration-300 font-bold">Call Us</h4>
+                  <p className="text-coffee/70 text-xs mb-1.5 transition-colors duration-300 font-medium">+91 9925811771</p>
+                  <a href="tel:+919925811771" className="text-ochre text-[10px] font-bold uppercase tracking-wider hover:underline">Call Now</a>
                 </div>
               </div>
-              <div className="bg-cream border border-ochre/20 p-6 rounded-lg flex items-start gap-4 shadow-sm">
-                <MessageSquare className="text-ochre flex-shrink-0 mt-1" />
+              <div className="bg-cream border border-ochre/20 p-5 rounded-lg flex items-start gap-3 shadow-sm">
+                <MessageSquare className="text-ochre flex-shrink-0 mt-1" size={20} />
                 <div>
-                  <h4 className="text-coffee font-serif mb-1 transition-colors duration-300">WhatsApp</h4>
-                  <p className="text-coffee/70 text-sm mb-2 transition-colors duration-300">Chat with Experts</p>
-                  <a href="https://wa.me/919925811771" className="text-ochre text-xs uppercase tracking-wider hover:underline">Message</a>
+                  <h4 className="text-coffee font-serif text-sm mb-0.5 transition-colors duration-300 font-bold">WhatsApp</h4>
+                  <p className="text-coffee/70 text-xs mb-1.5 transition-colors duration-300 font-medium">Chat with us</p>
+                  <a href="https://wa.me/919925811771" className="text-ochre text-[10px] font-bold uppercase tracking-wider hover:underline">Message</a>
+                </div>
+              </div>
+              <div className="bg-cream border border-ochre/20 p-5 rounded-lg flex items-start gap-3 shadow-sm">
+                <MapPin className="text-ochre flex-shrink-0 mt-1" size={20} />
+                <div>
+                  <h4 className="text-coffee font-serif text-sm mb-0.5 transition-colors duration-300 font-bold">Location</h4>
+                  <p className="text-coffee/70 text-xs mb-1.5 transition-colors duration-300 font-medium">Azad Chowk</p>
+                  <a 
+                    href="https://maps.app.goo.gl/ey6AtEEev3JdAEo59" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-ochre text-[10px] font-bold uppercase tracking-wider hover:underline"
+                  >
+                    Open in Map
+                  </a>
                 </div>
               </div>
             </div>
