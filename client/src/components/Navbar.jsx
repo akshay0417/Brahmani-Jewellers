@@ -54,7 +54,7 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className={`fixed w-full z-40 transition-all duration-500 bg-cream/90 backdrop-blur-md border-b border-ochre/20 shadow-sm ${scrolled ? 'py-3' : 'py-5'}`}>
+      <nav className={`fixed w-full z-40 transition-all duration-500 bg-cream/90 backdrop-blur-md border-b border-ochre/20 shadow-sm ${scrolled ? 'py-1.5' : 'py-2.5'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center relative min-h-[50px] md:min-h-0">
             
@@ -65,16 +65,16 @@ const Navbar = () => {
                   src="/logo.png" 
                   alt="Brahmani Jewellers Logo" 
                   onError={() => setUseImageLogo(false)} 
-                  className="h-10 w-10 sm:h-12 sm:w-12 object-contain transition-transform duration-300 hover:scale-105" 
+                  className="h-11 w-11 sm:h-15 sm:w-15 object-contain transition-transform duration-300 hover:scale-105" 
                 />
               ) : (
-                <Gem className="text-ochre group-hover:rotate-12 transition-transform duration-500 w-7 h-7 sm:w-8 sm:h-8" />
+                <Gem className="text-ochre group-hover:rotate-12 transition-transform duration-500 w-8 h-8 sm:w-10 sm:h-10" />
               )}
               <div className="flex flex-col">
-                <span className="text-lg sm:text-xl md:text-2xl font-serif font-bold tracking-[0.05em] sm:tracking-[0.1em] text-coffee uppercase leading-none group-hover:text-ochre transition-colors duration-300">
+                <span className="text-xl sm:text-2xl md:text-3xl font-serif font-bold tracking-[0.05em] sm:tracking-[0.1em] text-coffee uppercase leading-none group-hover:text-ochre transition-colors duration-300">
                   Brahmani
                 </span>
-                <span className="text-[8px] sm:text-[9px] md:text-xs font-serif font-semibold text-ochre tracking-[0.2em] sm:tracking-[0.3em] uppercase leading-none mt-1">
+                <span className="text-[10px] sm:text-xs md:text-sm font-serif font-semibold text-ochre tracking-[0.2em] sm:tracking-[0.3em] uppercase leading-none mt-1">
                   Jewellers
                 </span>
               </div>
