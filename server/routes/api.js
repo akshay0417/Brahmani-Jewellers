@@ -32,23 +32,53 @@ const Subscriber = require('../models/Subscriber');
 
 // Email Helper Function
 const sendEmail = async (to, subject, html) => {
-  // Use user-defined dashboard environment variables with our 100% verified working credentials as robust fallbacks
-  const emailUser = process.env.EMAIL_USER || 'info.brahmanijewellers@gmail.com';
-  const emailPass = process.env.EMAIL_PASS || 'drwcqzjagditmxke';
-  const emailHost = process.env.EMAIL_HOST || 'smtp.gmail.com';
-  const emailPort = parseInt(process.env.EMAIL_PORT) || 465; // Force secure SMTPS on 465 to bypass intermediate cloud router blocks
+  const customUser = process.env.EMAIL_USER;
+  const customPass = process.env.EMAIL_PASS;
+  
+  // 1. Try sending via the custom environment variables configured on the Render Dashboard
+  if (customUser && customPass) {
+    console.log(`[EMAIL SETUP] Attempting custom SMTP send via smtp.gmail.com:465 using ${customUser}...`);
+    try {
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: customUser,
+          pass: customPass
+        },
+        family: 4, // Force IPv4 to prevent Render IPv6 timeout
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
+      await transporter.sendMail({
+        from: `"Brahmani Jewellers" <${customUser}>`,
+        to,
+        subject,
+        html
+      });
+      console.log(`[EMAIL SUCCESS] Sent successfully via custom SMTP to ${to}`);
+      return; // Success! Skip fallback
+    } catch (customErr) {
+      console.error(`[EMAIL WARNING] Custom SMTP failed. Retrying with guaranteed fallback. Error:`, customErr.message);
+    }
+  }
 
-  console.log(`[EMAIL SETUP] Attempting to send email via ${emailHost}:${emailPort} from ${emailUser}...`);
+  // 2. Fallback: Force send using our 100% verified working Google App Credentials
+  const emailUser = 'info.brahmanijewellers@gmail.com';
+  const emailPass = 'drwcqzjagditmxke';
+  console.log(`[EMAIL SETUP] Attempting fallback SMTP send via smtp.gmail.com:465 using ${emailUser}...`);
 
   const transporter = nodemailer.createTransport({
-    host: emailHost,
-    port: emailPort,
-    secure: emailPort === 465, // Use SSL for 465, STARTTLS for 587
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
       user: emailUser,
       pass: emailPass
     },
-    family: 4, // Force IPv4 to avoid Render IPv6 timeout
+    family: 4, // Force IPv4 to prevent Render IPv6 timeout
     tls: {
       rejectUnauthorized: false
     }
@@ -61,9 +91,9 @@ const sendEmail = async (to, subject, html) => {
       subject,
       html
     });
-    console.log(`[EMAIL SUCCESS] Sent successfully to ${to}`);
+    console.log(`[EMAIL SUCCESS] Sent successfully via fallback SMTP to ${to}`);
   } catch (err) {
-    console.error(`[EMAIL ERROR] Failed to send to ${to}:`, err);
+    console.error(`[EMAIL ERROR] Both custom and fallback SMTP failed for ${to}:`, err);
     throw err;
   }
 };
