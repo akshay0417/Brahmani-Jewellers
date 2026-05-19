@@ -6,7 +6,7 @@ import { Lock, Mail, Gem, Key } from 'lucide-react';
 
 const Login = () => {
   const location = useLocation();
-  const [loginMethod, setLoginMethod] = useState('otp'); // 'otp' or 'password'
+  const [loginMethod, setLoginMethod] = useState('password'); // 'otp' or 'password'
   const [identifier, setIdentifier] = useState('');
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
@@ -21,7 +21,6 @@ const Login = () => {
       if (location.state.identifier) setIdentifier(location.state.identifier);
       if (location.state.step) setStep(location.state.step);
       if (location.state.successMsg) setSuccessMsg(location.state.successMsg);
-      setLoginMethod('otp');
     }
   }, [location.state]);
 
