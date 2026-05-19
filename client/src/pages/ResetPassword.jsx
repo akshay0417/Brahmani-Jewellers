@@ -54,11 +54,11 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-cream">
+    <div className="min-h-screen flex items-center justify-center px-4 pt-32 pb-12 bg-gradient-to-br from-cream via-cream-alt to-ochre/20">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-cream-alt p-8 rounded-lg border border-ochre/20 shadow-sm"
+        className="w-full max-w-sm bg-cream-alt/95 p-6 rounded-lg border border-ochre/20 shadow-2xl transition-colors duration-300"
       >
         <div className="text-center mb-8">
           <ShieldCheck className="text-coffee mx-auto mb-4" size={48} />

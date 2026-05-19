@@ -25,7 +25,8 @@ function App() {
   const location = useLocation();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/forgot-password' || location.pathname === '/reset-password';
   const isDashboard = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin/dashboard');
-  const hideHeaderFooter = isAuthPage || isDashboard;
+  const hideNavbar = isDashboard;
+  const hideFooter = isAuthPage || isDashboard;
 
   useEffect(() => {
     // Check if user is logged in
@@ -70,7 +71,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-cream text-coffee font-sans selection:bg-ochre selection:text-cream transition-colors duration-300">
-      {!hideHeaderFooter && <Navbar />}
+      {!hideNavbar && <Navbar />}
       <AnimatePresence mode="wait">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -87,7 +88,7 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
         </Routes>
       </AnimatePresence>
-      {!hideHeaderFooter && <Footer />}
+      {!hideFooter && <Footer />}
 
       {/* Login Prompt Modal */}
       <AnimatePresence>

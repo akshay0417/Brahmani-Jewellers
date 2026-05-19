@@ -111,13 +111,12 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 pt-32 bg-[url('https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=1920&q=20')] bg-cover bg-fixed">
-      <div className="absolute inset-0 bg-cream/90 backdrop-blur-sm transition-colors duration-300"></div>
+    <div className="min-h-screen flex items-center justify-center px-4 pt-32 pb-12 bg-gradient-to-br from-cream via-cream-alt to-ochre/20">
       
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 w-full max-w-md bg-cream-alt backdrop-blur-xl p-8 rounded-lg border border-ochre/20 shadow-2xl transition-colors duration-300"
+        className="relative z-10 w-full max-w-sm bg-cream-alt/95 p-6 rounded-lg border border-ochre/20 shadow-2xl transition-colors duration-300"
       >
         <div className="text-center mb-6">
           <img 
