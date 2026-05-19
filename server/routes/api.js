@@ -545,6 +545,11 @@ router.put('/auth/change-password', auth, async (req, res) => {
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Current password is incorrect' });
 
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({ message: 'New password cannot be the same as your current password. Please choose a different one.' });
+    }
+
     user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
 
@@ -703,6 +708,12 @@ router.post('/auth/reset-password', async (req, res) => {
 
     if (!user) {
       return res.status(400).json({ message: 'Invalid or expired password reset token' });
+    }
+
+    // Check if new password matches current password
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({ message: 'New password cannot be the same as your current password. Please choose a different one.' });
     }
 
     const salt = await bcrypt.genSalt(10);
