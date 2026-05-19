@@ -88,17 +88,21 @@ const sendViaGmailApi = async (to, subject, html) => {
   const fromName = 'Brahmani Jewellers';
   const fromEmail = process.env.EMAIL_USER || 'info.brahmanijewellers@gmail.com';
 
+  const messageId = `<${Date.now()}.${Math.random().toString(36).substring(2)}@gmail.com>`;
+  const dateStr = new Date().toUTCString();
   const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
   const messageParts = [
     `From: "${fromName}" <${fromEmail}>`,
     `To: ${to}`,
+    `Date: ${dateStr}`,
+    `Message-ID: ${messageId}`,
     `Content-Type: text/html; charset=utf-8`,
     `MIME-Version: 1.0`,
     `Subject: ${utf8Subject}`,
     '',
     html
   ];
-  const message = messageParts.join('\n');
+  const message = messageParts.join('\r\n');
 
   const encodedMessage = Buffer.from(message)
     .toString('base64')
@@ -476,8 +480,12 @@ router.get('/auth/verify-email', async (req, res) => {
       }
     }
 
-    // Redirect to login page with success message
-    return res.redirect(`${clientUrl}/login?verified=true&message=Your account has been verified successfully! Please log in.`);
+    // Generate token for auto-login
+    const autoToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+    // Redirect to login page with success message and auto-login token
+    const redirectUrl = `${clientUrl}/login?verified=true&token=${autoToken}&userId=${user._id}&userName=${encodeURIComponent(user.name)}&userEmail=${encodeURIComponent(user.email)}&userMobile=${encodeURIComponent(user.mobile)}&userRole=${user.role}&message=Your account has been verified and you are now logged in!`;
+    return res.redirect(redirectUrl);
   } catch (err) {
     console.error('[VERIFY EMAIL ERROR]:', err);
     res.status(500).send(`

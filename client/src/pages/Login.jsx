@@ -28,7 +28,25 @@ const Login = () => {
     const params = new URLSearchParams(location.search);
     const verified = params.get('verified');
     const msg = params.get('message');
+    const autoToken = params.get('token');
+    
     if (verified === 'true') {
+      if (autoToken) {
+        const userObj = {
+          id: params.get('userId'),
+          name: params.get('userName'),
+          email: params.get('userEmail'),
+          mobile: params.get('userMobile'),
+          role: params.get('userRole') || 'user'
+        };
+        sessionStorage.setItem('token', autoToken);
+        sessionStorage.setItem('user', JSON.stringify(userObj));
+        
+        const dashboardPath = userObj.role === 'admin' ? '/admin/dashboard' : '/dashboard';
+        navigate(dashboardPath);
+        window.location.reload();
+        return;
+      }
       setSuccessMsg(msg || 'Your account has been successfully verified! You can now log in.');
       setLoginMethod('password');
     } else if (verified === 'false' && msg) {
@@ -36,7 +54,7 @@ const Login = () => {
     } else if (msg) {
       setSuccessMsg(msg);
     }
-  }, [location.search]);
+  }, [location.search, navigate]);
 
   const handlePasswordLogin = async (e) => {
     e.preventDefault();
