@@ -51,8 +51,7 @@ const Login = () => {
       navigate(dashboardPath);
     } catch (err) {
       if (err.response?.status === 403 && err.response?.data?.unverified) {
-        setLoginMethod('otp');
-        setError('Your account is not verified. Please request an OTP to verify.');
+        setError(err.response.data.message || 'Your account is not verified yet. Please check your email for the verification link.');
       } else {
         setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
       }
