@@ -53,9 +53,94 @@ const Cart = require('../models/Cart');
 const Order = require('../models/Order');
 const Subscriber = require('../models/Subscriber');
 
+// Gmail API OAuth2 Helpers
+const getGmailAccessToken = async () => {
+  const clientId = process.env.GMAIL_CLIENT_ID;
+  const clientSecret = process.env.GMAIL_CLIENT_SECRET;
+  const refreshToken = process.env.GMAIL_REFRESH_TOKEN;
+
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error('Gmail API OAuth2 credentials missing in .env');
+  }
+
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token'
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Failed to refresh Gmail access token: ${errText}`);
+  }
+
+  const data = await response.json();
+  return data.access_token;
+};
+
+const sendViaGmailApi = async (to, subject, html) => {
+  const accessToken = await getGmailAccessToken();
+  const fromName = 'Brahmani Jewellers';
+  const fromEmail = process.env.EMAIL_USER || 'info.brahmanijewellers@gmail.com';
+
+  const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+  const messageParts = [
+    `From: "${fromName}" <${fromEmail}>`,
+    `To: ${to}`,
+    `Content-Type: text/html; charset=utf-8`,
+    `MIME-Version: 1.0`,
+    `Subject: ${utf8Subject}`,
+    '',
+    html
+  ];
+  const message = messageParts.join('\n');
+
+  const encodedMessage = Buffer.from(message)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+
+  const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      raw: encodedMessage
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Gmail API send failed: ${errText}`);
+  }
+
+  return await response.json();
+};
+
 // Email Helper Function
 const sendEmail = async (to, subject, html) => {
-  // 1. Try sending via Brevo (Sendinblue) HTTP API if API key is provided
+  // 1. Try sending via Gmail API (OAuth2 over HTTP) if credentials are provided
+  // This is 100% reliable on Render as it uses HTTPS port 443!
+  if (process.env.GMAIL_CLIENT_ID && process.env.GMAIL_CLIENT_SECRET && process.env.GMAIL_REFRESH_TOKEN) {
+    console.log(`[EMAIL SETUP] Attempting HTTP send via Gmail API for ${to}...`);
+    try {
+      await sendViaGmailApi(to, subject, html);
+      console.log(`[EMAIL SUCCESS] Sent successfully via Gmail API to ${to} ✅`);
+      return;
+    } catch (apiErr) {
+      console.error(`[EMAIL WARNING] Gmail API failed:`, apiErr.message);
+    }
+  }
+
+  // 2. Try sending via Brevo (Sendinblue) HTTP API if API key is provided
   // This is 100% reliable on Render because it runs over HTTPS (Port 443) which is never blocked!
   if (process.env.BREVO_API_KEY) {
     console.log(`[EMAIL SETUP] Attempting HTTP API send via Brevo for ${to}...`);
