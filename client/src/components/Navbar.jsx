@@ -235,11 +235,11 @@ const Navbar = () => {
                   cart.items.map((item) => (
                     <div key={item._id} className="flex gap-4 bg-cream-alt p-4 rounded-lg border border-ochre/10 group">
                       <div className="w-20 h-24 rounded overflow-hidden border border-ochre/20 flex-shrink-0">
-                        <img src={item.product.imageUrl} alt={item.product.category} className="w-full h-full object-cover" />
+                        <img src={item.product.imageUrl} alt={item.product.name || item.product.category} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start mb-1">
-                          <h4 className="font-serif text-coffee truncate pr-4">Heritage {item.product.category}</h4>
+                          <h4 className="font-serif text-coffee truncate pr-4">{item.product.name || `Heritage ${item.product.category}`}</h4>
                           <button onClick={() => removeFromCart(item.product._id)} className="text-coffee/40 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
                         </div>
                         <p className="text-ochre font-bold mb-3">₹{(item.product.price || 0).toLocaleString('en-IN')}</p>
