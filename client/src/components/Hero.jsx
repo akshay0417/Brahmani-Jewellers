@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const HERO_SLIDES = [
   {
-    image: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Royal bride, fits "model traditional look"
+    image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Light Gold Necklace
     subtitle: 'Timeless Traditional Elegance',
     title: 'The Divine\nBridal Heritage',
     italicWord: 'Bridal Heritage',
@@ -14,7 +14,7 @@ const HERO_SLIDES = [
     viewText: 'View Collection'
   },
   {
-    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Light gold
+    image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Model with light jewelry
     subtitle: 'The Art of Fine Jewellery',
     title: 'Exquisite Pure\nGold Designs',
     italicWord: 'Gold Designs',
@@ -23,7 +23,7 @@ const HERO_SLIDES = [
     viewText: 'Explore Catalog'
   },
   {
-    image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Diamonds / light
+    image: 'https://images.unsplash.com/photo-1588444837495-c6cfeb53f32d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Diamond ring on light background
     subtitle: 'Tokens of Eternal Love',
     title: 'Brilliant Diamond\nMasterpieces',
     italicWord: 'Masterpieces',
@@ -32,7 +32,7 @@ const HERO_SLIDES = [
     viewText: 'View Gallery'
   },
   {
-    image: 'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Silver / Light
+    image: 'https://images.unsplash.com/photo-1599643477874-5c866f5c5339?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Silver on light background
     subtitle: 'Exquisite Silver Ornaments',
     title: 'Purity In\nSilver Wear',
     italicWord: 'Silver Wear',
@@ -61,7 +61,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative h-screen flex items-center justify-center overflow-hidden bg-coffee group">
+    <section className="relative h-screen flex items-center justify-center overflow-hidden bg-cream group">
       {/* Background Auto-Sliding Carousel with AnimatePresence Crossfade */}
       <div className="absolute inset-0 w-full h-full">
         <AnimatePresence initial={false}>
@@ -82,9 +82,8 @@ const Hero = () => {
               className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
             />
             
-            {/* Lighter Transparent overlay for 'light color' request while keeping text readable */}
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-coffee/80 via-coffee/40 to-transparent transition-colors duration-300"></div>
-            <div className="absolute inset-0 w-full h-full bg-black/20"></div>
+            {/* Lighter Transparent overlay for 'light color' theme */}
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-cream/95 via-cream/60 to-transparent transition-colors duration-300"></div>
 
             {/* Slide Content positioned absolute inside the active slide */}
             <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-24 w-full h-full flex flex-col justify-center">
@@ -93,7 +92,7 @@ const Hero = () => {
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                  className="text-ochre tracking-[0.8em] uppercase text-xs md:text-sm font-bold mb-4 block drop-shadow-md font-sans"
+                  className="text-ochre tracking-[0.8em] uppercase text-xs md:text-sm font-bold mb-4 block drop-shadow-sm font-sans"
                 >
                   {HERO_SLIDES[currentIndex].subtitle}
                 </motion.span>
@@ -102,10 +101,10 @@ const Hero = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-                  className="text-4xl md:text-7xl font-serif font-bold text-cream leading-tight mb-6 drop-shadow-lg"
+                  className="text-4xl md:text-7xl font-serif font-bold text-coffee leading-tight mb-6"
                 >
                   {HERO_SLIDES[currentIndex].title.split('\n')[0]} <br />
-                  <span className="text-ochre italic drop-shadow-md">
+                  <span className="text-ochre italic drop-shadow-sm">
                     {HERO_SLIDES[currentIndex].italicWord}
                   </span>
                 </motion.h1>
@@ -114,7 +113,7 @@ const Hero = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
-                  className="text-cream/95 text-base md:text-xl font-sans font-light mb-10 max-w-lg leading-relaxed drop-shadow-sm"
+                  className="text-coffee/80 text-base md:text-xl font-sans font-medium mb-10 max-w-lg leading-relaxed"
                 >
                   {HERO_SLIDES[currentIndex].description}
                 </motion.p>
@@ -127,13 +126,13 @@ const Hero = () => {
                 >
                   <Link 
                     to="/shop" 
-                    className="px-10 py-4 bg-ochre text-coffee font-sans font-extrabold uppercase tracking-widest hover:bg-ochre/90 transition-all duration-300 rounded-sm text-center shadow-lg hover:shadow-ochre/30 hover:scale-[1.02] active:scale-95"
+                    className="px-10 py-4 bg-ochre text-cream font-sans font-extrabold uppercase tracking-widest hover:bg-coffee transition-all duration-300 rounded-sm text-center shadow-lg hover:shadow-ochre/30 hover:scale-[1.02] active:scale-95"
                   >
                     {HERO_SLIDES[currentIndex].shopText}
                   </Link>
                   <Link 
                     to="/gallery" 
-                    className="px-10 py-4 border-2 border-cream text-cream font-sans font-extrabold uppercase tracking-widest hover:bg-cream hover:text-coffee transition-all duration-300 rounded-sm text-center shadow-lg hover:scale-[1.02] active:scale-95"
+                    className="px-10 py-4 border-2 border-coffee text-coffee font-sans font-extrabold uppercase tracking-widest hover:bg-coffee hover:text-cream transition-all duration-300 rounded-sm text-center shadow-lg hover:scale-[1.02] active:scale-95"
                   >
                     {HERO_SLIDES[currentIndex].viewText}
                   </Link>
