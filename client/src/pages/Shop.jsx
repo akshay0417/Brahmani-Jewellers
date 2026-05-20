@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBag, Heart, ShieldCheck, Truck } from 'lucide-react';
+import { X, ShoppingBag, Heart, ShieldCheck, Truck, MessageCircle, Phone } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 const Shop = () => {
@@ -12,6 +12,27 @@ const Shop = () => {
   const [subFilter, setSubFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  // Local Wishlist State (persisted in localStorage)
+  const [wishlist, setWishlist] = useState(() => {
+    try {
+      const saved = localStorage.getItem('wishlist');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const toggleWishlist = (id) => {
+    let updated;
+    if (wishlist.includes(id)) {
+      updated = wishlist.filter(item => item !== id);
+    } else {
+      updated = [...wishlist, id];
+    }
+    setWishlist(updated);
+    localStorage.setItem('wishlist', JSON.stringify(updated));
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -68,6 +89,8 @@ const Shop = () => {
 
   const ProductCard = ({ item }) => {
     const priceData = calculatePrice(item);
+    const isFavorite = wishlist.includes(item._id);
+
     return (
       <motion.div
         layout
@@ -75,7 +98,7 @@ const Shop = () => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9 }}
         whileHover={{ y: -8 }}
-        className="royal-card rounded-xl overflow-hidden group cursor-pointer"
+        className="royal-card rounded-xl overflow-hidden group cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-300 border border-ochre/10"
         onClick={() => setSelectedProduct(item)}
       >
         <div className="aspect-[3/4] overflow-hidden relative bg-cream-alt">
@@ -85,18 +108,40 @@ const Shop = () => {
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
             onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
           />
-          <div className="absolute top-4 right-4 flex flex-col gap-2">
-            <button onClick={(e) => { e.stopPropagation(); /* Wishlist logic */ }} className="p-2 bg-cream/80 backdrop-blur-md rounded-full text-coffee hover:text-ochre transition-colors">
-              <Heart size={18} />
+          
+          {/* Wishlist Heart Icon (Working) */}
+          <div className="absolute top-4 right-4 z-20">
+            <button 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                toggleWishlist(item._id); 
+              }} 
+              className="p-2.5 bg-cream/90 backdrop-blur-md rounded-full shadow-md text-coffee hover:text-ochre hover:scale-110 active:scale-95 transition-all duration-200"
+            >
+              <Heart 
+                size={18} 
+                className={`${isFavorite ? 'fill-red-500 text-red-500' : 'text-coffee/80'} transition-colors duration-200`} 
+              />
             </button>
           </div>
-          <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-coffee/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+
+          {/* Hover Overlay with Stacked Actions */}
+          <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-coffee/95 via-coffee/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10 flex flex-col gap-2">
             <button 
               onClick={(e) => { e.stopPropagation(); addToCart(item._id); }}
-              className="w-full py-2 bg-ochre text-coffee font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 rounded-sm hover:bg-ochre/90"
+              className="w-full py-2.5 bg-cream text-coffee font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 rounded-sm hover:bg-ochre hover:text-coffee border border-ochre/30 transition-all duration-200"
             >
-              <ShoppingBag size={14} /> Quick Add
+              <ShoppingBag size={13} className="text-ochre group-hover:text-coffee" /> Quick Add
             </button>
+            <a 
+              href={`https://wa.me/917621967577?text=${encodeURIComponent("I am interested in buying this masterpiece: " + (item.name || 'Heritage Masterpiece') + "\nImage: " + item.imageUrl + "\nPrice: ₹" + priceData.final)}`}
+              target="_blank" 
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="w-full py-2.5 bg-emerald-600 text-white font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 rounded-sm hover:bg-emerald-700 transition-all duration-200"
+            >
+              <MessageCircle size={13} /> Buy on WhatsApp
+            </a>
           </div>
         </div>
         <div className="p-5 text-center">
