@@ -8,10 +8,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        coffee: '#3D2B1F',
+        coffee: '#650000',
         cream: {
-          DEFAULT: '#FFF6E6',
-          alt: '#FCF0DA',
+          DEFAULT: '#FFFDF9',
+          alt: '#FDF9F3',
         },
         ochre: '#EBA938',
         gold: {

@@ -47,7 +47,7 @@ const RatesSection = () => {
   );
 
   return (
-    <section className="py-16 md:py-20 bg-cream-alt relative transition-colors duration-300" id="rates">
+    <section className="py-10 md:py-12 bg-cream-alt relative transition-colors duration-300" id="rates">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-10 sm:mb-12">
           <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4 text-coffee transition-colors duration-300">Market <span className="text-ochre">Live Rates</span></h2>

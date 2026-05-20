@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { MapPin, Phone, MessageSquare, CheckCircle, Map, Star, Send, User, Mail } from 'lucide-react';
 
 const About = () => (
-  <section className="py-16 md:py-20 bg-cream transition-colors duration-300" id="about">
+  <section className="py-10 md:py-12 bg-cream transition-colors duration-300" id="about">
     <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
       {/* Left side: Image */}
       <motion.div
@@ -103,7 +103,7 @@ const Categories = () => {
   }, []);
 
   return (
-    <section className="py-16 md:py-20 bg-cream-alt transition-colors duration-300" id="categories">
+    <section className="py-10 md:py-12 bg-cream-alt transition-colors duration-300" id="categories">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-10 sm:mb-12">
           <motion.span initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} className="text-ochre tracking-[0.5em] uppercase text-xs font-bold mb-4 block">Royal Showcase</motion.span>
@@ -219,7 +219,7 @@ const Contact = () => {
   };
 
   return (
-    <section className="py-16 md:py-20 bg-cream-alt relative overflow-hidden transition-colors duration-300" id="contact">
+    <section className="py-10 md:py-12 bg-cream-alt relative overflow-hidden transition-colors duration-300" id="contact">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-10 sm:mb-12">
           <h2 className="text-4xl font-serif font-bold mb-4 text-coffee transition-colors duration-300">Get In <span className="text-ochre">Touch</span></h2>

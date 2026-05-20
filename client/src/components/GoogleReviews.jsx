@@ -57,7 +57,7 @@ const GoogleReviews = () => {
   };
 
   return (
-    <section className="py-16 md:py-20 bg-cream-alt transition-colors duration-300 relative overflow-hidden" id="reviews">
+    <section className="py-10 md:py-12 bg-cream-alt transition-colors duration-300 relative overflow-hidden" id="reviews">
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         
         {/* Header */}

@@ -66,10 +66,10 @@ const Navbar = () => {
                     src="/logo.png" 
                     alt="Brahmani Jewellers Logo" 
                     onError={() => setUseImageLogo(false)} 
-                    className="h-11 w-11 sm:h-15 sm:w-15 object-contain transition-transform duration-300 hover:scale-105" 
+                    className="h-14 w-14 sm:h-20 sm:w-20 object-contain transition-transform duration-300 hover:scale-105" 
                   />
                 ) : (
-                  <Gem className="text-ochre group-hover:rotate-12 transition-transform duration-500 w-8 h-8 sm:w-10 sm:h-10" />
+                  <Gem className="text-ochre group-hover:rotate-12 transition-transform duration-500 w-10 h-10 sm:w-12 sm:h-12" />
                 )}
                 <div className={`flex flex-col transition-all duration-500 overflow-hidden ${
                   scrolled 
