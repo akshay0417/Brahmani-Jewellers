@@ -32,7 +32,7 @@ const HERO_SLIDES = [
     viewText: 'View Gallery'
   },
   {
-    image: 'https://images.unsplash.com/photo-1599643477874-5c866f5c5339?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Silver on light background
+    image: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Model with heavy jewelry
     subtitle: 'Exquisite Silver Ornaments',
     title: 'Purity In\nSilver Wear',
     italicWord: 'Silver Wear',
@@ -92,7 +92,7 @@ const Hero = () => {
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                  className="text-ochre tracking-[0.8em] uppercase text-xs md:text-sm font-bold mb-4 block drop-shadow-sm font-sans"
+                  className="text-ochre tracking-[0.6em] uppercase text-[10px] md:text-xs font-bold mb-3 block drop-shadow-sm font-sans"
                 >
                   {HERO_SLIDES[currentIndex].subtitle}
                 </motion.span>
@@ -101,7 +101,7 @@ const Hero = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-                  className="text-4xl md:text-7xl font-serif font-bold text-coffee leading-tight mb-6"
+                  className="text-3xl md:text-5xl font-serif font-bold text-coffee leading-tight mb-4"
                 >
                   {HERO_SLIDES[currentIndex].title.split('\n')[0]} <br />
                   <span className="text-ochre italic drop-shadow-sm">
@@ -113,7 +113,7 @@ const Hero = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
-                  className="text-coffee/80 text-base md:text-xl font-sans font-medium mb-10 max-w-lg leading-relaxed"
+                  className="text-coffee/80 text-sm md:text-base font-sans font-medium mb-8 max-w-lg leading-relaxed"
                 >
                   {HERO_SLIDES[currentIndex].description}
                 </motion.p>
