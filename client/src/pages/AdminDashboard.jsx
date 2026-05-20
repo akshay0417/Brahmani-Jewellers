@@ -180,6 +180,18 @@ const AdminDashboard = () => {
     }
   };
 
+  const toggleUserApproval = async (id, currentStatus) => {
+    try {
+      const res = await api.put(`/users/${id}/approve`, { isApproved: !currentStatus }, config);
+      setUsers(users.map((u) => u._id === id ? { ...u, isApproved: !currentStatus } : u));
+      setStatus({ type: 'success', message: res.data.message });
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    } catch (err) {
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Error toggling approval' });
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    }
+  };
+
   const handleDeleteSubscriber = async (id) => {
     if (!window.confirm('Are you sure you want to remove this subscriber from the newsletter?')) return;
     try {
@@ -618,6 +630,7 @@ const AdminDashboard = () => {
                   <th className="py-4 px-4">Email</th>
                   <th className="py-4 px-4">Mobile</th>
                   <th className="py-4 px-4">Role</th>
+                  <th className="py-4 px-4">Approval</th>
                   <th className="py-4 px-4">Joined Date</th>
                   <th className="py-4 px-4">Last Login</th>
                   <th className="py-4 px-4 text-right">Actions</th>
@@ -626,7 +639,7 @@ const AdminDashboard = () => {
               <tbody>
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="text-center py-8 text-coffee/50">No users found.</td>
+                    <td colSpan="8" className="text-center py-8 text-coffee/50">No users found.</td>
                   </tr>
                 ) : (
                   users.map((u, i) => (
@@ -638,6 +651,22 @@ const AdminDashboard = () => {
                         <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-sm ${u.role === 'admin' ? 'bg-red-500/10 text-red-600 border border-red-500/20' : 'bg-green-500/10 text-green-700 border border-green-500/20'}`}>
                           {u.role}
                         </span>
+                      </td>
+                      <td className="py-4 px-4">
+                        {u.role === 'admin' ? (
+                          <span className="text-xs text-coffee/50 font-bold uppercase tracking-wider">Auto-Approved</span>
+                        ) : (
+                          <button
+                            onClick={() => toggleUserApproval(u._id, u.isApproved)}
+                            className={`px-3 py-1.5 rounded-sm text-xs font-bold uppercase tracking-widest transition-all ${
+                              u.isApproved 
+                                ? 'bg-green-500/10 text-green-700 border border-green-500/30 hover:bg-green-500 hover:text-white' 
+                                : 'bg-yellow-500/10 text-yellow-700 border border-yellow-500/30 hover:bg-yellow-500 hover:text-white'
+                            }`}
+                          >
+                            {u.isApproved ? 'Approved ✓' : 'Pending ⏳'}
+                          </button>
+                        )}
                       </td>
                       <td className="py-4 px-4 text-sm text-coffee/60">
                         {new Date(u.createdAt).toLocaleDateString()}

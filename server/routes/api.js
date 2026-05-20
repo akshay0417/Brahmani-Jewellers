@@ -480,11 +480,8 @@ router.get('/auth/verify-email', async (req, res) => {
       }
     }
 
-    // Generate token for auto-login
-    const autoToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-
-    // Redirect to login page with success message and auto-login token
-    const redirectUrl = `${clientUrl}/login?verified=true&token=${autoToken}&userId=${user._id}&userName=${encodeURIComponent(user.name)}&userEmail=${encodeURIComponent(user.email)}&userMobile=${encodeURIComponent(user.mobile)}&userRole=${user.role}&message=Your account has been verified and you are now logged in!`;
+    // Redirect to login page with success message (pending admin approval)
+    const redirectUrl = `${clientUrl}/login?verified=true&pendingApproval=true&message=Your email has been successfully verified! Your account is now pending approval from the administrator. You will be notified via email once approved.`;
     return res.redirect(redirectUrl);
   } catch (err) {
     console.error('[VERIFY EMAIL ERROR]:', err);
@@ -523,6 +520,10 @@ router.post('/auth/login', async (req, res) => {
 
     if (!user.isVerified) {
       return res.status(403).json({ message: 'Your account is not verified yet. Please click the verification link sent to your email or verify via OTP.', unverified: true });
+    }
+
+    if (!user.isApproved && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Your account is pending approval from the administrator. You will receive an email once approved.', unapproved: true });
     }
 
     user.lastLogin = new Date();
@@ -582,6 +583,10 @@ router.post('/auth/request-otp', async (req, res) => {
     // Enforce email verification link first
     if (!user.isVerified) {
       return res.status(403).json({ message: 'Your account is not verified yet. Please check your email for the verification link.', unverified: true });
+    }
+
+    if (!user.isApproved && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Your account is pending approval from the administrator. You will receive an email once approved.', unapproved: true });
     }
 
     // Generate 6-digit OTP
@@ -823,6 +828,51 @@ router.delete('/users/:id', auth, isAdmin, async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: 'User deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Approve/Disapprove User (Admin only)
+router.put('/users/:id/approve', auth, isAdmin, async (req, res) => {
+  const { isApproved } = req.body;
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.isApproved = isApproved;
+    await user.save();
+
+    // Send notification email to the user when their account is approved
+    if (isApproved && user.email) {
+      try {
+        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+        const approvalHtml = `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 40px 30px; background-color: #FFFDF9; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <div style="text-align: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 20px; margin-bottom: 30px;">
+              <h1 style="color: #3D2B1F; font-size: 28px; font-weight: 700; letter-spacing: 2px; margin: 0; text-transform: uppercase;">Brahmani Jewellers</h1>
+              <p style="color: #d4af37; font-size: 12px; letter-spacing: 4px; margin: 5px 0 0 0; text-transform: uppercase;">Purity & Trust Since 1992</p>
+            </div>
+            <h2 style="color: #3D2B1F; font-size: 20px; font-weight: 700; margin-bottom: 20px; text-transform: uppercase; text-align: center; letter-spacing: 1px;">Account Approved</h2>
+            <p style="font-size: 16px; margin-bottom: 10px;">Dear <strong>${user.name}</strong>,</p>
+            <p style="font-size: 15px; color: #5C4A3E; margin-bottom: 25px;">We are pleased to inform you that your Brahmani Jewellers account has been approved by our administrator.</p>
+            <p style="font-size: 15px; color: #5C4A3E; margin-bottom: 25px;">You now have full access to log in, view live rates, explore collections, and make purchases.</p>
+            <div style="text-align: center; margin: 35px 0;">
+              <a href="${clientUrl}/login" style="background-color: #3D2B1F; color: #FFFDF9; border: 1px solid #d4af37; padding: 14px 35px; text-decoration: none; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; border-radius: 4px; display: inline-block;">Login to Your Account</a>
+            </div>
+            <div style="margin-top: 40px; border-top: 1px solid rgba(212, 175, 55, 0.2); padding-top: 25px; font-size: 13px; color: #7A695D; text-align: center;">
+              <p style="margin: 0; font-weight: bold; color: #3D2B1F;">Brahmani Jewellers Team</p>
+              <p style="margin: 5px 0 0 0;">For inquiries: <a href="mailto:info.brahmanijewellers@gmail.com" style="color: #d4af37; text-decoration: none;">info.brahmanijewellers@gmail.com</a></p>
+            </div>
+          </div>
+        `;
+        sendEmail(user.email, 'Account Approved - Brahmani Jewellers', approvalHtml).catch(console.error);
+      } catch (err) {
+        console.error('[APPROVAL EMAIL ERROR]:', err);
+      }
+    }
+
+    res.json({ message: `User account has been ${isApproved ? 'approved' : 'disapproved'} successfully`, user });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
