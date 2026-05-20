@@ -14,7 +14,26 @@ const Login = () => {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [otpTimer, setOtpTimer] = useState(0); // in seconds
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let interval = null;
+    if (step === 2 && otpTimer > 0) {
+      interval = setInterval(() => {
+        setOtpTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (otpTimer === 0 && step === 2) {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [step, otpTimer]);
+
+  const formatTimer = (seconds) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
 
   useEffect(() => {
     if (location.state) {
@@ -86,6 +105,7 @@ const Login = () => {
       const res = await api.post('/auth/request-otp', { identifier });
       setSuccessMsg(res.data.message);
       setStep(2);
+      setOtpTimer(600); // 10 minutes validity
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send OTP. User may not exist.');
     } finally {
@@ -237,12 +257,16 @@ const Login = () => {
             </div>
             
             <div className="flex items-center justify-between text-sm">
-              <button type="button" onClick={() => { setStep(1); setError(''); setSuccessMsg(''); setOtp(''); }} className="text-coffee/70 hover:text-ochre transition-colors">
+              <button type="button" onClick={() => { setStep(1); setError(''); setSuccessMsg(''); setOtp(''); setOtpTimer(0); }} className="text-coffee/70 hover:text-ochre transition-colors">
                 Change Identifier
               </button>
-              <button type="button" onClick={handleRequestOtp} className="text-ochre hover:underline">
-                Resend OTP
-              </button>
+              {otpTimer > 0 ? (
+                <span className="text-coffee/70 font-bold bg-cream-alt px-2 py-1 rounded border border-ochre/20">Valid for {formatTimer(otpTimer)}</span>
+              ) : (
+                <button type="button" onClick={handleRequestOtp} className="text-ochre hover:underline font-bold">
+                  Resend OTP
+                </button>
+              )}
             </div>
 
             <button

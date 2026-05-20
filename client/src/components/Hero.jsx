@@ -23,12 +23,12 @@ const HERO_SLIDES = [
     viewText: 'Explore Catalog'
   },
   {
-    image: 'https://images.unsplash.com/photo-1588444837495-c6cfeb53f32d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Diamond ring on light background
-    subtitle: 'Tokens of Eternal Love',
-    title: 'Brilliant Diamond\nMasterpieces',
+    image: 'https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Antique / Polki on light background
+    subtitle: 'Heritage & Antique Collection',
+    title: 'Royal Antique\nMasterpieces',
     italicWord: 'Masterpieces',
-    description: 'Celebrate your absolute promise with our premium diamond rings and ornaments, crafted with brilliant stones.',
-    shopText: 'Explore Diamonds 💎',
+    description: 'Immerse yourself in history with our royal antique collections, crafted to echo the grandeur of ancient times.',
+    shopText: 'Explore Antique 🏺',
     viewText: 'View Gallery'
   },
   {
@@ -122,17 +122,17 @@ const Hero = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
-                  className="flex flex-col sm:flex-row gap-4"
+                  className="flex flex-col sm:flex-row gap-3"
                 >
                   <Link 
                     to="/shop" 
-                    className="px-10 py-4 bg-ochre text-cream font-sans font-extrabold uppercase tracking-widest hover:bg-coffee transition-all duration-300 rounded-sm text-center shadow-lg hover:shadow-ochre/30 hover:scale-[1.02] active:scale-95"
+                    className="px-8 py-3 bg-ochre text-cream text-sm font-sans font-extrabold uppercase tracking-widest hover:bg-coffee transition-all duration-300 rounded-sm text-center shadow-lg hover:shadow-ochre/30 hover:scale-[1.02] active:scale-95"
                   >
                     {HERO_SLIDES[currentIndex].shopText}
                   </Link>
                   <Link 
                     to="/gallery" 
-                    className="px-10 py-4 border-2 border-coffee text-coffee font-sans font-extrabold uppercase tracking-widest hover:bg-coffee hover:text-cream transition-all duration-300 rounded-sm text-center shadow-lg hover:scale-[1.02] active:scale-95"
+                    className="px-8 py-3 border-2 border-coffee text-coffee text-sm font-sans font-extrabold uppercase tracking-widest hover:bg-coffee hover:text-cream transition-all duration-300 rounded-sm text-center shadow-lg hover:scale-[1.02] active:scale-95"
                   >
                     {HERO_SLIDES[currentIndex].viewText}
                   </Link>
