@@ -176,8 +176,8 @@ const Shop = () => {
                 </button>
                 
                 {isGoldOrSilver && subCats.length > 0 && (
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-cream border border-ochre/20 rounded-md shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden">
-                    <div className="flex flex-col">
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                    <div className="flex flex-col bg-cream border border-ochre/20 rounded-md shadow-xl overflow-hidden">
                       <button onClick={() => { setFilter(cat); setSubFilter(''); }} className={`px-4 py-3 text-xs uppercase tracking-widest text-left transition-colors ${filter === cat && !subFilter ? 'bg-ochre/10 text-ochre font-bold' : 'text-coffee hover:bg-ochre/5'}`}>
                         All {cat}
                       </button>

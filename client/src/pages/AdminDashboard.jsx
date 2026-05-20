@@ -476,11 +476,17 @@ const AdminDashboard = () => {
                   <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Item Type (e.g. Ring, Chain)</label>
                   <input
                     type="text"
+                    list="subCatsList"
                     value={subCategory}
                     onChange={(e) => setSubCategory(e.target.value)}
                     className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
                     placeholder="Optional: Ring, Bracelet..."
                   />
+                  <datalist id="subCatsList">
+                    {[...new Set(gallery.filter(i => i.category === category && i.subCategory).map(i => i.subCategory))].map(sub => (
+                      <option key={sub} value={sub} />
+                    ))}
+                  </datalist>
                 </div>
               </div>
               <div className="space-y-2">
@@ -1005,7 +1011,19 @@ const AdminDashboard = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs text-coffee/70 uppercase tracking-widest">Item Type</label>
-                  <input type="text" value={editingItem.subCategory || ''} onChange={(e) => setEditingItem({ ...editingItem, subCategory: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre" placeholder="e.g. Ring, Chain" />
+                  <input 
+                    type="text" 
+                    list="editSubCatsList"
+                    value={editingItem.subCategory || ''} 
+                    onChange={(e) => setEditingItem({ ...editingItem, subCategory: e.target.value })} 
+                    className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre" 
+                    placeholder="e.g. Ring, Chain" 
+                  />
+                  <datalist id="editSubCatsList">
+                    {[...new Set(gallery.filter(i => i.category === editingItem.category && i.subCategory).map(i => i.subCategory))].map(sub => (
+                      <option key={sub} value={sub} />
+                    ))}
+                  </datalist>
                 </div>
               </div>
               <div className="space-y-2">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../api';
 import Hero from '../components/Hero';
 import RatesSection from '../components/RatesSection';
@@ -90,43 +90,62 @@ const About = () => (
   </section>
 );
 
-const Categories = () => (
-  <section className="py-16 md:py-20 bg-cream-alt transition-colors duration-300" id="categories">
-    <div className="max-w-7xl mx-auto px-4">
-      <div className="text-center mb-10 sm:mb-12">
-        <h2 className="text-4xl font-serif font-bold mb-4 text-coffee transition-colors duration-300">Our <span className="text-ochre">Collections</span></h2>
-        <p className="text-coffee/70 transition-colors duration-300">Explore our intricately designed jewellery categories</p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {[
-          { title: "Gold Jewellery", image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", desc: "Hallmarked pure gold designs", path: "/gallery?category=gold" },
-          { title: "Silver Ornaments", image: "https://images.unsplash.com/photo-1599643477874-5c866f5c5339?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", desc: "Elegant & traditional silver wear", path: "/gallery?category=silver" },
-          { title: "Rudraksha", image: "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", desc: "Authentic & certified Rudraksha", path: "/gallery?category=rudraksha" },
-        ].map((cat, idx) => (
-          <Link
-            key={idx}
-            to={cat.path}
-            className="block group"
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.15 }}
-              className="relative h-96 rounded-xl overflow-hidden cursor-pointer shadow-xl shadow-coffee/5 border border-ochre/15 hover:border-ochre/60 transition-colors duration-300"
+const Categories = () => {
+  const [items, setItems] = useState([]);
+  
+  useEffect(() => {
+    api.get('/gallery').then(res => {
+      // slice top 6 for the home page showcase (assuming latest are first or last, we can just slice)
+      const showcased = res.data.slice(0, 6);
+      setItems(showcased);
+    }).catch(err => console.log("Error fetching gallery", err));
+  }, []);
+
+  return (
+    <section className="py-16 md:py-20 bg-cream-alt transition-colors duration-300" id="categories">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-10 sm:mb-12">
+          <motion.span initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} className="text-ochre tracking-[0.5em] uppercase text-xs font-bold mb-4 block">Royal Showcase</motion.span>
+          <h2 className="text-4xl font-serif font-bold mb-4 text-coffee transition-colors duration-300">Featured <span className="text-ochre">Masterpieces</span></h2>
+          <p className="text-coffee/70 transition-colors duration-300">Discover the latest arrivals and exquisite designs from our gallery</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+          {items.map((item, idx) => (
+            <Link
+              key={item._id || idx}
+              to={`/gallery?category=${item.category}`}
+              className="block group"
             >
-              <img src={cat.image} alt={cat.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-coffee/90 via-coffee/40 to-transparent flex flex-col justify-end p-8">
-                <h3 className="text-2xl font-serif text-cream mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{cat.title}</h3>
-                <p className="text-cream/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">{cat.desc}</p>
-                <span className="text-[10px] tracking-[0.2em] text-ochre uppercase font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150">View Exhibition →</span>
-              </div>
-            </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: (idx % 3) * 0.15 }}
+                className="relative h-96 rounded-xl overflow-hidden cursor-pointer shadow-xl shadow-coffee/5 border border-ochre/15 hover:border-ochre/60 transition-colors duration-300"
+              >
+                <img src={item.imageUrl} alt={item.name || item.category} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-coffee/90 via-coffee/40 to-transparent flex flex-col justify-end p-8">
+                  <h3 className="text-2xl font-serif text-cream mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{item.name || `${item.category} Design`}</h3>
+                  <p className="text-cream/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 line-clamp-2">{item.description || item.subCategory || "Exquisite craftsmanship"}</p>
+                  <span className="text-[10px] tracking-[0.2em] text-ochre uppercase font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150">View Category →</span>
+                </div>
+              </motion.div>
+            </Link>
+          ))}
+        </div>
+        
+        {items.length === 0 && (
+          <div className="text-center text-coffee/50 py-10">Loading masterpieces...</div>
+        )}
+        
+        <div className="mt-16 text-center">
+          <Link to="/gallery" className="inline-block px-8 py-3 border border-ochre text-coffee font-bold uppercase tracking-widest text-sm hover:bg-ochre hover:text-cream transition-colors duration-300 shadow-sm hover:shadow-md">
+            Explore Full Exhibition
           </Link>
-        ))}
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 const Testimonials = () => (
   <section className="py-16 md:py-20 bg-cream border-y border-ochre/10 transition-colors duration-300">

@@ -27,8 +27,8 @@ export default {
         royalBlack: '#0A0A0A',
       },
       fontFamily: {
-        serif: ['Cinzel', 'serif'],
-        sans: ['Outfit', 'sans-serif'],
+        serif: ['"Playfair Display"', 'serif'],
+        sans: ['Montserrat', 'sans-serif'],
       },
     },
   },
