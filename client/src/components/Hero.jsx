@@ -92,7 +92,7 @@ const Hero = () => {
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                  className="text-ochre tracking-[0.8em] uppercase text-xs md:text-sm font-bold mb-4 block drop-shadow-sm font-sans"
+                  className="text-ochre tracking-[0.6em] uppercase text-[10px] md:text-xs font-bold mb-3 block drop-shadow-sm font-sans"
                 >
                   {HERO_SLIDES[currentIndex].subtitle}
                 </motion.span>
@@ -101,7 +101,7 @@ const Hero = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-                  className="text-4xl md:text-7xl font-serif font-bold text-coffee leading-tight mb-6"
+                  className="text-3xl md:text-5xl font-serif font-bold text-coffee leading-tight mb-4"
                 >
                   {HERO_SLIDES[currentIndex].title.split('\n')[0]} <br />
                   <span className="text-ochre italic drop-shadow-sm">
@@ -113,7 +113,7 @@ const Hero = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
-                  className="text-coffee/80 text-base md:text-xl font-sans font-medium mb-10 max-w-lg leading-relaxed"
+                  className="text-coffee/80 text-sm md:text-base font-sans font-medium mb-8 max-w-lg leading-relaxed"
                 >
                   {HERO_SLIDES[currentIndex].description}
                 </motion.p>
@@ -126,13 +126,13 @@ const Hero = () => {
                 >
                   <Link 
                     to="/shop" 
-                    className="px-8 py-3 bg-ochre text-cream text-sm font-sans font-extrabold uppercase tracking-widest hover:bg-coffee transition-all duration-300 rounded-sm text-center shadow-lg hover:shadow-ochre/30 hover:scale-[1.02] active:scale-95"
+                    className="px-6 py-2.5 bg-ochre text-cream text-xs font-sans font-extrabold uppercase tracking-widest hover:bg-coffee transition-all duration-300 rounded-sm text-center shadow-lg hover:shadow-ochre/30 hover:scale-[1.02] active:scale-95"
                   >
                     {HERO_SLIDES[currentIndex].shopText}
                   </Link>
                   <Link 
                     to="/gallery" 
-                    className="px-8 py-3 border-2 border-coffee text-coffee text-sm font-sans font-extrabold uppercase tracking-widest hover:bg-coffee hover:text-cream transition-all duration-300 rounded-sm text-center shadow-lg hover:scale-[1.02] active:scale-95"
+                    className="px-6 py-2.5 border-2 border-coffee text-coffee text-xs font-sans font-extrabold uppercase tracking-widest hover:bg-coffee hover:text-cream transition-all duration-300 rounded-sm text-center shadow-lg hover:scale-[1.02] active:scale-95"
                   >
                     {HERO_SLIDES[currentIndex].viewText}
                   </Link>

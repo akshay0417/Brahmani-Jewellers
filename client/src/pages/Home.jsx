@@ -327,9 +327,9 @@ const Home = () => {
     >
       <Hero />
       <RatesSection />
-      <GoogleReviews />
       <Categories />
       <About />
+      <GoogleReviews />
       <Contact />
     </motion.div>
   );
