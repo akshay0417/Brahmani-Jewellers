@@ -14,7 +14,7 @@ const HERO_SLIDES = [
     viewText: 'View Collection'
   },
   {
-    image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Model with light jewelry
+    image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Gold on model
     subtitle: 'The Art of Fine Jewellery',
     title: 'Exquisite Pure\nGold Designs',
     italicWord: 'Gold Designs',
@@ -23,7 +23,7 @@ const HERO_SLIDES = [
     viewText: 'Explore Catalog'
   },
   {
-    image: 'https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Antique / Polki on light background
+    image: 'https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Antique / Polki Gold
     subtitle: 'Heritage & Antique Collection',
     title: 'Royal Antique\nMasterpieces',
     italicWord: 'Masterpieces',
@@ -32,13 +32,13 @@ const HERO_SLIDES = [
     viewText: 'View Gallery'
   },
   {
-    image: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Model with heavy jewelry
-    subtitle: 'Exquisite Silver Ornaments',
-    title: 'Purity In\nSilver Wear',
-    italicWord: 'Silver Wear',
-    description: 'Dazzling silver bangles, chains, and articles designed for daily elegance and auspicious celebrations.',
-    shopText: 'Shop Silver 🪙',
-    viewText: 'View Silver'
+    image: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Heavy gold jewelry on Indian bride
+    subtitle: 'Exclusive 22k Gold',
+    title: 'Authentic Indian\nGold Jewellery',
+    italicWord: 'Gold Jewellery',
+    description: 'Explore our breathtaking range of pure 22-karat gold necklaces, bangles, and earrings crafted for perfection.',
+    shopText: 'Shop Gold 🪙',
+    viewText: 'View Catalog'
   }
 ];
 
@@ -48,9 +48,9 @@ const Hero = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % HERO_SLIDES.length);
-    }, 3000); // Changed to 3 seconds as requested
+    }, 3000); 
     return () => clearInterval(timer);
-  }, [currentIndex]); // Added dependency to reset timer on manual scroll
+  }, [currentIndex]); 
 
   const nextSlide = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % HERO_SLIDES.length);
@@ -92,7 +92,7 @@ const Hero = () => {
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                  className="text-ochre tracking-[0.6em] uppercase text-[10px] md:text-xs font-bold mb-3 block drop-shadow-sm font-sans"
+                  className="text-ochre tracking-[0.8em] uppercase text-xs md:text-sm font-bold mb-4 block drop-shadow-sm font-sans"
                 >
                   {HERO_SLIDES[currentIndex].subtitle}
                 </motion.span>
@@ -101,7 +101,7 @@ const Hero = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-                  className="text-3xl md:text-5xl font-serif font-bold text-coffee leading-tight mb-4"
+                  className="text-4xl md:text-7xl font-serif font-bold text-coffee leading-tight mb-6"
                 >
                   {HERO_SLIDES[currentIndex].title.split('\n')[0]} <br />
                   <span className="text-ochre italic drop-shadow-sm">
@@ -113,7 +113,7 @@ const Hero = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
-                  className="text-coffee/80 text-sm md:text-base font-sans font-medium mb-8 max-w-lg leading-relaxed"
+                  className="text-coffee/80 text-base md:text-xl font-sans font-medium mb-10 max-w-lg leading-relaxed"
                 >
                   {HERO_SLIDES[currentIndex].description}
                 </motion.p>

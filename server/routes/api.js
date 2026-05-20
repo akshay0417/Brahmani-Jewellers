@@ -604,7 +604,7 @@ router.post('/auth/request-otp', async (req, res) => {
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.otp = otp;
-    user.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+    user.otpExpiry = new Date(Date.now() + 2 * 60 * 1000); // 2 mins
     await user.save();
 
     console.log(`[MOCK OTP] Your OTP for ${identifier} is ${otp}`);
@@ -623,7 +623,7 @@ router.post('/auth/request-otp', async (req, res) => {
           <div style="background-color: #FCF0DA; padding: 20px; text-align: center; border-radius: 8px; margin: 25px 0; border: 1px solid #EBA938;">
             <p style="margin: 0 0 10px 0; color: #3D2B1F; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Your OTP Code</p>
             <h1 style="letter-spacing: 5px; color: #3D2B1F; margin: 0; font-size: 2.2em; font-family: monospace;">${otp}</h1>
-            <p style="color: #666; font-size: 12px; margin-top: 10px; margin-bottom: 0;">This code will expire in 10 minutes.</p>
+            <p style="color: #666; font-size: 12px; margin-top: 10px; margin-bottom: 0;">This code will expire in 2 minutes.</p>
           </div>
           <p style="font-size: 14px; color: #7A695D; margin-bottom: 25px;">If you didn't request this, please ignore this email or contact support.</p>
           <div style="margin-top: 40px; border-top: 1px solid rgba(212, 175, 55, 0.2); padding-top: 25px; font-size: 13px; color: #7A695D; text-align: center;">

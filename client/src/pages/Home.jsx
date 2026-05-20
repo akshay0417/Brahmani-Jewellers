@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import Hero from '../components/Hero';
 import RatesSection from '../components/RatesSection';
+import GoogleReviews from '../components/GoogleReviews';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, MessageSquare, CheckCircle, Map, Star, Send, User, Mail } from 'lucide-react';
@@ -25,7 +26,7 @@ const About = () => (
         />
         {/* Years of trust badge */}
         <div className="absolute -bottom-6 -right-6 z-20 bg-ochre text-coffee p-6 rounded-lg shadow-xl text-center">
-          <span className="block text-4xl font-bold font-serif">10+</span>
+          <span className="block text-4xl font-bold font-serif">35+</span>
           <span className="text-sm font-medium uppercase tracking-wider">Years of Trust</span>
         </div>
       </motion.div>
@@ -326,9 +327,9 @@ const Home = () => {
     >
       <Hero />
       <RatesSection />
+      <GoogleReviews />
       <Categories />
       <About />
-      <Testimonials />
       <Contact />
     </motion.div>
   );
