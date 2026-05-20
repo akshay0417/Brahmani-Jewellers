@@ -13,6 +13,8 @@ const RateSchema = new mongoose.Schema({
   
   // Settings
   isManual: { type: Boolean, default: true },
+  freeDeliveryKmLimit: { type: Number, default: 10 },
+  deliveryChargePerKm: { type: Number, default: 15 },
   
   lastUpdated: { type: Date, default: Date.now }
 });

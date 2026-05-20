@@ -5,11 +5,12 @@ import { motion } from 'framer-motion';
 import { LogOut, Upload, Trash2, TrendingUp, Image as ImageIcon, CheckCircle, AlertCircle, User, MessageSquare, Lock, X, Mail } from 'lucide-react';
 
 const AdminDashboard = () => {
-  const [rates, setRates] = useState({ isManual: true, goldImpFine: '', silverFine: '', manualGold24K: '', manualGold22K: '', manualGold18K: '', manualSilver90: '' });
+  const [rates, setRates] = useState({ isManual: true, goldImpFine: '', silverFine: '', manualGold24K: '', manualGold22K: '', manualGold18K: '', manualSilver90: '', freeDeliveryKmLimit: '', deliveryChargePerKm: '' });
   const [gallery, setGallery] = useState([]);
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [newImage, setNewImage] = useState(null);
   const [category, setCategory] = useState('gold');
   const [subCategory, setSubCategory] = useState('');
@@ -55,12 +56,13 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [rateRes, galleryRes, usersRes, messagesRes, subscribersRes] = await Promise.all([
+      const [rateRes, galleryRes, usersRes, messagesRes, subscribersRes, ordersRes] = await Promise.all([
         api.get('/rates'),
         api.get('/gallery'),
         api.get('/users', config),
         api.get('/messages', config),
-        api.get('/subscribers', config)
+        api.get('/subscribers', config),
+        api.get('/admin/orders', config)
       ]);
 
       if (rateRes.data) setRates({ 
@@ -70,13 +72,16 @@ const AdminDashboard = () => {
         manualGold24K: rateRes.data.gold24K || '',
         manualGold22K: rateRes.data.gold22K || '',
         manualGold18K: rateRes.data.gold18K || '',
-        manualSilver90: rateRes.data.silver90 || ''
+        manualSilver90: rateRes.data.silver90 || '',
+        freeDeliveryKmLimit: rateRes.data.freeDeliveryKmLimit ?? 10,
+        deliveryChargePerKm: rateRes.data.deliveryChargePerKm ?? 15
       });
       
       if (galleryRes.data) setGallery(galleryRes.data);
       if (usersRes.data) setUsers(usersRes.data);
       if (messagesRes.data) setMessages(messagesRes.data);
       if (subscribersRes.data) setSubscribers(subscribersRes.data);
+      if (ordersRes.data) setOrders(ordersRes.data);
     } catch (err) {
       console.error("Error loading dashboard data", err);
     }
@@ -92,6 +97,19 @@ const AdminDashboard = () => {
       setStatus({ type: 'error', message: 'Failed to update rates.' });
     } finally {
       setLoading(false);
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    }
+  };
+
+  const handleUpdateOrderStatus = async (orderId, newStatus, newPaymentStatus) => {
+    try {
+      await api.put(`/admin/orders/${orderId}`, { status: newStatus, paymentStatus: newPaymentStatus }, config);
+      setStatus({ type: 'success', message: 'Order status updated successfully!' });
+      fetchData();
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    } catch (err) {
+      console.error(err);
+      setStatus({ type: 'error', message: 'Failed to update order status.' });
       setTimeout(() => setStatus({ type: '', message: '' }), 3000);
     }
   };
@@ -377,6 +395,33 @@ const AdminDashboard = () => {
                 </div>
               )}
 
+              {/* Delivery settings */}
+              <div className="space-y-4 bg-cream p-4 rounded border border-ochre/20">
+                <p className="text-xs text-coffee/70 font-bold mb-2">DELIVERY CHARGES SETTINGS</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-coffee/70 uppercase tracking-widest">Free Delivery Limit (KM)</label>
+                    <input
+                      type="number"
+                      value={rates.freeDeliveryKmLimit}
+                      onChange={(e) => setRates({ ...rates, freeDeliveryKmLimit: e.target.value })}
+                      className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
+                      placeholder="e.g. 10"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-coffee/70 uppercase tracking-widest">Charge Per KM (₹)</label>
+                    <input
+                      type="number"
+                      value={rates.deliveryChargePerKm}
+                      onChange={(e) => setRates({ ...rates, deliveryChargePerKm: e.target.value })}
+                      className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
+                      placeholder="e.g. 15"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <button disabled={loading} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 transition-all rounded-sm">
                 {loading ? 'Processing...' : 'Save Market Prices'}
               </button>
@@ -601,6 +646,110 @@ const AdminDashboard = () => {
                   )}
                   <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-cream-alt/90 text-coffee text-[10px] uppercase font-bold tracking-wider rounded-sm shadow-sm backdrop-blur-sm">
                     {item.category} {item.weight && `| ${item.weight}`} {item.purity && `| ${item.purity}`} {item.price && `| ₹${item.price}`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Manage Orders */}
+        <section className="mt-12 bg-cream-alt p-8 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
+          <div className="flex items-center justify-between mb-8 border-b border-ochre/10 pb-4">
+            <div className="flex items-center gap-3">
+              <TrendingUp className="text-ochre" size={28} />
+              <h2 className="text-2xl font-serif font-bold text-coffee transition-colors duration-300">
+                Manage <span className="text-ochre">Orders</span>
+              </h2>
+            </div>
+            <div className="bg-ochre/10 text-ochre px-4 py-2 rounded-full font-bold text-sm tracking-widest uppercase">
+              Total Orders: {orders.length}
+            </div>
+          </div>
+          
+          {orders.length === 0 ? (
+            <p className="text-coffee/50 text-center py-8 transition-colors duration-300">No orders found.</p>
+          ) : (
+            <div className="space-y-6">
+              {orders.map((order) => (
+                <div key={order._id} className="bg-cream border border-ochre/25 p-6 rounded-lg shadow-sm space-y-4">
+                  <div className="flex flex-wrap justify-between items-center gap-4 border-b border-ochre/10 pb-4">
+                    <div>
+                      <p className="text-xs text-coffee/50 font-bold uppercase">Order ID</p>
+                      <p className="text-sm font-mono text-coffee font-semibold">{order._id}</p>
+                      <p className="text-[10px] text-coffee/40">{new Date(order.createdAt).toLocaleString('en-IN')}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-coffee/50 font-bold uppercase">Customer</p>
+                      <p className="text-sm text-coffee font-semibold">{order.user?.name || 'Guest'} ({order.user?.mobile || 'No Mobile'})</p>
+                      <p className="text-xs text-coffee/60">{order.user?.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-coffee/50 font-bold uppercase">Payment Method</p>
+                      <p className="text-sm font-semibold text-ochre">{order.paymentMethod || 'COD'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-coffee/50 font-bold uppercase">Status</p>
+                      <div className="flex gap-2 mt-1">
+                        <select 
+                          value={order.status} 
+                          onChange={(e) => handleUpdateOrderStatus(order._id, e.target.value, order.paymentStatus)}
+                          className="bg-cream border border-ochre/30 text-xs px-2 py-1 rounded focus:outline-none focus:border-ochre text-coffee font-bold"
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="Processing">Processing</option>
+                          <option value="Shipped">Shipped</option>
+                          <option value="Delivered">Delivered</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </select>
+                        <select 
+                          value={order.paymentStatus} 
+                          onChange={(e) => handleUpdateOrderStatus(order._id, order.status, e.target.value)}
+                          className={`border text-xs px-2 py-1 rounded focus:outline-none text-coffee font-bold ${order.paymentStatus === 'Paid' ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'}`}
+                        >
+                          <option value="Unpaid">Unpaid</option>
+                          <option value="Paid">Paid</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Items list */}
+                  <div className="space-y-2">
+                    <p className="text-xs text-coffee/50 font-bold uppercase">Items ordered</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {order.items?.map((item, idx) => (
+                        <div key={idx} className="flex gap-3 bg-cream-alt p-3 rounded border border-ochre/10 items-center">
+                          {item.product?.imageUrl && (
+                            <img src={item.product.imageUrl} alt={item.product.name} className="w-12 h-12 object-cover rounded border border-ochre/25" />
+                          )}
+                          <div>
+                            <p className="text-sm font-serif text-coffee font-semibold">{item.product?.name || item.product?.category}</p>
+                            <p className="text-xs text-coffee/60">
+                              Qty: {item.quantity} | ₹{(item.priceAtPurchase || 0).toLocaleString('en-IN')} each
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Address and Totals */}
+                  <div className="flex flex-wrap justify-between items-end gap-6 pt-4 border-t border-ochre/10">
+                    <div className="text-xs text-coffee/70 max-w-md">
+                      <p className="font-bold text-coffee uppercase text-[10px] mb-1">Shipping Address</p>
+                      <p className="font-semibold">{order.shippingAddress?.name} ({order.shippingAddress?.mobile})</p>
+                      <p>{order.shippingAddress?.address}, {order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}</p>
+                    </div>
+                    <div className="text-right space-y-1">
+                      {order.distanceKm > 0 && (
+                        <p className="text-xs text-coffee/60">Distance: {order.distanceKm} km</p>
+                      )}
+                      {order.shippingCharge > 0 && (
+                        <p className="text-xs text-coffee/60">Delivery Charge: ₹{order.shippingCharge.toLocaleString('en-IN')}</p>
+                      )}
+                      <p className="text-lg font-serif text-coffee font-bold">Total: <span className="text-ochre">₹{order.totalAmount?.toLocaleString('en-IN')}</span></p>
+                    </div>
                   </div>
                 </div>
               ))}

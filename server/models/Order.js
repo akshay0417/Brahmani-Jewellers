@@ -10,6 +10,8 @@ const OrderSchema = new mongoose.Schema({
     }
   ],
   totalAmount: { type: Number, required: true },
+  shippingCharge: { type: Number, default: 0 },
+  distanceKm: { type: Number, default: 0 },
   shippingAddress: {
     name: String,
     mobile: String,

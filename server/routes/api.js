@@ -896,7 +896,7 @@ router.put('/users/:id/approve', auth, isAdmin, async (req, res) => {
 router.get('/rates', async (req, res) => {
   try {
     const rate = await Rate.findOne().sort({ lastUpdated: -1 });
-    res.json(rate || { gold22K: 0, gold18K: 0, silver90: 0, isManual: true });
+    res.json(rate || { gold22K: 0, gold18K: 0, silver90: 0, isManual: true, freeDeliveryKmLimit: 10, deliveryChargePerKm: 15 });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -904,7 +904,7 @@ router.get('/rates', async (req, res) => {
 
 // Update Rates (Admin only)
 router.post('/rates', auth, isAdmin, async (req, res) => {
-  const { isManual, goldImpFine, silverFine, manualGold24K, manualGold22K, manualGold18K, manualSilver90 } = req.body;
+  const { isManual, goldImpFine, silverFine, manualGold24K, manualGold22K, manualGold18K, manualSilver90, freeDeliveryKmLimit, deliveryChargePerKm } = req.body;
   try {
     let rate = await Rate.findOne();
     if (!rate) {
@@ -912,6 +912,8 @@ router.post('/rates', auth, isAdmin, async (req, res) => {
     }
     
     rate.isManual = isManual !== undefined ? isManual : rate.isManual;
+    if (freeDeliveryKmLimit !== undefined) rate.freeDeliveryKmLimit = freeDeliveryKmLimit;
+    if (deliveryChargePerKm !== undefined) rate.deliveryChargePerKm = deliveryChargePerKm;
     
     if (rate.isManual) {
       if (manualGold24K !== undefined) rate.gold24K = manualGold24K;
@@ -1369,7 +1371,7 @@ router.delete('/cart/remove/:productId', auth, async (req, res) => {
 
 // Place a new order
 router.post('/orders', auth, async (req, res) => {
-  const { items, totalAmount, shippingAddress, paymentMethod } = req.body;
+  const { items, totalAmount, shippingAddress, paymentMethod, shippingCharge, distanceKm } = req.body;
   try {
     if (!items || items.length === 0) return res.status(400).json({ message: 'No items in order' });
 
@@ -1378,7 +1380,9 @@ router.post('/orders', auth, async (req, res) => {
       items,
       totalAmount,
       shippingAddress,
-      paymentMethod
+      paymentMethod,
+      shippingCharge: shippingCharge || 0,
+      distanceKm: distanceKm || 0
     });
 
     await newOrder.save();
