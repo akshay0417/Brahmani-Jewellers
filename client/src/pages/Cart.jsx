@@ -31,9 +31,9 @@ const Cart = () => {
           <div className="bg-cream-alt p-6 rounded-lg border border-ochre/10 shadow-sm">
             {cart.items.map((item) => (
               <div key={item.product._id} className="flex flex-col sm:flex-row items-center gap-6 py-6 border-b border-ochre/10 last:border-0">
-                <img src={item.product.imageUrl} alt={item.product.category} className="w-24 h-24 object-cover rounded-sm border border-ochre/20" />
+                <img src={item.product.imageUrl} alt={item.product.name || item.product.category} className="w-24 h-24 object-cover rounded-sm border border-ochre/20" />
                 <div className="flex-1 text-center sm:text-left">
-                  <h3 className="text-lg font-serif text-coffee capitalize">{item.product.category} {item.product.weight || ''}</h3>
+                  <h3 className="text-lg font-serif text-coffee capitalize">{item.product.name || `${item.product.category} ${item.product.weight || ''}`}</h3>
                   <p className="text-ochre text-sm font-medium">₹{(item.product.price || 0).toLocaleString('en-IN')}</p>
                 </div>
                 <div className="flex items-center gap-4 bg-cream p-2 rounded-full border border-ochre/20">

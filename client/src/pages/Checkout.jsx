@@ -138,7 +138,7 @@ const Checkout = () => {
               <div className="space-y-4 mb-8 max-h-[300px] overflow-y-auto pr-2">
                 {cart.items.map((item) => (
                   <div key={item.product._id} className="flex justify-between items-center text-sm">
-                    <span className="text-coffee/80">{item.product.category} x {item.quantity}</span>
+                    <span className="text-coffee/80">{(item.product.name || item.product.category) + (item.product.weight ? ` (${item.product.weight}g)` : '')} x {item.quantity}</span>
                     <span className="font-medium">₹{(item.product.price * item.quantity).toLocaleString('en-IN')}</span>
                   </div>
                 ))}

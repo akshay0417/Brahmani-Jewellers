@@ -60,12 +60,63 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const cartCount = cart.items.reduce((total, item) => total + item.quantity, 0);
-  const cartTotal = cart.items.reduce((total, item) => total + (item.product.price || 0) * item.quantity, 0);
+  const [rates, setRates] = useState(null);
+
+  const fetchRates = async () => {
+    try {
+      const res = await api.get('/rates');
+      setRates(res.data);
+    } catch (err) {
+      console.error("Error fetching rates in CartContext", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchRates();
+  }, []);
+
+  const calculatePrice = (product) => {
+    if (!product) return 0;
+    if (product.price) return product.price;
+    if (!rates || !product.weight || !product.purity) return 0;
+
+    let ratePerGram = 0;
+    const p = (product.purity || '').toUpperCase();
+    if (p.includes('24')) ratePerGram = rates.gold24K / 10;
+    else if (p.includes('22')) ratePerGram = rates.gold22K / 10;
+    else if (p.includes('18')) ratePerGram = rates.gold18K / 10;
+    else if (p.includes('90') || p.includes('SILVER')) ratePerGram = rates.silver90 / 1000;
+
+    if (!ratePerGram) return 0;
+
+    const weight = parseFloat(product.weight);
+    const basePrice = ratePerGram * weight;
+    const makingPercent = product.makingCharges || 0;
+    const makingAmount = basePrice * (makingPercent / 100);
+    const other = product.otherCharges || 0;
+    const subtotal = basePrice + makingAmount + other;
+    const gst = subtotal * 0.03;
+    return Math.round(subtotal + gst);
+  };
+
+  const cartItems = cart.items.map(item => {
+    if (!item.product) return item;
+    const calculatedPrice = calculatePrice(item.product);
+    return {
+      ...item,
+      product: {
+        ...item.product,
+        price: calculatedPrice || item.product.price || 0
+      }
+    };
+  });
+
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const cartTotal = cartItems.reduce((total, item) => total + (item.product.price || 0) * item.quantity, 0);
 
   return (
     <CartContext.Provider value={{ 
-      cart, 
+      cart: { ...cart, items: cartItems }, 
       addToCart, 
       updateQuantity, 
       removeFromCart, 
