@@ -21,6 +21,7 @@ const AdminDashboard = () => {
   const [purity, setPurity] = useState('22K');
   const [makingCharges, setMakingCharges] = useState('');
   const [otherCharges, setOtherCharges] = useState('');
+  const [isFeatured, setIsFeatured] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '' });
@@ -130,6 +131,7 @@ const AdminDashboard = () => {
     formData.append('price', rates.price || '');
     formData.append('makingCharges', makingCharges);
     formData.append('otherCharges', otherCharges);
+    formData.append('isFeatured', isFeatured);
 
     try {
       await api.post('/gallery', formData, {
@@ -140,6 +142,7 @@ const AdminDashboard = () => {
       setPurity('22K');
       setMakingCharges('');
       setOtherCharges('');
+      setIsFeatured(false);
       setRates({ ...rates, price: '' });
       fetchData();
       setStatus({ type: 'success', message: 'Image uploaded successfully!' });
@@ -583,6 +586,18 @@ const AdminDashboard = () => {
                   />
                 </div>
               </div>
+              <div className="flex items-center gap-3 pt-2">
+                <input 
+                  type="checkbox" 
+                  id="isFeatured" 
+                  checked={isFeatured}
+                  onChange={(e) => setIsFeatured(e.target.checked)}
+                  className="w-5 h-5 accent-ochre"
+                />
+                <label htmlFor="isFeatured" className="text-sm text-coffee font-bold cursor-pointer">
+                  Highlight this photo on Home Page? (Large display)
+                </label>
+              </div>
               <button disabled={loading || !newImage} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 transition-all disabled:opacity-50 rounded-sm">
                 {loading ? 'Uploading...' : 'Add to Collection'}
               </button>
@@ -648,6 +663,11 @@ const AdminDashboard = () => {
                   {item.subCategory && (
                     <div className="absolute top-2 left-2 bg-cream/90 backdrop-blur-sm text-coffee text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-sm shadow-sm">
                       {item.subCategory}
+                    </div>
+                  )}
+                  {item.isFeatured && (
+                    <div className="absolute top-2 right-2 bg-ochre text-coffee p-1 rounded-full shadow-md" title="Highlighted on Home Page">
+                      <Star size={12} className="fill-coffee" />
                     </div>
                   )}
                   <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-cream-alt/90 text-coffee text-[10px] uppercase font-bold tracking-wider rounded-sm shadow-sm backdrop-blur-sm">
@@ -1060,6 +1080,18 @@ const AdminDashboard = () => {
                   <label className="text-xs text-coffee/70 uppercase tracking-widest">Other Charges (₹)</label>
                   <input type="number" value={editingItem.otherCharges ?? ''} onChange={(e) => setEditingItem({ ...editingItem, otherCharges: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre" />
                 </div>
+              </div>
+              <div className="flex items-center gap-3 pt-4">
+                <input 
+                  type="checkbox" 
+                  id="editIsFeatured" 
+                  checked={editingItem.isFeatured || false}
+                  onChange={(e) => setEditingItem({ ...editingItem, isFeatured: e.target.checked })}
+                  className="w-5 h-5 accent-ochre"
+                />
+                <label htmlFor="editIsFeatured" className="text-sm text-coffee font-bold cursor-pointer">
+                  Highlight this photo on Home Page? (Large display)
+                </label>
               </div>
               <button disabled={loading} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 rounded-sm mt-4">
                 {loading ? 'Saving...' : 'Save Changes'}

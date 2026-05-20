@@ -95,8 +95,8 @@ const Categories = () => {
   
   useEffect(() => {
     api.get('/gallery').then(res => {
-      // slice top 6 for the home page showcase (assuming latest are first or last, we can just slice)
-      const showcased = res.data.slice(0, 6);
+      // slice top 8 for the home page showcase to fill a 4-col grid nicely
+      const showcased = res.data.slice(0, 8);
       setItems(showcased);
     }).catch(err => console.log("Error fetching gallery", err));
   }, []);
@@ -109,22 +109,22 @@ const Categories = () => {
           <h2 className="text-4xl font-serif font-bold mb-4 text-coffee transition-colors duration-300">Featured <span className="text-ochre">Masterpieces</span></h2>
           <p className="text-coffee/70 transition-colors duration-300">Discover the latest arrivals and exquisite designs from our gallery</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:auto-rows-[280px]">
           {items.map((item, idx) => (
             <Link
               key={item._id || idx}
               to={`/gallery?category=${item.category}`}
-              className="block group"
+              className={`block group ${item.isFeatured ? 'md:col-span-2 md:row-span-2' : ''}`}
             >
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: (idx % 3) * 0.15 }}
-                className="relative h-72 rounded-xl overflow-hidden cursor-pointer shadow-xl shadow-coffee/5 border border-ochre/15 hover:border-ochre/60 transition-colors duration-300"
+                transition={{ delay: (idx % 4) * 0.15 }}
+                className="relative h-full min-h-[280px] rounded-xl overflow-hidden cursor-pointer shadow-xl shadow-coffee/5 border border-ochre/15 hover:border-ochre/60 transition-colors duration-300"
               >
                 <img src={item.imageUrl} alt={item.name || item.category} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-t from-coffee/90 via-coffee/40 to-transparent flex flex-col justify-end p-8">
-                  <h3 className="text-2xl font-serif text-cream mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{item.name || `${item.category} Design`}</h3>
+                <div className="absolute inset-0 bg-gradient-to-t from-coffee/90 via-coffee/40 to-transparent flex flex-col justify-end p-6 md:p-8">
+                  <h3 className={`${item.isFeatured ? 'text-3xl md:text-4xl' : 'text-xl md:text-2xl'} font-serif text-cream mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300`}>{item.name || `${item.category} Design`}</h3>
                   <p className="text-cream/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 line-clamp-2">{item.description || item.subCategory || "Exquisite craftsmanship"}</p>
                   <span className="text-[10px] tracking-[0.2em] text-ochre uppercase font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150">View Category →</span>
                 </div>
