@@ -10,6 +10,18 @@ const axios = require('axios');
 const auth = require('../middleware/auth');
 const isAdmin = require('../middleware/isAdmin');
 
+// Cloudinary Configuration
+if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name') {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  });
+  console.log('Cloudinary configured successfully! ☁️');
+} else {
+  console.warn('[WARNING] Cloudinary is not configured in .env. Falling back to local/base64 storage.');
+}
+
 // API Health Check
 router.get('/', (req, res) => {
   res.json({ 
@@ -953,8 +965,32 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'No image uploaded' });
 
-    const b64 = Buffer.from(req.file.buffer).toString('base64');
-    const imageUrl = `data:${req.file.mimetype};base64,${b64}`;
+    let imageUrl = '';
+    const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && 
+                                   process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name';
+
+    if (isCloudinaryConfigured) {
+      // Upload to Cloudinary using stream
+      const { Readable } = require('stream');
+      const uploadPromise = () => new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'brahmani_jewellers',
+            resource_type: 'image'
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result.secure_url);
+          }
+        );
+        Readable.from(req.file.buffer).pipe(uploadStream);
+      });
+      imageUrl = await uploadPromise();
+    } else {
+      // Fallback to base64
+      const b64 = Buffer.from(req.file.buffer).toString('base64');
+      imageUrl = `data:${req.file.mimetype};base64,${b64}`;
+    }
 
     const newItem = new Gallery({
       imageUrl: imageUrl,
@@ -1009,8 +1045,26 @@ router.delete('/gallery/:id', auth, isAdmin, async (req, res) => {
     const item = await Gallery.findById(req.params.id);
     if (!item) return res.status(404).json({ message: 'Item not found' });
 
-    // Optional: Delete from cloudinary too using public_id
-    // But for now, just remove from DB
+    // Delete from Cloudinary if configured and the image is stored there
+    const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && 
+                                   process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name';
+    if (isCloudinaryConfigured && item.imageUrl && item.imageUrl.includes('cloudinary.com')) {
+      try {
+        const parts = item.imageUrl.split('/');
+        const uploadIndex = parts.indexOf('upload');
+        if (uploadIndex !== -1 && uploadIndex + 2 < parts.length) {
+          const publicIdWithExtension = parts.slice(uploadIndex + 2).join('/');
+          const publicId = publicIdWithExtension.substring(0, publicIdWithExtension.lastIndexOf('.'));
+          if (publicId) {
+            await cloudinary.uploader.destroy(publicId);
+            console.log(`Successfully deleted image from Cloudinary: ${publicId}`);
+          }
+        }
+      } catch (cloudinaryErr) {
+        console.error('Failed to delete image from Cloudinary:', cloudinaryErr);
+      }
+    }
+
     await Gallery.findByIdAndDelete(req.params.id);
     res.json({ message: 'Item deleted' });
   } catch (err) {
