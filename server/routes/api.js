@@ -406,7 +406,7 @@ router.post('/auth/register', async (req, res) => {
 router.get('/auth/verify-email', async (req, res) => {
   const { token } = req.query;
   try {
-    let clientUrl = process.env.FRONTEND_URL || 'https://brahmani-jewellers.vercel.app';
+    let clientUrl = process.env.FRONTEND_URL || 'https://brahmanijewellers.com';
     const host = req.get('host') || '';
     if (host.includes('localhost') || host.includes('127.0.0.1') || host.includes('192.168')) {
       clientUrl = 'http://localhost:5173';
@@ -653,7 +653,7 @@ router.post('/auth/forgot-password', async (req, res) => {
     user.resetTokenExpiry = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
     await user.save();
 
-    const clientUrl = req.headers.origin || 'https://brahmani-jewellers.vercel.app';
+    const clientUrl = req.headers.origin || 'https://brahmanijewellers.com';
     const resetUrl = `${clientUrl}/reset-password?token=${resetToken}`;
     
     try {
@@ -846,7 +846,7 @@ router.put('/users/:id/approve', auth, isAdmin, async (req, res) => {
     // Send notification email to the user when their account is approved
     if (isApproved && user.email) {
       try {
-        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+        const clientUrl = process.env.CLIENT_URL || 'https://brahmanijewellers.com';
         const approvalHtml = `
           <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 40px 30px; background-color: #FFFDF9; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
             <div style="text-align: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 20px; margin-bottom: 30px;">
