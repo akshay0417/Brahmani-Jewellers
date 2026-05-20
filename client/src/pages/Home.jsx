@@ -120,7 +120,7 @@ const Categories = () => {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: (idx % 3) * 0.15 }}
-                className="relative h-96 rounded-xl overflow-hidden cursor-pointer shadow-xl shadow-coffee/5 border border-ochre/15 hover:border-ochre/60 transition-colors duration-300"
+                className="relative h-72 rounded-xl overflow-hidden cursor-pointer shadow-xl shadow-coffee/5 border border-ochre/15 hover:border-ochre/60 transition-colors duration-300"
               >
                 <img src={item.imageUrl} alt={item.name || item.category} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-coffee/90 via-coffee/40 to-transparent flex flex-col justify-end p-8">
@@ -139,7 +139,7 @@ const Categories = () => {
         
         <div className="mt-16 text-center">
           <Link to="/gallery" className="inline-block px-8 py-3 border border-ochre text-coffee font-bold uppercase tracking-widest text-sm hover:bg-ochre hover:text-cream transition-colors duration-300 shadow-sm hover:shadow-md">
-            Explore Full Exhibition
+            Explore Full Collection
           </Link>
         </div>
       </div>

@@ -51,7 +51,7 @@ const Gallery = () => {
     >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <motion.span initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-ochre tracking-[0.5em] uppercase text-xs font-bold mb-4 block">Exhibition</motion.span>
+          <motion.span initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-ochre tracking-[0.5em] uppercase text-xs font-bold mb-4 block">Collection</motion.span>
           <h1 className="text-5xl font-serif font-bold mb-4 text-coffee">Our <span className="text-ochre italic">Masterpieces</span></h1>
           <div className="w-24 h-1 bg-ochre mx-auto mb-8"></div>
           <p className="text-coffee/70 max-w-2xl mx-auto">A pure visual showcase of our finest artistry. Browse our heritage designs and draw inspiration for your next bespoke creation.</p>
@@ -177,7 +177,7 @@ const Gallery = () => {
                   </p>
                 )}
                 <a
-                  href={`https://wa.me/917621967577?text=${encodeURIComponent("Hello! I love this design from your exhibition: " + selectedItem.imageUrl)}`}
+                  href={`https://wa.me/917621967577?text=${encodeURIComponent("Hello! I love this design from your collection: " + selectedItem.imageUrl)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-6 inline-block border border-ochre text-cream px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-ochre hover:text-coffee transition-colors"
