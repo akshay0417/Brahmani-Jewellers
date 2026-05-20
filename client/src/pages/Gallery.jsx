@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 const Gallery = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const categoryParam = searchParams.get('category');
 
   const [items, setItems] = useState([]);
@@ -13,6 +14,12 @@ const Gallery = () => {
   const [subFilter, setSubFilter] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!sessionStorage.getItem('token')) {
+      navigate('/login');
+    }
+  }, [navigate]);
 
   useEffect(() => {
     if (categoryParam) {

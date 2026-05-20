@@ -3,15 +3,23 @@ import api from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShoppingBag, Heart, ShieldCheck, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useNavigate } from 'react-router-dom';
 
 const Shop = () => {
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [rates, setRates] = useState(null);
   const [filter, setFilter] = useState('all');
   const [subFilter, setSubFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  useEffect(() => {
+    if (!sessionStorage.getItem('token')) {
+      navigate('/login');
+    }
+  }, [navigate]);
 
   // Local Wishlist State (persisted in localStorage)
   const [wishlist, setWishlist] = useState(() => {
