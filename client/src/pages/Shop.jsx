@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShoppingBag, Heart, ShieldCheck, Truck, MessageCircle, Phone } from 'lucide-react';
@@ -6,6 +7,7 @@ import { useCart } from '../context/CartContext';
 
 const Shop = () => {
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [rates, setRates] = useState(null);
   const [filter, setFilter] = useState('all');
@@ -133,15 +135,16 @@ const Shop = () => {
             >
               <ShoppingBag size={13} className="text-ochre group-hover:text-coffee" /> Quick Add
             </button>
-            <a 
-              href={`https://wa.me/917621967577?text=${encodeURIComponent("I am interested in buying this masterpiece: " + (item.name || 'Heritage Masterpiece') + "\nImage: " + item.imageUrl + "\nPrice: ₹" + priceData.final)}`}
-              target="_blank" 
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="w-full py-2.5 bg-emerald-600 text-white font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 rounded-sm hover:bg-emerald-700 transition-all duration-200"
+            <button 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                addToCart(item._id); 
+                navigate('/cart');
+              }}
+              className="w-full py-2.5 bg-ochre text-coffee font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 rounded-sm hover:bg-ochre/90 transition-all duration-200"
             >
-              <MessageCircle size={13} /> Buy on WhatsApp
-            </a>
+              Buy Now
+            </button>
           </div>
         </div>
         <div className="p-5 text-center">
@@ -265,7 +268,16 @@ const Shop = () => {
                       
                       <div className="flex flex-col sm:flex-row gap-4">
                         <button onClick={() => { addToCart(selectedProduct._id); setSelectedProduct(null); }} className="flex-1 py-4 bg-coffee text-cream font-bold uppercase tracking-widest rounded-sm hover:bg-coffee/90 transition-all flex items-center justify-center gap-3"><ShoppingBag size={20} /> Add to Cart</button>
-                        <a href={`https://wa.me/917621967577?text=${encodeURIComponent("I am interested in buying this masterpiece: " + selectedProduct.imageUrl + "\nFinal Price: ₹" + pData.final)}`} target="_blank" rel="noopener noreferrer" className="flex-1 py-4 bg-ochre text-coffee font-bold uppercase tracking-widest rounded-sm hover:bg-ochre/90 transition-all flex items-center justify-center gap-3">Buy via WhatsApp</a>
+                        <button 
+                          onClick={() => { 
+                            addToCart(selectedProduct._id); 
+                            setSelectedProduct(null); 
+                            navigate('/cart'); 
+                          }} 
+                          className="flex-1 py-4 bg-ochre text-coffee font-bold uppercase tracking-widest rounded-sm hover:bg-ochre/90 transition-all flex items-center justify-center gap-3"
+                        >
+                          Buy Now
+                        </button>
                       </div>
                     </>
                   );
