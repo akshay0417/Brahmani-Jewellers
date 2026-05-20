@@ -299,8 +299,6 @@ const Contact = () => {
 };
 
 const Home = () => {
-  const isLoggedIn = !!sessionStorage.getItem('token');
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -308,8 +306,8 @@ const Home = () => {
       exit={{ opacity: 0 }}
     >
       <Hero />
-      {isLoggedIn && <RatesSection />}
-      {isLoggedIn && <Categories />}
+      <RatesSection />
+      <Categories />
       <About />
       <Testimonials />
       <Contact />
@@ -318,3 +316,4 @@ const Home = () => {
 };
 
 export default Home;
+
