@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBag, Heart, ShieldCheck, Truck, MessageCircle, Phone } from 'lucide-react';
+import { X, ShoppingBag, Heart, ShieldCheck, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 const Shop = () => {
   const { addToCart } = useCart();
-  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [rates, setRates] = useState(null);
   const [filter, setFilter] = useState('all');
@@ -127,23 +125,13 @@ const Shop = () => {
             </button>
           </div>
 
-          {/* Hover Overlay with Stacked Actions */}
-          <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-coffee/95 via-coffee/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10 flex flex-col gap-2">
+          {/* Hover Overlay with Add to Cart Action */}
+          <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-coffee/95 via-coffee/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
             <button 
               onClick={(e) => { e.stopPropagation(); addToCart(item._id); }}
-              className="w-full py-2.5 bg-cream text-coffee font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 rounded-sm hover:bg-ochre hover:text-coffee border border-ochre/30 transition-all duration-200"
+              className="w-full py-3 bg-ochre text-coffee font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 rounded-sm hover:bg-ochre/90 transition-all duration-200 shadow-md"
             >
-              <ShoppingBag size={13} className="text-ochre group-hover:text-coffee" /> Quick Add
-            </button>
-            <button 
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                addToCart(item._id); 
-                navigate('/cart');
-              }}
-              className="w-full py-2.5 bg-ochre text-coffee font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 rounded-sm hover:bg-ochre/90 transition-all duration-200"
-            >
-              Buy Now
+              <ShoppingBag size={14} /> Add to Cart
             </button>
           </div>
         </div>
@@ -266,17 +254,12 @@ const Shop = () => {
                         {pData.breakdown && <div className="px-3 py-1 bg-ochre/10 text-ochre text-[10px] font-bold uppercase tracking-widest rounded-sm border border-ochre/20 mb-1">Live Rate Verified</div>}
                       </div>
                       
-                      <div className="flex flex-col sm:flex-row gap-4">
-                        <button onClick={() => { addToCart(selectedProduct._id); setSelectedProduct(null); }} className="flex-1 py-4 bg-coffee text-cream font-bold uppercase tracking-widest rounded-sm hover:bg-coffee/90 transition-all flex items-center justify-center gap-3"><ShoppingBag size={20} /> Add to Cart</button>
+                      <div className="flex gap-4">
                         <button 
-                          onClick={() => { 
-                            addToCart(selectedProduct._id); 
-                            setSelectedProduct(null); 
-                            navigate('/cart'); 
-                          }} 
-                          className="flex-1 py-4 bg-ochre text-coffee font-bold uppercase tracking-widest rounded-sm hover:bg-ochre/90 transition-all flex items-center justify-center gap-3"
+                          onClick={() => { addToCart(selectedProduct._id); setSelectedProduct(null); }} 
+                          className="w-full py-4 bg-ochre text-coffee font-bold uppercase tracking-widest rounded-sm hover:bg-ochre/90 transition-all flex items-center justify-center gap-3 shadow-md"
                         >
-                          Buy Now
+                          <ShoppingBag size={20} /> Add to Cart
                         </button>
                       </div>
                     </>
