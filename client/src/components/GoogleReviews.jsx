@@ -26,7 +26,7 @@ const REVIEWS = [
   }
 ];
 
-const GoogleReviews = () => {
+const CustomerReviews = () => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [feedback, setFeedback] = useState('');
@@ -40,19 +40,12 @@ const GoogleReviews = () => {
     }
     setIsSubmitting(true);
     
-    // Copy text to clipboard so user can easily paste it in Google
-    if (feedback.trim() !== '') {
-      navigator.clipboard.writeText(feedback).catch(err => console.log('Could not copy text: ', err));
-    }
-
-    // Redirect to Google Maps Search for the Jewellery shop where they can write the review
-    window.open("https://www.google.com/maps/search/Brahmani+Jewellers+Amraiwadi+Ahmedabad", "_blank");
-    
+    // Simulate submission to backend
     setTimeout(() => {
       setIsSubmitting(false);
       setRating(0);
       setFeedback('');
-      alert("You are being redirected to Google to post your review. If you wrote any text, it has been copied to your clipboard so you can paste it there!");
+      alert("Thank you for your feedback! Your review has been submitted successfully.");
     }, 1000);
   };
 
@@ -62,23 +55,12 @@ const GoogleReviews = () => {
         
         {/* Header */}
         <div className="text-center mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md mb-6 border border-gray-100"
-          >
-            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" className="w-5 h-5" />
-            <span className="font-bold text-gray-700 text-sm tracking-wider uppercase">Google Reviews</span>
-          </motion.div>
-          
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-5xl font-serif font-bold text-coffee mb-4"
+            className="text-3xl md:text-5xl font-serif font-bold text-coffee mb-4 mt-8"
           >
             Customer <span className="text-ochre italic">Feedback</span>
           </motion.h2>
@@ -95,7 +77,7 @@ const GoogleReviews = () => {
             className="lg:col-span-5 bg-white p-8 rounded-lg shadow-xl border border-ochre/20 flex flex-col justify-center"
           >
             <h3 className="text-2xl font-serif font-bold text-coffee mb-2">Write a Review</h3>
-            <p className="text-coffee/60 text-sm mb-6">Share your experience with Brahmani Jewellers on Google.</p>
+            <p className="text-coffee/60 text-sm mb-6">Share your experience with Brahmani Jewellers.</p>
             
             <form onSubmit={handleSubmitReview} className="space-y-6">
               {/* Star Rating Input */}
@@ -139,12 +121,8 @@ const GoogleReviews = () => {
                 disabled={isSubmitting}
                 className="w-full flex items-center justify-center gap-2 bg-coffee text-cream font-bold py-4 uppercase tracking-[0.2em] hover:bg-ochre transition-all disabled:opacity-50 shadow-md hover:shadow-lg rounded-sm"
               >
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" className="w-4 h-4 bg-white rounded-full p-[2px]" />
-                {isSubmitting ? 'Redirecting...' : 'Post to Google'}
+                {isSubmitting ? 'Posting...' : 'Post'}
               </button>
-              <p className="text-xs text-center text-coffee/50 mt-2">
-                You will be redirected to Google Maps to post this review securely.
-              </p>
             </form>
           </motion.div>
 
@@ -192,7 +170,6 @@ const GoogleReviews = () => {
                       </div>
                     </div>
                   </div>
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" className="w-4 h-4 opacity-50" />
                 </div>
                 <p className="text-coffee/80 text-sm">
                   "{review.text}"
@@ -207,4 +184,4 @@ const GoogleReviews = () => {
   );
 };
 
-export default GoogleReviews;
+export default CustomerReviews;
