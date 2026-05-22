@@ -346,9 +346,9 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cream pt-12 pb-24 px-4 md:px-8 transition-colors duration-300">
+    <div className="min-h-screen bg-cream pt-8 pb-16 px-4 md:px-8 transition-colors duration-300">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-4xl font-serif font-bold text-coffee uppercase tracking-wider transition-colors duration-300">Dashboard</h1>
             <p className="text-ochre/80 tracking-[0.2em] text-xs mt-1">
@@ -376,429 +376,435 @@ const AdminDashboard = () => {
           </motion.div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Rate Management */}
-          <section className="bg-cream-alt p-8 rounded-lg shadow-sm border border-ochre/10 transition-colors duration-300">
-            <div className="flex items-center gap-3 mb-6">
-              <TrendingUp className="text-ochre" />
-              <h2 className="text-xl font-serif font-bold text-coffee uppercase tracking-widest">Rates Control Panel</h2>
-            </div>
-            
-            <div className="mb-6 flex gap-4">
-              <button 
-                type="button"
-                onClick={() => setRates({ ...rates, isManual: true })}
-                className={`flex-1 py-2 rounded font-bold uppercase tracking-widest text-xs transition-colors ${rates.isManual ? 'bg-ochre text-cream' : 'bg-cream border border-ochre/30 text-coffee'}`}
-              >
-                Manual Edit
-              </button>
-              <button 
-                type="button"
-                onClick={() => setRates({ ...rates, isManual: false })}
-                className={`flex-1 py-2 rounded font-bold uppercase tracking-widest text-xs transition-colors ${!rates.isManual ? 'bg-ochre text-cream' : 'bg-cream border border-ochre/30 text-coffee'}`}
-              >
-                Auto (From Fine)
-              </button>
-            </div>
-
-            <form onSubmit={handleRateUpdate} className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          {/* Left Column: Rates & Security */}
+          <div className="space-y-8">
+            {/* Rate Management */}
+            <section className="bg-cream-alt p-6 rounded-lg shadow-sm border border-ochre/10 transition-colors duration-300">
+              <div className="flex items-center gap-3 mb-6">
+                <TrendingUp className="text-ochre" />
+                <h2 className="text-xl font-serif font-bold text-coffee uppercase tracking-widest">Rates Control Panel</h2>
+              </div>
               
-              {!rates.isManual ? (
-                <div className="space-y-4 bg-cream p-4 rounded border border-ochre/20">
-                  <p className="text-xs text-coffee/70 font-bold mb-2">AUTO CALCULATOR (Enters Fine, calculates 24K/22K/18K/90%)</p>
-                  <div className="space-y-2">
-                    <label className="text-xs text-coffee/70 uppercase tracking-widest">Gold Fine (IMP) Rate</label>
-                    <input
-                      type="number"
-                      value={rates.goldImpFine}
-                      onChange={(e) => setRates({ ...rates, goldImpFine: e.target.value })}
-                      className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none"
-                      placeholder="e.g. 75000"
-                    />
+              <div className="mb-6 flex gap-4">
+                <button 
+                  type="button"
+                  onClick={() => setRates({ ...rates, isManual: true })}
+                  className={`flex-1 py-2 rounded font-bold uppercase tracking-widest text-xs transition-colors ${rates.isManual ? 'bg-ochre text-cream' : 'bg-cream border border-ochre/30 text-coffee'}`}
+                >
+                  Manual Edit
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setRates({ ...rates, isManual: false })}
+                  className={`flex-1 py-2 rounded font-bold uppercase tracking-widest text-xs transition-colors ${!rates.isManual ? 'bg-ochre text-cream' : 'bg-cream border border-ochre/30 text-coffee'}`}
+                >
+                  Auto (From Fine)
+                </button>
+              </div>
+
+              <form onSubmit={handleRateUpdate} className="space-y-6">
+                
+                {!rates.isManual ? (
+                  <div className="space-y-4 bg-cream p-4 rounded border border-ochre/20">
+                    <p className="text-xs text-coffee/70 font-bold mb-2">AUTO CALCULATOR (Enters Fine, calculates 24K/22K/18K/90%)</p>
+                    <div className="space-y-2">
+                      <label className="text-xs text-coffee/70 uppercase tracking-widest">Gold Fine (IMP) Rate</label>
+                      <input
+                        type="number"
+                        value={rates.goldImpFine}
+                        onChange={(e) => setRates({ ...rates, goldImpFine: e.target.value })}
+                        className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none"
+                        placeholder="e.g. 75000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-coffee/70 uppercase tracking-widest">Silver Fine Rate</label>
+                      <input
+                        type="number"
+                        value={rates.silverFine}
+                        onChange={(e) => setRates({ ...rates, silverFine: e.target.value })}
+                        className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none"
+                        placeholder="e.g. 90000"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs text-coffee/70 uppercase tracking-widest">Silver Fine Rate</label>
-                    <input
-                      type="number"
-                      value={rates.silverFine}
-                      onChange={(e) => setRates({ ...rates, silverFine: e.target.value })}
-                      className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none"
-                      placeholder="e.g. 90000"
-                    />
+                ) : (
+                  <div className="space-y-4 bg-cream p-4 rounded border border-ochre/20">
+                    <p className="text-xs text-coffee/70 font-bold mb-2">MANUAL OVERRIDE</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs text-coffee/70 uppercase tracking-widest">Gold 24K Rate</label>
+                        <input
+                          type="number"
+                          value={rates.manualGold24K}
+                          onChange={(e) => setRates({ ...rates, manualGold24K: e.target.value })}
+                          className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs text-coffee/70 uppercase tracking-widest">Gold 22K Rate</label>
+                        <input
+                          type="number"
+                          value={rates.manualGold22K}
+                          onChange={(e) => setRates({ ...rates, manualGold22K: e.target.value })}
+                          className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs text-coffee/70 uppercase tracking-widest">Gold 18K Rate</label>
+                        <input
+                          type="number"
+                          value={rates.manualGold18K}
+                          onChange={(e) => setRates({ ...rates, manualGold18K: e.target.value })}
+                          className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs text-coffee/70 uppercase tracking-widest">Silver Rate (90%)</label>
+                        <input
+                          type="number"
+                          value={rates.manualSilver90}
+                          onChange={(e) => setRates({ ...rates, manualSilver90: e.target.value })}
+                          className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none"
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ) : (
+                )}
+
+                {/* Delivery settings */}
                 <div className="space-y-4 bg-cream p-4 rounded border border-ochre/20">
-                  <p className="text-xs text-coffee/70 font-bold mb-2">MANUAL OVERRIDE</p>
+                  <p className="text-xs text-coffee/70 font-bold mb-2">DELIVERY CHARGES SETTINGS</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-xs text-coffee/70 uppercase tracking-widest">Gold 24K Rate</label>
+                      <label className="text-xs text-coffee/70 uppercase tracking-widest">Free Delivery Limit (KM)</label>
                       <input
                         type="number"
-                        value={rates.manualGold24K}
-                        onChange={(e) => setRates({ ...rates, manualGold24K: e.target.value })}
-                        className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none"
+                        value={rates.freeDeliveryKmLimit}
+                        onChange={(e) => setRates({ ...rates, freeDeliveryKmLimit: e.target.value })}
+                        className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
+                        placeholder="e.g. 10"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs text-coffee/70 uppercase tracking-widest">Gold 22K Rate</label>
+                      <label className="text-xs text-coffee/70 uppercase tracking-widest">Charge Per KM (₹)</label>
                       <input
                         type="number"
-                        value={rates.manualGold22K}
-                        onChange={(e) => setRates({ ...rates, manualGold22K: e.target.value })}
-                        className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs text-coffee/70 uppercase tracking-widest">Gold 18K Rate</label>
-                      <input
-                        type="number"
-                        value={rates.manualGold18K}
-                        onChange={(e) => setRates({ ...rates, manualGold18K: e.target.value })}
-                        className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs text-coffee/70 uppercase tracking-widest">Silver Rate (90%)</label>
-                      <input
-                        type="number"
-                        value={rates.manualSilver90}
-                        onChange={(e) => setRates({ ...rates, manualSilver90: e.target.value })}
-                        className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none"
+                        value={rates.deliveryChargePerKm}
+                        onChange={(e) => setRates({ ...rates, deliveryChargePerKm: e.target.value })}
+                        className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
+                        placeholder="e.g. 15"
                       />
                     </div>
                   </div>
                 </div>
-              )}
 
-              {/* Delivery settings */}
-              <div className="space-y-4 bg-cream p-4 rounded border border-ochre/20">
-                <p className="text-xs text-coffee/70 font-bold mb-2">DELIVERY CHARGES SETTINGS</p>
+                <button disabled={loading} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 transition-all rounded-sm">
+                  {loading ? 'Processing...' : 'Save Market Prices'}
+                </button>
+              </form>
+            </section>
+
+            {/* Security Management */}
+            <section className="bg-cream-alt p-6 rounded-lg shadow-sm border border-ochre/10 transition-colors duration-300">
+              <div className="flex items-center gap-3 mb-6">
+                <Lock className="text-ochre" size={24} />
+                <h2 className="text-xl font-serif font-bold text-coffee uppercase tracking-widest">Security Settings</h2>
+              </div>
+              <form onSubmit={handlePasswordChange} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest font-bold">Current Password</label>
+                  <input
+                    type="password"
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                    placeholder="Enter current password"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest font-bold">New Password</label>
+                  <input
+                    type="password"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                    placeholder="Enter new password"
+                    required
+                  />
+                </div>
+                <button disabled={loading} className="w-full py-3 bg-coffee text-cream font-bold uppercase tracking-widest hover:bg-ochre transition-all rounded-sm shadow-md">
+                  {loading ? 'Updating...' : 'Update Password'}
+                </button>
+              </form>
+            </section>
+          </div>
+
+          {/* Right Column: Uploads */}
+          <div className="space-y-8">
+            {/* Gallery Management - Upload */}
+            <section className="bg-cream-alt p-6 rounded-lg shadow-sm border border-ochre/10 transition-colors duration-300">
+              <div className="flex items-center gap-3 mb-6">
+                <Upload className="text-ochre" />
+                <h2 className="text-xl font-serif font-bold text-coffee uppercase tracking-widest">Upload New Design</h2>
+              </div>
+              <form onSubmit={handleImageUpload} className="space-y-6">
+                <div 
+                  className="border-2 border-dashed border-ochre/30 bg-cream rounded-lg p-8 text-center hover:border-ochre/60 transition-colors cursor-pointer"
+                  onClick={() => document.getElementById('imageInput').click()}
+                >
+                  {newImage ? (
+                    <div className="space-y-2">
+                      <p className="text-ochre text-sm truncate font-medium">{newImage.name}</p>
+                      <p className="text-coffee/50 text-xs transition-colors duration-300">Click to change selection</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 text-coffee/50 transition-colors duration-300">
+                      <ImageIcon className="mx-auto mb-2 opacity-60 text-ochre" size={40} />
+                      <p className="text-sm">Click to select image (JPG/PNG)</p>
+                    </div>
+                  )}
+                  <input
+                    id="imageInput"
+                    type="file"
+                    hidden
+                    accept="image/jpeg, image/png"
+                    onChange={(e) => setNewImage(e.target.files[0])}
+                  />
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-coffee/70 uppercase tracking-widest">Free Delivery Limit (KM)</label>
-                    <input
-                      type="number"
-                      value={rates.freeDeliveryKmLimit}
-                      onChange={(e) => setRates({ ...rates, freeDeliveryKmLimit: e.target.value })}
-                      className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
-                      placeholder="e.g. 10"
-                    />
+                    <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Select Category</label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                    >
+                      <option value="gold">Gold Jewellery</option>
+                      <option value="silver">Silver Jewellery</option>
+                      <option value="rudraksha">Rudraksha</option>
+                      <option value="antique">Antique Items</option>
+                    </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-coffee/70 uppercase tracking-widest">Charge Per KM (₹)</label>
+                    <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Item Type (e.g. Ring, Chain)</label>
                     <input
-                      type="number"
-                      value={rates.deliveryChargePerKm}
-                      onChange={(e) => setRates({ ...rates, deliveryChargePerKm: e.target.value })}
-                      className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
-                      placeholder="e.g. 15"
+                      type="text"
+                      list="subCatsList"
+                      value={subCategory}
+                      onChange={(e) => setSubCategory(e.target.value)}
+                      className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                      placeholder="Optional: Ring, Bracelet..."
                     />
+                    <datalist id="subCatsList">
+                      {[...new Set(gallery.filter(i => i.category === category && i.subCategory).map(i => i.subCategory))].map(sub => (
+                        <option key={sub} value={sub} />
+                      ))}
+                    </datalist>
                   </div>
                 </div>
-              </div>
-
-              <button disabled={loading} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 transition-all rounded-sm">
-                {loading ? 'Processing...' : 'Save Market Prices'}
-              </button>
-            </form>
-          </section>
-
-          {/* Gallery Management - Upload */}
-          <section className="bg-cream-alt p-8 rounded-lg shadow-sm border border-ochre/10 transition-colors duration-300">
-            <div className="flex items-center gap-3 mb-6">
-              <Upload className="text-ochre" />
-              <h2 className="text-xl font-serif font-bold text-coffee uppercase tracking-widest">Upload New Design</h2>
-            </div>
-            <form onSubmit={handleImageUpload} className="space-y-6">
-              <div 
-                className="border-2 border-dashed border-ochre/30 bg-cream rounded-lg p-8 text-center hover:border-ochre/60 transition-colors cursor-pointer"
-                onClick={() => document.getElementById('imageInput').click()}
-              >
-                {newImage ? (
-                  <div className="space-y-2">
-                    <p className="text-ochre text-sm truncate font-medium">{newImage.name}</p>
-                    <p className="text-coffee/50 text-xs transition-colors duration-300">Click to change selection</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2 text-coffee/50 transition-colors duration-300">
-                    <ImageIcon className="mx-auto mb-2 opacity-60 text-ochre" size={40} />
-                    <p className="text-sm">Click to select image (JPG/PNG)</p>
-                  </div>
-                )}
-                <input
-                  id="imageInput"
-                  type="file"
-                  hidden
-                  accept="image/jpeg, image/png"
-                  onChange={(e) => setNewImage(e.target.files[0])}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Select Category</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
-                  >
-                    <option value="gold">Gold Jewellery</option>
-                    <option value="silver">Silver Jewellery</option>
-                    <option value="rudraksha">Rudraksha</option>
-                    <option value="antique">Antique Items</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Item Type (e.g. Ring, Chain)</label>
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Item Name (Optional)</label>
                   <input
                     type="text"
-                    list="subCatsList"
-                    value={subCategory}
-                    onChange={(e) => setSubCategory(e.target.value)}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
-                    placeholder="Optional: Ring, Bracelet..."
-                  />
-                  <datalist id="subCatsList">
-                    {[...new Set(gallery.filter(i => i.category === category && i.subCategory).map(i => i.subCategory))].map(sub => (
-                      <option key={sub} value={sub} />
-                    ))}
-                  </datalist>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Item Name (Optional)</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
-                  placeholder="e.g. Royal Heritage Necklace"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Description (Optional)</label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows="2"
-                  className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors resize-none"
-                  placeholder="A timeless piece of heritage..."
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Target Page</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" value="both" checked={targetPage === 'both'} onChange={() => setTargetPage('both')} className="accent-ochre" />
-                    <span className="text-sm text-coffee">Both</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" value="shop" checked={targetPage === 'shop'} onChange={() => setTargetPage('shop')} className="accent-ochre" />
-                    <span className="text-sm text-coffee">Shop (with price)</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" value="collection" checked={targetPage === 'collection'} onChange={() => setTargetPage('collection')} className="accent-ochre" />
-                    <span className="text-sm text-coffee">Collection (Exhibition)</span>
-                  </label>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Price (₹ - Optional)</label>
-                  <input
-                    type="number"
-                    value={rates.price || ''}
-                    onChange={(e) => setRates({ ...rates, price: e.target.value })}
-                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
-                    placeholder="Enter price"
+                    placeholder="e.g. Royal Heritage Necklace"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Weight (Grams)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={weight}
-                    onChange={(e) => setWeight(e.target.value)}
-                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
-                    placeholder="e.g. 10.5"
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Description (Optional)</label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows="2"
+                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors resize-none"
+                    placeholder="A timeless piece of heritage..."
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Purity</label>
-                  <select
-                    value={purity}
-                    onChange={(e) => setPurity(e.target.value)}
-                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
-                  >
-                    <option value="24K">24K Gold</option>
-                    <option value="22K">22K Gold</option>
-                    <option value="18K">18K Gold</option>
-                    <option value="90%">90% Silver</option>
-                  </select>
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Target Page</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" value="both" checked={targetPage === 'both'} onChange={() => setTargetPage('both')} className="accent-ochre" />
+                      <span className="text-sm text-coffee">Both</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" value="shop" checked={targetPage === 'shop'} onChange={() => setTargetPage('shop')} className="accent-ochre" />
+                      <span className="text-sm text-coffee">Shop (with price)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" value="collection" checked={targetPage === 'collection'} onChange={() => setTargetPage('collection')} className="accent-ochre" />
+                      <span className="text-sm text-coffee">Collection (Exhibition)</span>
+                    </label>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Making Charges (%)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={makingCharges}
-                    onChange={(e) => setMakingCharges(e.target.value)}
-                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
-                    placeholder="e.g. 15 for 15%"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Other Charges (₹)</label>
-                  <input
-                    type="number"
-                    value={otherCharges}
-                    onChange={(e) => setOtherCharges(e.target.value)}
-                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
-                    placeholder="e.g. 500"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-3 pt-2">
-                <input 
-                  type="checkbox" 
-                  id="isFeatured" 
-                  checked={isFeatured}
-                  onChange={(e) => setIsFeatured(e.target.checked)}
-                  className="w-5 h-5 accent-ochre"
-                />
-                <label htmlFor="isFeatured" className="text-sm text-coffee font-bold cursor-pointer">
-                  Highlight this photo on Home Page? (Large display)
-                </label>
-              </div>
-              <button disabled={loading || !newImage} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 transition-all disabled:opacity-50 rounded-sm">
-                {loading ? 'Uploading...' : 'Add to Collection'}
-              </button>
-            </form>
-          </section>
-
-          {/* Instagram Showcase Upload */}
-          <section className="bg-cream-alt p-8 rounded-lg shadow-sm border border-ochre/10 transition-colors duration-300">
-            <div className="flex items-center gap-3 mb-6">
-              <Upload className="text-ochre" />
-              <h2 className="text-xl font-serif font-bold text-coffee uppercase tracking-widest">Upload Instagram Post</h2>
-            </div>
-            <form onSubmit={handleInstagramUpload} className="space-y-6">
-              <div 
-                className="border-2 border-dashed border-ochre/30 bg-cream rounded-lg p-8 text-center hover:border-ochre/60 transition-colors cursor-pointer"
-                onClick={() => document.getElementById('instaImageInput').click()}
-              >
-                {newInstaImage ? (
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <p className="text-ochre text-sm truncate font-medium">{newInstaImage.name}</p>
-                    <p className="text-coffee/50 text-xs">Click to change selection</p>
+                    <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Price (₹ - Optional)</label>
+                    <input
+                      type="number"
+                      value={rates.price || ''}
+                      onChange={(e) => setRates({ ...rates, price: e.target.value })}
+                      className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                      placeholder="Enter price"
+                    />
                   </div>
-                ) : (
-                  <div className="space-y-2 text-coffee/50">
-                    <ImageIcon className="mx-auto mb-2 opacity-60 text-ochre" size={40} />
-                    <p className="text-sm">Click to select post image (JPG/PNG)</p>
+                  <div className="space-y-2">
+                    <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Weight (Grams)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={weight}
+                      onChange={(e) => setWeight(e.target.value)}
+                      className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                      placeholder="e.g. 10.5"
+                    />
                   </div>
-                )}
-                <input
-                  id="instaImageInput"
-                  type="file"
-                  hidden
-                  accept="image/jpeg, image/png"
-                  onChange={(e) => setNewInstaImage(e.target.files[0])}
-                />
-              </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Purity</label>
+                    <select
+                      value={purity}
+                      onChange={(e) => setPurity(e.target.value)}
+                      className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                    >
+                      <option value="24K">24K Gold</option>
+                      <option value="22K">22K Gold</option>
+                      <option value="18K">18K Gold</option>
+                      <option value="90%">90% Silver</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Making Charges (%)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={makingCharges}
+                      onChange={(e) => setMakingCharges(e.target.value)}
+                      className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                      placeholder="e.g. 15 for 15%"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Other Charges (₹)</label>
+                    <input
+                      type="number"
+                      value={otherCharges}
+                      onChange={(e) => setOtherCharges(e.target.value)}
+                      className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                      placeholder="e.g. 500"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 pt-2">
+                  <input 
+                    type="checkbox" 
+                    id="isFeatured" 
+                    checked={isFeatured}
+                    onChange={(e) => setIsFeatured(e.target.checked)}
+                    className="w-5 h-5 accent-ochre"
+                  />
+                  <label htmlFor="isFeatured" className="text-sm text-coffee font-bold cursor-pointer">
+                    Highlight this photo on Home Page? (Large display)
+                  </label>
+                </div>
+                <button disabled={loading || !newImage} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 transition-all disabled:opacity-50 rounded-sm">
+                  {loading ? 'Uploading...' : 'Add to Collection'}
+                </button>
+              </form>
+            </section>
 
-              <div className="space-y-2">
-                <label className="text-xs text-coffee/70 uppercase tracking-widest">Instagram Post URL (ઇન્સ્ટાગ્રામ પોસ્ટ લિંક)</label>
-                <input
-                  type="url"
-                  value={instaPostUrl}
-                  onChange={(e) => setInstaPostUrl(e.target.value)}
-                  className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors text-sm"
-                  placeholder="https://www.instagram.com/p/..."
-                  required
-                />
+            {/* Instagram Showcase Upload */}
+            <section className="bg-cream-alt p-6 rounded-lg shadow-sm border border-ochre/10 transition-colors duration-300">
+              <div className="flex items-center gap-3 mb-6">
+                <Upload className="text-ochre" />
+                <h2 className="text-xl font-serif font-bold text-coffee uppercase tracking-widest">Upload Instagram Post</h2>
               </div>
-
-              <div className="space-y-2">
-                <label className="text-xs text-coffee/70 uppercase tracking-widest">Caption / Description (લખાણ)</label>
-                <input
-                  type="text"
-                  value={instaCaption}
-                  onChange={(e) => setInstaCaption(e.target.value)}
-                  className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors text-sm"
-                  placeholder="e.g. Timeless gold necklace... ✨"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs text-coffee/70 uppercase tracking-widest">Likes Count (લાઇક્સ)</label>
+              <form onSubmit={handleInstagramUpload} className="space-y-6">
+                <div 
+                  className="border-2 border-dashed border-ochre/30 bg-cream rounded-lg p-8 text-center hover:border-ochre/60 transition-colors cursor-pointer"
+                  onClick={() => document.getElementById('instaImageInput').click()}
+                >
+                  {newInstaImage ? (
+                    <div className="space-y-2">
+                      <p className="text-ochre text-sm truncate font-medium">{newInstaImage.name}</p>
+                      <p className="text-coffee/50 text-xs">Click to change selection</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 text-coffee/50">
+                      <ImageIcon className="mx-auto mb-2 opacity-60 text-ochre" size={40} />
+                      <p className="text-sm">Click to select post image (JPG/PNG)</p>
+                    </div>
+                  )}
                   <input
-                    type="number"
-                    value={instaLikes}
-                    onChange={(e) => setInstaLikes(e.target.value)}
-                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors text-sm"
-                    placeholder="e.g. 150"
+                    id="instaImageInput"
+                    type="file"
+                    hidden
+                    accept="image/jpeg, image/png"
+                    onChange={(e) => setNewInstaImage(e.target.files[0])}
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <label className="text-xs text-coffee/70 uppercase tracking-widest">Comments Count (કોમેન્ટ્સ)</label>
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest font-bold">Instagram Post URL (ઇન્સ્ટાગ્રામ પોસ્ટ લિંક)</label>
                   <input
-                    type="number"
-                    value={instaComments}
-                    onChange={(e) => setInstaComments(e.target.value)}
+                    type="url"
+                    value={instaPostUrl}
+                    onChange={(e) => setInstaPostUrl(e.target.value)}
                     className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors text-sm"
-                    placeholder="e.g. 24"
+                    placeholder="https://www.instagram.com/p/..."
+                    required
                   />
                 </div>
-              </div>
 
-              <button disabled={loading || !newInstaImage || !instaPostUrl} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 transition-all disabled:opacity-50 rounded-sm">
-                {loading ? 'Uploading...' : 'Add to Showcase'}
-              </button>
-            </form>
-          </section>
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest font-bold">Caption / Description (લખાણ)</label>
+                  <input
+                    type="text"
+                    value={instaCaption}
+                    onChange={(e) => setInstaCaption(e.target.value)}
+                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors text-sm"
+                    placeholder="e.g. Timeless gold necklace... ✨"
+                  />
+                </div>
 
-          {/* Security Management */}
-          <section className="bg-cream-alt p-8 rounded-lg shadow-sm border border-ochre/10 transition-colors duration-300 lg:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <Lock className="text-ochre" size={24} />
-              <h2 className="text-xl font-serif font-bold text-coffee uppercase tracking-widest">Security Settings</h2>
-            </div>
-            <form onSubmit={handlePasswordChange} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-              <div className="space-y-2">
-                <label className="text-xs text-coffee/70 uppercase tracking-widest">Current Password</label>
-                <input
-                  type="password"
-                  value={passwordData.currentPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                  className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
-                  placeholder="Enter current password"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-coffee/70 uppercase tracking-widest">New Password</label>
-                <input
-                  type="password"
-                  value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                  className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
-                  placeholder="Enter new password"
-                  required
-                />
-              </div>
-              <button disabled={loading} className="w-full py-3 bg-coffee text-cream font-bold uppercase tracking-widest hover:bg-ochre transition-all rounded-sm shadow-md">
-                {loading ? 'Updating...' : 'Update Password'}
-              </button>
-            </form>
-          </section>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-coffee/70 uppercase tracking-widest font-bold">Likes Count (લાઇક્સ)</label>
+                    <input
+                      type="number"
+                      value={instaLikes}
+                      onChange={(e) => setInstaLikes(e.target.value)}
+                      className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors text-sm"
+                      placeholder="e.g. 150"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-coffee/70 uppercase tracking-widest font-bold">Comments Count (કોમેન્ટ્સ)</label>
+                    <input
+                      type="number"
+                      value={instaComments}
+                      onChange={(e) => setInstaComments(e.target.value)}
+                      className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors text-sm"
+                      placeholder="e.g. 24"
+                    />
+                  </div>
+                </div>
+
+                <button disabled={loading || !newInstaImage || !instaPostUrl} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 transition-all disabled:opacity-50 rounded-sm">
+                  {loading ? 'Uploading...' : 'Add to Showcase'}
+                </button>
+              </form>
+            </section>
+          </div>
         </div>
 
         {/* Gallery List */}
-        <section className="mt-12 bg-cream-alt p-8 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
-          <h2 className="text-2xl font-serif font-bold text-coffee mb-8 border-b border-ochre/10 pb-4 transition-colors duration-300">
+        <section className="mt-8 bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
+          <h2 className="text-2xl font-serif font-bold text-coffee mb-6 border-b border-ochre/10 pb-3 transition-colors duration-300">
             Manage <span className="text-ochre">Collection</span>
           </h2>
           {gallery.length === 0 ? (
@@ -836,8 +842,8 @@ const AdminDashboard = () => {
         </section>
 
         {/* Instagram Showcase List */}
-        <section className="mt-12 bg-cream-alt p-8 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
-          <h2 className="text-2xl font-serif font-bold text-coffee mb-8 border-b border-ochre/10 pb-4 transition-colors duration-300">
+        <section className="mt-8 bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
+          <h2 className="text-2xl font-serif font-bold text-coffee mb-6 border-b border-ochre/10 pb-3 transition-colors duration-300">
             Manage <span className="text-ochre">Instagram Showcase</span>
           </h2>
           {instagramPosts.length === 0 ? (
@@ -887,8 +893,8 @@ const AdminDashboard = () => {
         </section>
 
         {/* Manage Orders */}
-        <section className="mt-12 bg-cream-alt p-8 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
-          <div className="flex items-center justify-between mb-8 border-b border-ochre/10 pb-4">
+        <section className="mt-8 bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
+          <div className="flex items-center justify-between mb-6 border-b border-ochre/10 pb-3">
             <div className="flex items-center gap-3">
               <TrendingUp className="text-ochre" size={28} />
               <h2 className="text-2xl font-serif font-bold text-coffee transition-colors duration-300">
@@ -991,8 +997,8 @@ const AdminDashboard = () => {
         </section>
 
         {/* User Management List */}
-        <section className="mt-12 bg-cream-alt p-8 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
-          <div className="flex items-center justify-between mb-8 border-b border-ochre/10 pb-4">
+        <section className="mt-8 bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
+          <div className="flex items-center justify-between mb-6 border-b border-ochre/10 pb-3">
             <div className="flex items-center gap-3">
               <User className="text-ochre" size={28} />
               <h2 className="text-2xl font-serif font-bold text-coffee transition-colors duration-300">
@@ -1070,8 +1076,8 @@ const AdminDashboard = () => {
         </section>
 
         {/* VIP Subscribers Section */}
-        <section className="mt-12 bg-cream-alt p-8 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
-          <div className="flex items-center justify-between mb-8 border-b border-ochre/10 pb-4">
+        <section className="mt-8 bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
+          <div className="flex items-center justify-between mb-6 border-b border-ochre/10 pb-3">
             <div className="flex items-center gap-3">
               <Mail className="text-ochre" size={28} />
               <h2 className="text-2xl font-serif font-bold text-coffee transition-colors duration-300">
@@ -1165,8 +1171,8 @@ const AdminDashboard = () => {
         </section>
 
         {/* Messages Section */}
-        <section className="mt-12 bg-cream-alt p-8 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
-          <div className="flex items-center gap-3 mb-8 border-b border-ochre/10 pb-4">
+        <section className="mt-8 bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
+          <div className="flex items-center gap-3 mb-6 border-b border-ochre/10 pb-3">
             <MessageSquare className="text-ochre" size={28} />
             <h2 className="text-2xl font-serif font-bold text-coffee transition-colors duration-300">
               Direct <span className="text-ochre">Messages</span>
