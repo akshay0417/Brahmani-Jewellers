@@ -3,6 +3,7 @@ import api from '../api';
 import Hero from '../components/Hero';
 import RatesSection from '../components/RatesSection';
 import GoogleReviews from '../components/GoogleReviews';
+import InstagramFeed from '../components/InstagramFeed';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, MessageSquare, CheckCircle, Map, Star, Send, User, Mail } from 'lucide-react';
@@ -330,6 +331,7 @@ const Home = () => {
       <Categories />
       <About />
       <GoogleReviews />
+      <InstagramFeed />
       <Contact />
     </motion.div>
   );
