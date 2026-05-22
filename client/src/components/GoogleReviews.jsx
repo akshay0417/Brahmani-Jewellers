@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Star } from 'lucide-react';
+import api from '../api';
 
 const REVIEWS = [
   {
@@ -29,24 +30,66 @@ const REVIEWS = [
 const CustomerReviews = () => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [name, setName] = useState('');
   const [feedback, setFeedback] = useState('');
+  const [reviews, setReviews] = useState([]);
+  const [stats, setStats] = useState({ averageRating: 5.0, totalCount: 3 });
+  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmitReview = (e) => {
+  const fetchReviews = async () => {
+    try {
+      const res = await api.get('/reviews');
+      setReviews(res.data.reviews);
+      setStats({
+        averageRating: res.data.averageRating,
+        totalCount: res.data.totalCount
+      });
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching reviews", err);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
+
+  const handleSubmitReview = async (e) => {
     e.preventDefault();
+    if (!name.trim()) {
+      alert("Please enter your name.");
+      return;
+    }
     if (rating === 0) {
       alert("Please select a star rating first.");
       return;
     }
+    if (!feedback.trim()) {
+      alert("Please enter your feedback.");
+      return;
+    }
     setIsSubmitting(true);
     
-    // Simulate submission to backend
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await api.post('/reviews', {
+        name: name.trim(),
+        rating,
+        text: feedback.trim()
+      });
+      
+      alert("Thank you for your feedback! Your review has been submitted successfully.");
+      setName('');
       setRating(0);
       setFeedback('');
-      alert("Thank you for your feedback! Your review has been submitted successfully.");
-    }, 1000);
+      fetchReviews();
+    } catch (err) {
+      console.error("Error submitting review", err);
+      alert(err.response?.data?.message || "Failed to submit review. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -80,6 +123,19 @@ const CustomerReviews = () => {
             <p className="text-coffee/60 text-sm mb-6">Share your experience with Brahmani Jewellers.</p>
             
             <form onSubmit={handleSubmitReview} className="space-y-6">
+              {/* Name Input */}
+              <div>
+                <p className="text-sm font-bold uppercase tracking-wider text-coffee mb-3">Your Name</p>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full bg-cream/50 border border-ochre/20 rounded-sm py-3 px-4 text-coffee focus:outline-none focus:border-ochre transition-colors text-sm"
+                  required
+                />
+              </div>
+
               {/* Star Rating Input */}
               <div>
                 <p className="text-sm font-bold uppercase tracking-wider text-coffee mb-3">Rate your experience</p>
@@ -112,7 +168,8 @@ const CustomerReviews = () => {
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
                   placeholder="Describe your experience with our jewellery and service..."
-                  className="w-full bg-cream/50 border border-ochre/20 rounded-sm py-3 px-4 text-coffee focus:outline-none focus:border-ochre transition-colors resize-none h-32"
+                  className="w-full bg-cream/50 border border-ochre/20 rounded-sm py-3 px-4 text-coffee focus:outline-none focus:border-ochre transition-colors resize-none h-32 text-sm"
+                  required
                 ></textarea>
               </div>
 
@@ -135,47 +192,69 @@ const CustomerReviews = () => {
             className="lg:col-span-7 flex flex-col gap-6"
           >
             <div className="flex items-center gap-4 mb-2">
-              <span className="text-4xl font-bold text-coffee">4.9</span>
+              <span className="text-4xl font-bold text-coffee">{stats.averageRating}</span>
               <div className="flex gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-ochre text-ochre" />
-                ))}
+                {[...Array(5)].map((_, i) => {
+                  const ratingVal = stats.averageRating || 5.0;
+                  const isFilled = i < Math.round(ratingVal);
+                  return (
+                    <Star key={i} className={`w-5 h-5 ${isFilled ? "fill-ochre text-ochre" : "fill-gray-200 text-gray-200"}`} />
+                  );
+                })}
               </div>
-              <span className="text-coffee/60 text-sm">(Based on 150+ reviews)</span>
+              <span className="text-coffee/60 text-sm">(Based on {stats.totalCount} reviews)</span>
             </div>
 
-            {REVIEWS.map((review, idx) => (
-              <motion.div 
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                viewport={{ once: true }}
-                className="bg-white p-6 rounded-lg shadow-sm border border-ochre/10 hover:shadow-md transition-all duration-300"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-ochre/20 text-ochre flex items-center justify-center font-bold text-lg">
-                      {review.initial}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-coffee leading-tight">{review.name}</h4>
-                      <div className="flex items-center gap-2">
-                        <div className="flex gap-0.5">
-                          {[...Array(review.rating)].map((_, i) => (
-                            <Star key={i} className="w-3 h-3 fill-ochre text-ochre" />
-                          ))}
+            {loading ? (
+              <div className="text-center py-12 text-coffee/60">Loading reviews...</div>
+            ) : reviews.length === 0 ? (
+              <div className="text-center py-12 text-coffee/60">No reviews yet. Be the first to review!</div>
+            ) : (
+              reviews.map((review, idx) => {
+                const initial = review.name ? review.name.charAt(0).toUpperCase() : 'U';
+                const dateText = review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                }) : 'Recently';
+
+                return (
+                  <motion.div 
+                    key={review._id || idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: idx * 0.1 }}
+                    viewport={{ once: true }}
+                    className="bg-white p-6 rounded-lg shadow-sm border border-ochre/10 hover:shadow-md transition-all duration-300"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-ochre/20 text-ochre flex items-center justify-center font-bold text-lg">
+                          {initial}
                         </div>
-                        <span className="text-xs text-coffee/50">{review.date}</span>
+                        <div>
+                          <h4 className="font-bold text-coffee leading-tight">{review.name}</h4>
+                          <div className="flex items-center gap-2">
+                            <div className="flex gap-0.5">
+                              {[...Array(review.rating)].map((_, i) => (
+                                <Star key={i} className="w-3 h-3 fill-ochre text-ochre" />
+                              ))}
+                              {[...Array(5 - review.rating)].map((_, i) => (
+                                <Star key={i} className="w-3 h-3 fill-gray-200 text-gray-200" />
+                              ))}
+                            </div>
+                            <span className="text-xs text-coffee/50">{dateText}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-                <p className="text-coffee/80 text-sm">
-                  "{review.text}"
-                </p>
-              </motion.div>
-            ))}
+                    <p className="text-coffee/80 text-sm">
+                      "{review.text}"
+                    </p>
+                  </motion.div>
+                );
+              })
+            )}
           </motion.div>
 
         </div>
