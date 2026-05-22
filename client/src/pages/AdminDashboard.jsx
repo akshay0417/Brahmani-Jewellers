@@ -11,6 +11,15 @@ const AdminDashboard = () => {
   const [messages, setMessages] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
   const [orders, setOrders] = useState([]);
+  
+  // Instagram Showcase State
+  const [instagramPosts, setInstagramPosts] = useState([]);
+  const [newInstaImage, setNewInstaImage] = useState(null);
+  const [instaPostUrl, setInstaPostUrl] = useState('');
+  const [instaCaption, setInstaCaption] = useState('');
+  const [instaLikes, setInstaLikes] = useState('');
+  const [instaComments, setInstaComments] = useState('');
+
   const [newImage, setNewImage] = useState(null);
   const [category, setCategory] = useState('gold');
   const [subCategory, setSubCategory] = useState('');
@@ -57,13 +66,14 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [rateRes, galleryRes, usersRes, messagesRes, subscribersRes, ordersRes] = await Promise.all([
+      const [rateRes, galleryRes, usersRes, messagesRes, subscribersRes, ordersRes, instagramRes] = await Promise.all([
         api.get('/rates'),
         api.get('/gallery'),
         api.get('/users', config),
         api.get('/messages', config),
         api.get('/subscribers', config),
-        api.get('/admin/orders', config)
+        api.get('/admin/orders', config),
+        api.get('/instagram')
       ]);
 
       if (rateRes.data) setRates({ 
@@ -83,6 +93,7 @@ const AdminDashboard = () => {
       if (messagesRes.data) setMessages(messagesRes.data);
       if (subscribersRes.data) setSubscribers(subscribersRes.data);
       if (ordersRes.data) setOrders(ordersRes.data);
+      if (instagramRes.data) setInstagramPosts(instagramRes.data);
     } catch (err) {
       console.error("Error loading dashboard data", err);
     }
@@ -148,6 +159,51 @@ const AdminDashboard = () => {
       setStatus({ type: 'success', message: 'Image uploaded successfully!' });
     } catch (err) {
       setStatus({ type: 'error', message: err.response?.data?.message || 'Upload failed.' });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    }
+  };
+
+  const handleInstagramUpload = async (e) => {
+    e.preventDefault();
+    if (!newInstaImage || !instaPostUrl) return;
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('image', newInstaImage);
+    formData.append('postUrl', instaPostUrl);
+    formData.append('caption', instaCaption);
+    formData.append('likes', instaLikes);
+    formData.append('comments', instaComments);
+
+    try {
+      await api.post('/instagram', formData, {
+        headers: { ...config.headers, 'Content-Type': 'multipart/form-data' }
+      });
+      setNewInstaImage(null);
+      setInstaPostUrl('');
+      setInstaCaption('');
+      setInstaLikes('');
+      setInstaComments('');
+      fetchData();
+      setStatus({ type: 'success', message: 'Instagram post added successfully!' });
+    } catch (err) {
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Instagram upload failed.' });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    }
+  };
+
+  const deleteInstagramPost = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this Instagram post?")) return;
+    setLoading(true);
+    try {
+      await api.delete(`/instagram/${id}`, config);
+      fetchData();
+      setStatus({ type: 'success', message: 'Instagram post deleted successfully!' });
+    } catch (err) {
+      setStatus({ type: 'error', message: 'Failed to delete Instagram post.' });
     } finally {
       setLoading(false);
       setTimeout(() => setStatus({ type: '', message: '' }), 3000);
@@ -604,6 +660,89 @@ const AdminDashboard = () => {
             </form>
           </section>
 
+          {/* Instagram Showcase Upload */}
+          <section className="bg-cream-alt p-8 rounded-lg shadow-sm border border-ochre/10 transition-colors duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <Upload className="text-ochre" />
+              <h2 className="text-xl font-serif font-bold text-coffee uppercase tracking-widest">Upload Instagram Post</h2>
+            </div>
+            <form onSubmit={handleInstagramUpload} className="space-y-6">
+              <div 
+                className="border-2 border-dashed border-ochre/30 bg-cream rounded-lg p-8 text-center hover:border-ochre/60 transition-colors cursor-pointer"
+                onClick={() => document.getElementById('instaImageInput').click()}
+              >
+                {newInstaImage ? (
+                  <div className="space-y-2">
+                    <p className="text-ochre text-sm truncate font-medium">{newInstaImage.name}</p>
+                    <p className="text-coffee/50 text-xs">Click to change selection</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 text-coffee/50">
+                    <ImageIcon className="mx-auto mb-2 opacity-60 text-ochre" size={40} />
+                    <p className="text-sm">Click to select post image (JPG/PNG)</p>
+                  </div>
+                )}
+                <input
+                  id="instaImageInput"
+                  type="file"
+                  hidden
+                  accept="image/jpeg, image/png"
+                  onChange={(e) => setNewInstaImage(e.target.files[0])}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs text-coffee/70 uppercase tracking-widest">Instagram Post URL (ઇન્સ્ટાગ્રામ પોસ્ટ લિંક)</label>
+                <input
+                  type="url"
+                  value={instaPostUrl}
+                  onChange={(e) => setInstaPostUrl(e.target.value)}
+                  className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors text-sm"
+                  placeholder="https://www.instagram.com/p/..."
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs text-coffee/70 uppercase tracking-widest">Caption / Description (લખાણ)</label>
+                <input
+                  type="text"
+                  value={instaCaption}
+                  onChange={(e) => setInstaCaption(e.target.value)}
+                  className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors text-sm"
+                  placeholder="e.g. Timeless gold necklace... ✨"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest">Likes Count (લાઇક્સ)</label>
+                  <input
+                    type="number"
+                    value={instaLikes}
+                    onChange={(e) => setInstaLikes(e.target.value)}
+                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors text-sm"
+                    placeholder="e.g. 150"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest">Comments Count (કોમેન્ટ્સ)</label>
+                  <input
+                    type="number"
+                    value={instaComments}
+                    onChange={(e) => setInstaComments(e.target.value)}
+                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors text-sm"
+                    placeholder="e.g. 24"
+                  />
+                </div>
+              </div>
+
+              <button disabled={loading || !newInstaImage || !instaPostUrl} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 transition-all disabled:opacity-50 rounded-sm">
+                {loading ? 'Uploading...' : 'Add to Showcase'}
+              </button>
+            </form>
+          </section>
+
           {/* Security Management */}
           <section className="bg-cream-alt p-8 rounded-lg shadow-sm border border-ochre/10 transition-colors duration-300 lg:col-span-2">
             <div className="flex items-center gap-3 mb-6">
@@ -672,6 +811,52 @@ const AdminDashboard = () => {
                   )}
                   <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-cream-alt/90 text-coffee text-[10px] uppercase font-bold tracking-wider rounded-sm shadow-sm backdrop-blur-sm">
                     {item.category} {item.weight && `| ${item.weight}`} {item.purity && `| ${item.purity}`} {item.price && `| ₹${item.price}`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Instagram Showcase List */}
+        <section className="mt-12 bg-cream-alt p-8 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
+          <h2 className="text-2xl font-serif font-bold text-coffee mb-8 border-b border-ochre/10 pb-4 transition-colors duration-300">
+            Manage <span className="text-ochre">Instagram Showcase</span>
+          </h2>
+          {instagramPosts.length === 0 ? (
+            <p className="text-coffee/50 text-center py-8 transition-colors duration-300">No Instagram posts found in the showcase.</p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+              {instagramPosts.map((post) => (
+                <div key={post._id} className="relative group rounded-md overflow-hidden aspect-square border border-ochre/20 shadow-sm">
+                  <img src={post.imageUrl} alt="Instagram Post" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-coffee/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+                    <a 
+                      href={post.postUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="p-3 bg-ochre text-cream rounded-full hover:bg-ochre/90 transform hover:scale-110 transition-all shadow-lg"
+                      title="View on Instagram"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                      </svg>
+                    </a>
+                    {post._id !== 'default1' && post._id !== 'default2' && post._id !== 'default3' && post._id !== 'default4' && post._id !== 'default5' && post._id !== 'default6' && (
+                      <button onClick={() => deleteInstagramPost(post._id)} className="p-3 bg-red-600/90 rounded-full text-white hover:bg-red-600 transform hover:scale-110 transition-all shadow-lg" title="Delete">
+                        <Trash2 size={20} />
+                      </button>
+                    )}
+                  </div>
+                  {post.caption && (
+                    <div className="absolute bottom-2 left-2 right-2 px-2 py-1 bg-cream-alt/90 text-coffee text-[10px] rounded-sm shadow-sm backdrop-blur-sm truncate">
+                      {post.caption}
+                    </div>
+                  )}
+                  <div className="absolute top-2 left-2 bg-ochre/95 text-coffee text-[10px] font-bold px-2 py-0.5 rounded-sm shadow-sm backdrop-blur-sm">
+                    ❤️ {post.likes || 0} | 💬 {post.comments || 0}
                   </div>
                 </div>
               ))}

@@ -1,13 +1,14 @@
 const express = require('express');
+const dotenv = require('dotenv');
+dotenv.config();
+
 const mongoose = require('mongoose');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const path = require('path');
 const apiRoutes = require('./routes/api');
 const User = require('./models/User');
 const bcrypt = require('bcryptjs');
 
-dotenv.config();
 
 const app = express();
 app.set('trust proxy', 1);

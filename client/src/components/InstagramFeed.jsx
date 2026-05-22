@@ -1,54 +1,77 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Instagram, Heart, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import api from '../api';
 
 const InstagramFeed = () => {
   const instagramUrl = "https://www.instagram.com/brahmanijewellers___?igsh=MTBpaW9kbWx2cTI0dg%3D%3D&utm_source=qr";
 
-  const posts = [
+  const defaultPosts = [
     {
-      id: 1,
+      _id: "default1",
       imageUrl: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=600&q=80",
       likes: "342",
       comments: "24",
-      caption: "Timeless elegance in pure gold. ✨"
+      caption: "Timeless elegance in pure gold. ✨",
+      postUrl: instagramUrl
     },
     {
-      id: 2,
+      _id: "default2",
       imageUrl: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80",
       likes: "512",
       comments: "45",
-      caption: "Exquisite bridal sets hand-crafted for your special day. 👑"
+      caption: "Exquisite bridal sets hand-crafted for your special day. 👑",
+      postUrl: instagramUrl
     },
     {
-      id: 3,
+      _id: "default3",
       imageUrl: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80",
       likes: "289",
       comments: "12",
-      caption: "Adorn yourself with pure gold rings. 💍"
+      caption: "Adorn yourself with pure gold rings. 💍",
+      postUrl: instagramUrl
     },
     {
-      id: 4,
+      _id: "default4",
       imageUrl: "https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?auto=format&fit=crop&w=600&q=80",
       likes: "601",
       comments: "58",
-      caption: "Celebrate tradition with our classic royal bangles. 🌸"
+      caption: "Celebrate tradition with our classic royal bangles. 🌸",
+      postUrl: instagramUrl
     },
     {
-      id: 5,
+      _id: "default5",
       imageUrl: "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=600&q=80",
       likes: "418",
       comments: "30",
-      caption: "Designs that inspire trust for 35+ years. 💛"
+      caption: "Designs that inspire trust for 35+ years. 💛",
+      postUrl: instagramUrl
     },
     {
-      id: 6,
+      _id: "default6",
       imageUrl: "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=600&q=80",
       likes: "375",
       comments: "19",
-      caption: "Add a touch of royalty with our premium collection. ✨"
+      caption: "Add a touch of royalty with our premium collection. ✨",
+      postUrl: instagramUrl
     }
   ];
+
+  const [posts, setPosts] = useState(defaultPosts);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await api.get('/instagram');
+        if (res.data && res.data.length > 0) {
+          setPosts(res.data);
+        }
+      } catch (err) {
+        console.error("Error fetching Instagram posts from API:", err);
+      }
+    };
+    fetchPosts();
+  }, []);
 
   return (
     <section className="py-10 md:py-12 bg-cream border-t border-ochre/15 transition-colors duration-300">
@@ -78,8 +101,8 @@ const InstagramFeed = () => {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {posts.map((post, idx) => (
             <motion.a
-              key={post.id}
-              href={instagramUrl}
+              key={post._id || post.id || idx}
+              href={post.postUrl || instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -91,7 +114,7 @@ const InstagramFeed = () => {
               {/* Image */}
               <img 
                 src={post.imageUrl} 
-                alt={post.caption} 
+                alt={post.caption || "Instagram post showcase"} 
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
 
@@ -105,7 +128,9 @@ const InstagramFeed = () => {
                     <MessageCircle size={16} className="fill-white text-white" /> {post.comments}
                   </span>
                 </div>
-                <p className="text-[10px] text-cream/90 line-clamp-2 px-1 mb-3">{post.caption}</p>
+                {post.caption && (
+                  <p className="text-[10px] text-cream/90 line-clamp-2 px-1 mb-3">{post.caption}</p>
+                )}
                 <Instagram size={24} className="text-ochre hover:scale-110 transition-transform" />
               </div>
             </motion.a>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Star } from 'lucide-react';
 import api from '../api';
@@ -36,6 +37,9 @@ const CustomerReviews = () => {
   const [stats, setStats] = useState({ averageRating: 5.0, totalCount: 3 });
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
+  const [hasExistingReview, setHasExistingReview] = useState(false);
 
   const fetchReviews = async () => {
     try {
@@ -53,13 +57,36 @@ const CustomerReviews = () => {
   };
 
   useEffect(() => {
+    const token = sessionStorage.getItem('token');
+    const userStr = sessionStorage.getItem('user');
+    if (token && userStr) {
+      setIsLoggedIn(true);
+      try {
+        const parsedUser = JSON.parse(userStr);
+        setUser(parsedUser);
+        setName(parsedUser.name || '');
+        
+        // Fetch existing review
+        api.get('/reviews/my')
+          .then(res => {
+            if (res.data && res.data.review) {
+              setRating(res.data.review.rating);
+              setFeedback(res.data.review.text);
+              setHasExistingReview(true);
+            }
+          })
+          .catch(err => console.error("Error fetching my review:", err));
+      } catch (err) {
+        console.error("Error parsing user from sessionStorage", err);
+      }
+    }
     fetchReviews();
   }, []);
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
-    if (!name.trim()) {
-      alert("Please enter your name.");
+    if (!isLoggedIn) {
+      alert("Please log in to submit a review.");
       return;
     }
     if (rating === 0) {
@@ -73,16 +100,13 @@ const CustomerReviews = () => {
     setIsSubmitting(true);
     
     try {
-      await api.post('/reviews', {
-        name: name.trim(),
+      const res = await api.post('/reviews', {
         rating,
         text: feedback.trim()
       });
       
-      alert("Thank you for your feedback! Your review has been submitted successfully.");
-      setName('');
-      setRating(0);
-      setFeedback('');
+      alert(res.data?.message || "Thank you for your feedback! Your review has been submitted successfully.");
+      setHasExistingReview(true);
       fetchReviews();
     } catch (err) {
       console.error("Error submitting review", err);
@@ -117,71 +141,97 @@ const CustomerReviews = () => {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="lg:col-span-5 bg-white p-8 rounded-lg shadow-xl border border-ochre/20 flex flex-col justify-center"
+            className="lg:col-span-5 bg-white p-8 rounded-lg shadow-xl border border-ochre/20 flex flex-col justify-center min-h-[400px]"
           >
-            <h3 className="text-2xl font-serif font-bold text-coffee mb-2">Write a Review</h3>
-            <p className="text-coffee/60 text-sm mb-6">Share your experience with Brahmani Jewellers.</p>
-            
-            <form onSubmit={handleSubmitReview} className="space-y-6">
-              {/* Name Input */}
-              <div>
-                <p className="text-sm font-bold uppercase tracking-wider text-coffee mb-3">Your Name</p>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your name"
-                  className="w-full bg-cream/50 border border-ochre/20 rounded-sm py-3 px-4 text-coffee focus:outline-none focus:border-ochre transition-colors text-sm"
-                  required
-                />
-              </div>
-
-              {/* Star Rating Input */}
-              <div>
-                <p className="text-sm font-bold uppercase tracking-wider text-coffee mb-3">Rate your experience</p>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      type="button"
-                      key={star}
-                      className="transition-transform hover:scale-110 focus:outline-none"
-                      onMouseEnter={() => setHoverRating(star)}
-                      onMouseLeave={() => setHoverRating(0)}
-                      onClick={() => setRating(star)}
-                    >
-                      <Star 
-                        className={`w-8 h-8 transition-colors ${
-                          star <= (hoverRating || rating) 
-                            ? "fill-ochre text-ochre" 
-                            : "fill-gray-200 text-gray-200"
-                        }`} 
-                      />
-                    </button>
-                  ))}
+            {!isLoggedIn ? (
+              <div className="text-center py-6 flex flex-col items-center justify-center h-full">
+                <div className="w-16 h-16 bg-ochre/10 rounded-full flex items-center justify-center mb-6">
+                  <Star className="w-8 h-8 text-ochre fill-ochre" />
                 </div>
+                <h3 className="text-2xl font-serif font-bold text-coffee mb-4">Write a Review</h3>
+                <p className="text-coffee/70 text-sm mb-8 max-w-sm mx-auto leading-relaxed">
+                  Please log in to share your experience and write a review. Only verified customer accounts can leave reviews to ensure authenticity.
+                </p>
+                <Link
+                  to="/login"
+                  className="w-full flex items-center justify-center gap-2 bg-coffee text-cream font-bold py-4 uppercase tracking-[0.2em] hover:bg-ochre transition-all shadow-md hover:shadow-lg rounded-sm"
+                >
+                  Login to Write Review
+                </Link>
               </div>
+            ) : (
+              <>
+                <h3 className="text-2xl font-serif font-bold text-coffee mb-2">Write a Review</h3>
+                <p className="text-coffee/60 text-sm mb-6">
+                  {hasExistingReview 
+                    ? "You have already submitted a review. Submitting this form will update your existing review." 
+                    : "Share your experience with Brahmani Jewellers."}
+                </p>
+                
+                <form onSubmit={handleSubmitReview} className="space-y-6">
+                  {/* Name Input */}
+                  <div>
+                    <p className="text-sm font-bold uppercase tracking-wider text-coffee mb-3">Your Name</p>
+                    <input
+                      type="text"
+                      value={name}
+                      disabled
+                      className="w-full bg-gray-100 border border-ochre/20 rounded-sm py-3 px-4 text-coffee/60 font-medium transition-colors text-sm cursor-not-allowed"
+                    />
+                    <p className="text-xs text-ochre/80 mt-1.5 italic font-medium">
+                      Reviewing as verified customer
+                    </p>
+                  </div>
 
-              {/* Feedback Textarea */}
-              <div>
-                <p className="text-sm font-bold uppercase tracking-wider text-coffee mb-3">Your Feedback</p>
-                <textarea
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                  placeholder="Describe your experience with our jewellery and service..."
-                  className="w-full bg-cream/50 border border-ochre/20 rounded-sm py-3 px-4 text-coffee focus:outline-none focus:border-ochre transition-colors resize-none h-32 text-sm"
-                  required
-                ></textarea>
-              </div>
+                  {/* Star Rating Input */}
+                  <div>
+                    <p className="text-sm font-bold uppercase tracking-wider text-coffee mb-3">Rate your experience</p>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          type="button"
+                          key={star}
+                          className="transition-transform hover:scale-110 focus:outline-none"
+                          onMouseEnter={() => setHoverRating(star)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          onClick={() => setRating(star)}
+                        >
+                          <Star 
+                            className={`w-8 h-8 transition-colors ${
+                              star <= (hoverRating || rating) 
+                                ? "fill-ochre text-ochre" 
+                                : "fill-gray-200 text-gray-200"
+                            }`} 
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 bg-coffee text-cream font-bold py-4 uppercase tracking-[0.2em] hover:bg-ochre transition-all disabled:opacity-50 shadow-md hover:shadow-lg rounded-sm"
-              >
-                {isSubmitting ? 'Posting...' : 'Post'}
-              </button>
-            </form>
+                  {/* Feedback Textarea */}
+                  <div>
+                    <p className="text-sm font-bold uppercase tracking-wider text-coffee mb-3">Your Feedback</p>
+                    <textarea
+                      value={feedback}
+                      onChange={(e) => setFeedback(e.target.value)}
+                      placeholder="Describe your experience with our jewellery and service..."
+                      className="w-full bg-cream/50 border border-ochre/20 rounded-sm py-3 px-4 text-coffee focus:outline-none focus:border-ochre transition-colors resize-none h-32 text-sm"
+                      required
+                    ></textarea>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full flex items-center justify-center gap-2 bg-coffee text-cream font-bold py-4 uppercase tracking-[0.2em] hover:bg-ochre transition-all disabled:opacity-50 shadow-md hover:shadow-lg rounded-sm"
+                  >
+                    {isSubmitting ? 'Posting...' : hasExistingReview ? 'Update Review' : 'Post'}
+                  </button>
+                </form>
+              </>
+            )}
           </motion.div>
+
 
           {/* Existing Reviews Display */}
           <motion.div 

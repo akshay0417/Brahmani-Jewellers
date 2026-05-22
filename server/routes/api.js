@@ -65,6 +65,7 @@ const Cart = require('../models/Cart');
 const Order = require('../models/Order');
 const Subscriber = require('../models/Subscriber');
 const Review = require('../models/Review');
+const InstagramPost = require('../models/InstagramPost');
 
 // Gmail API OAuth2 Helpers
 const getGmailAccessToken = async () => {
@@ -995,24 +996,218 @@ router.get('/reviews', async (req, res) => {
   }
 });
 
-// Post a Review
-router.post('/reviews', async (req, res) => {
-  const { name, rating, text } = req.body;
-  if (!name || !rating || !text) {
-    return res.status(400).json({ message: 'Name, rating and text are required.' });
+// Get Logged-in User's Review
+router.get('/reviews/my', auth, async (req, res) => {
+  try {
+    const review = await Review.findOne({ user: req.user });
+    res.json({ review });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Post or Edit a Review (Authenticated)
+router.post('/reviews', auth, async (req, res) => {
+  const { rating, text } = req.body;
+  if (rating === undefined || !text) {
+    return res.status(400).json({ message: 'Rating and text are required.' });
   }
   
   try {
-    const review = new Review({
-      name,
-      rating: Number(rating),
-      text
-    });
+    // Get user details to populate the real name
+    const user = await User.findById(req.user);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if the user has already submitted a review
+    let review = await Review.findOne({ user: req.user });
     
-    const newReview = await review.save();
-    res.status(201).json(newReview);
+    if (review) {
+      // Update existing review
+      review.rating = Number(rating);
+      review.text = text;
+      // In case they updated their name in their profile
+      review.name = user.name;
+      review.createdAt = Date.now(); // update time to float it to the top
+      
+      const updatedReview = await review.save();
+      return res.json({ message: 'Review updated successfully!', review: updatedReview });
+    } else {
+      // Create new review
+      review = new Review({
+        user: req.user,
+        name: user.name,
+        rating: Number(rating),
+        text
+      });
+      
+      const newReview = await review.save();
+      return res.status(201).json({ message: 'Review submitted successfully!', review: newReview });
+    }
   } catch (err) {
     res.status(400).json({ message: err.message });
+  }
+});
+
+
+// --- INSTAGRAM SHOWCASE ROUTES ---
+
+// Get all Instagram posts
+router.get('/instagram', async (req, res) => {
+  try {
+    const posts = await InstagramPost.find().sort({ createdAt: -1 });
+    
+    if (posts.length > 0) {
+      return res.json(posts);
+    }
+    
+    // Default seed posts if database is empty
+    const instagramUrl = "https://www.instagram.com/brahmanijewellers___?igsh=MTBpaW9kbWx2cTI0dg%3D%3D&utm_source=qr";
+    const defaultPosts = [
+      {
+        _id: "default1",
+        imageUrl: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=600&q=80",
+        likes: 342,
+        comments: 24,
+        caption: "Timeless elegance in pure gold. ✨",
+        postUrl: instagramUrl
+      },
+      {
+        _id: "default2",
+        imageUrl: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80",
+        likes: 512,
+        comments: 45,
+        caption: "Exquisite bridal sets hand-crafted for your special day. 👑",
+        postUrl: instagramUrl
+      },
+      {
+        _id: "default3",
+        imageUrl: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80",
+        likes: 289,
+        comments: 12,
+        caption: "Adorn yourself with pure gold rings. 💍",
+        postUrl: instagramUrl
+      },
+      {
+        _id: "default4",
+        imageUrl: "https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?auto=format&fit=crop&w=600&q=80",
+        likes: 601,
+        comments: 58,
+        caption: "Celebrate tradition with our classic royal bangles. 🌸",
+        postUrl: instagramUrl
+      },
+      {
+        _id: "default5",
+        imageUrl: "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=600&q=80",
+        likes: 418,
+        comments: 30,
+        caption: "Designs that inspire trust for 35+ years. 💛",
+        postUrl: instagramUrl
+      },
+      {
+        _id: "default6",
+        imageUrl: "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=600&q=80",
+        likes: 375,
+        comments: 19,
+        caption: "Add a touch of royalty with our premium collection. ✨",
+        postUrl: instagramUrl
+      }
+    ];
+    
+    res.json(defaultPosts);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Upload Instagram Post (Admin only)
+router.post('/instagram', auth, isAdmin, (req, res, next) => {
+  upload.single('image')(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ message: err.message });
+    } else if (err) {
+      return res.status(400).json({ message: err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
+  const { postUrl, caption, likes, comments } = req.body;
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No image uploaded' });
+    if (!postUrl) return res.status(400).json({ message: 'Instagram post URL is required' });
+
+    let imageUrl = '';
+    const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && 
+                                   process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name';
+
+    if (isCloudinaryConfigured) {
+      const { Readable } = require('stream');
+      const uploadPromise = () => new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'brahmani_instagram',
+            resource_type: 'image'
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result.secure_url);
+          }
+        );
+        Readable.from(req.file.buffer).pipe(uploadStream);
+      });
+      imageUrl = await uploadPromise();
+    } else {
+      const b64 = Buffer.from(req.file.buffer).toString('base64');
+      imageUrl = `data:${req.file.mimetype};base64,${b64}`;
+    }
+
+    const newPost = new InstagramPost({
+      imageUrl,
+      postUrl,
+      caption,
+      likes: Number(likes) || 0,
+      comments: Number(comments) || 0
+    });
+
+    await newPost.save();
+    res.status(201).json(newPost);
+  } catch (err) {
+    console.error('Instagram upload error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Delete Instagram Post (Admin only)
+router.delete('/instagram/:id', auth, isAdmin, async (req, res) => {
+  try {
+    const post = await InstagramPost.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: 'Instagram post not found' });
+
+    // Delete from Cloudinary if configured
+    const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && 
+                                   process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name';
+    if (isCloudinaryConfigured && post.imageUrl && post.imageUrl.includes('cloudinary.com')) {
+      try {
+        const parts = post.imageUrl.split('/');
+        const uploadIndex = parts.indexOf('upload');
+        if (uploadIndex !== -1 && uploadIndex + 2 < parts.length) {
+          const publicIdWithExtension = parts.slice(uploadIndex + 2).join('/');
+          const publicId = publicIdWithExtension.substring(0, publicIdWithExtension.lastIndexOf('.'));
+          if (publicId) {
+            await cloudinary.uploader.destroy(publicId);
+            console.log(`Successfully deleted Instagram image from Cloudinary: ${publicId}`);
+          }
+        }
+      } catch (cloudinaryErr) {
+        console.error('Failed to delete Instagram image from Cloudinary:', cloudinaryErr);
+      }
+    }
+
+    await InstagramPost.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Instagram post deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
