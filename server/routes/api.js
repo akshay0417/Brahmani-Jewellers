@@ -9,6 +9,27 @@ const twilio = require('twilio');
 const axios = require('axios');
 const auth = require('../middleware/auth');
 const isAdmin = require('../middleware/isAdmin');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
+const { createShipment } = require('../services/delhivery');
+
+// Razorpay Configuration
+let razorpayInstance = null;
+try {
+  const rzpKey = process.env.RAZORPAY_KEY_ID;
+  const rzpSecret = process.env.RAZORPAY_KEY_SECRET;
+  if (rzpKey && rzpKey !== 'rzp_test_mockKeyId123' && rzpKey !== '') {
+    razorpayInstance = new Razorpay({
+      key_id: rzpKey,
+      key_secret: rzpSecret
+    });
+    console.log('Razorpay configured successfully! 💳');
+  } else {
+    console.warn('[WARNING] Razorpay is running in SIMULATION mode.');
+  }
+} catch (err) {
+  console.error('Razorpay config error:', err.message);
+}
 
 // Cloudinary Configuration
 if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name') {
@@ -1659,7 +1680,7 @@ router.delete('/cart/remove/:productId', auth, async (req, res) => {
 
 // --- ORDER ROUTES ---
 
-// Place a new order
+// Place a new order (COD flow)
 router.post('/orders', auth, async (req, res) => {
   const { items, totalAmount, shippingAddress, paymentMethod, shippingCharge, distanceKm } = req.body;
   try {
@@ -1677,10 +1698,145 @@ router.post('/orders', auth, async (req, res) => {
 
     await newOrder.save();
 
+    // Auto-trigger Delhivery shipment
+    try {
+      const shipRes = await createShipment(newOrder);
+      if (shipRes.success) {
+        newOrder.trackingId = shipRes.trackingId;
+        newOrder.status = 'Processing';
+        await newOrder.save();
+      }
+    } catch (shipErr) {
+      console.error('[Delhivery Auto Shipment Error]:', shipErr.message);
+    }
+
     // Clear the cart after placing order
     await Cart.findOneAndDelete({ user: req.user });
 
     res.status(201).json({ message: 'Order placed successfully!', order: newOrder });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Create a Razorpay Order
+router.post('/orders/razorpay-order', auth, async (req, res) => {
+  const { totalAmount } = req.body;
+  try {
+    if (!totalAmount || totalAmount <= 0) {
+      return res.status(400).json({ message: 'Invalid total amount' });
+    }
+
+    if (razorpayInstance) {
+      const options = {
+        amount: Math.round(totalAmount * 100), // amount in paisa
+        currency: 'INR',
+        receipt: 'receipt_' + Date.now()
+      };
+      const order = await razorpayInstance.orders.create(options);
+      res.json({
+        id: order.id,
+        amount: order.amount,
+        currency: order.currency
+      });
+    } else {
+      // Mock Mode: Generate a mock Razorpay Order ID
+      const mockOrderId = 'order_mock_' + Math.random().toString(36).substring(2, 15);
+      res.json({
+        id: mockOrderId,
+        amount: Math.round(totalAmount * 100),
+        currency: 'INR',
+        isMock: true
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Verify Razorpay Payment and Place Order
+router.post('/orders/verify-payment', auth, async (req, res) => {
+  const { orderData, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+  try {
+    if (!orderData || !orderData.items || orderData.items.length === 0) {
+      return res.status(400).json({ message: 'Invalid order data' });
+    }
+
+    let isVerified = false;
+
+    // Verify payment signature
+    if (razorpayInstance) {
+      if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+        return res.status(400).json({ message: 'Missing Razorpay parameters' });
+      }
+      const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
+      hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+      const generated_signature = hmac.digest('hex');
+
+      if (generated_signature === razorpay_signature) {
+        isVerified = true;
+      } else {
+        return res.status(400).json({ message: 'Payment verification failed: Signature mismatch' });
+      }
+    } else {
+      // Mock Mode: automatically verify payment
+      isVerified = true;
+    }
+
+    if (isVerified) {
+      const newOrder = new Order({
+        user: req.user,
+        items: orderData.items,
+        totalAmount: orderData.totalAmount,
+        shippingAddress: orderData.shippingAddress,
+        paymentMethod: 'Razorpay',
+        paymentStatus: 'Paid',
+        shippingCharge: orderData.shippingCharge || 0,
+        distanceKm: orderData.distanceKm || 0,
+        razorpayOrderId: razorpay_order_id,
+        razorpayPaymentId: razorpay_payment_id,
+        razorpaySignature: razorpay_signature
+      });
+
+      await newOrder.save();
+
+      // Auto-trigger Delhivery shipment
+      try {
+        const shipRes = await createShipment(newOrder);
+        if (shipRes.success) {
+          newOrder.trackingId = shipRes.trackingId;
+          newOrder.status = 'Processing';
+          await newOrder.save();
+        }
+      } catch (shipErr) {
+        console.error('[Delhivery Auto Shipment Error]:', shipErr.message);
+      }
+
+      // Clear the cart
+      await Cart.findOneAndDelete({ user: req.user });
+
+      res.status(201).json({ message: 'Payment verified and order placed successfully!', order: newOrder });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Trigger Delhivery Shipment Manually (Admin only)
+router.post('/admin/orders/:id/ship-delhivery', auth, isAdmin, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    const shipRes = await createShipment(order);
+    if (shipRes.success) {
+      order.trackingId = shipRes.trackingId;
+      order.status = 'Shipped'; // update to Shipped upon manual booking
+      await order.save();
+      res.json({ message: 'Shipment created successfully!', order });
+    } else {
+      res.status(400).json({ message: shipRes.message || 'Failed to create shipment with Delhivery' });
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

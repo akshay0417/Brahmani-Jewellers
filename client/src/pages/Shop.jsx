@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBag, Heart, ShieldCheck, Truck } from 'lucide-react';
+import { X, ShoppingBag, Heart, ShieldCheck, Truck, MessageCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 const Shop = () => {
@@ -41,8 +41,19 @@ const Shop = () => {
           api.get('/gallery'),
           api.get('/rates')
         ]);
-        setItems(itemsRes.data.filter(item => item.targetPage === 'shop' || item.targetPage === 'both' || !item.targetPage));
+        const shopItems = itemsRes.data.filter(item => item.targetPage === 'shop' || item.targetPage === 'both' || !item.targetPage);
+        setItems(shopItems);
         setRates(ratesRes.data);
+
+        // Deep-linking: check if URL query params contain product ID
+        const params = new URLSearchParams(window.location.search);
+        const productId = params.get('id');
+        if (productId) {
+          const matched = shopItems.find(item => item._id === productId);
+          if (matched) {
+            setSelectedProduct(matched);
+          }
+        }
       } catch (err) {
         console.error("Error fetching shop items", err);
       } finally {
@@ -78,6 +89,24 @@ const Shop = () => {
       final,
       breakdown: { basePrice, makingPercent, makingAmount, other, gst, subtotal }
     };
+  };
+
+  const handleWhatsAppInquiry = (product) => {
+    if (!product) return;
+    const priceData = calculatePrice(product);
+    const finalPrice = priceData.final;
+    const productLink = `${window.location.origin}/shop?id=${product._id}`;
+    
+    let text = `Hello Brahmani Jewellers, I am interested in this item:\n\n`;
+    text += `*Name:* ${product.name || 'Heritage Ornament'}\n`;
+    text += `*Category:* ${product.category}\n`;
+    if (product.purity) text += `*Purity:* ${product.purity}\n`;
+    if (product.weight) text += `*Weight:* ${product.weight} Grams\n`;
+    text += `*Price:* ₹${finalPrice.toLocaleString('en-IN')}\n\n`;
+    text += `Link: ${productLink}`;
+
+    const whatsappUrl = `https://wa.me/917621967577?text=${encodeURIComponent(text)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const shopCategories = ['all', 'gold', 'silver', 'antique', 'rudraksha'];
@@ -254,12 +283,18 @@ const Shop = () => {
                         {pData.breakdown && <div className="px-3 py-1 bg-ochre/10 text-ochre text-[10px] font-bold uppercase tracking-widest rounded-sm border border-ochre/20 mb-1">Live Rate Verified</div>}
                       </div>
                       
-                      <div className="flex gap-4">
+                      <div className="flex flex-col sm:flex-row gap-4">
                         <button 
                           onClick={() => { addToCart(selectedProduct._id); setSelectedProduct(null); }} 
-                          className="w-full py-4 bg-ochre text-coffee font-bold uppercase tracking-widest rounded-sm hover:bg-ochre/90 transition-all flex items-center justify-center gap-3 shadow-md"
+                          className="w-full sm:w-1/2 py-4 bg-ochre text-coffee font-bold uppercase tracking-widest rounded-sm hover:bg-ochre/90 transition-all flex items-center justify-center gap-3 shadow-md"
                         >
                           <ShoppingBag size={20} /> Add to Cart
+                        </button>
+                        <button 
+                          onClick={() => handleWhatsAppInquiry(selectedProduct)} 
+                          className="w-full sm:w-1/2 py-4 bg-[#25D366] text-white font-bold uppercase tracking-widest rounded-sm hover:bg-[#20ba5a] transition-all flex items-center justify-center gap-3 shadow-md"
+                        >
+                          <MessageCircle size={20} /> WhatsApp Inquiry
                         </button>
                       </div>
                     </>

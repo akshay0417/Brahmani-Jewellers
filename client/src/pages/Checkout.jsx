@@ -20,8 +20,7 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [deliveryRates, setDeliveryRates] = useState({ freeDeliveryKmLimit: 10, deliveryChargePerKm: 15 });
-  const [cardData, setCardData] = useState({ number: '', expiry: '', cvv: '' });
-  const [upiData, setUpiData] = useState({ upiId: '' });
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const fetchDeliveryRates = async () => {
@@ -38,6 +37,30 @@ const Checkout = () => {
       }
     };
     fetchDeliveryRates();
+
+    // Load Razorpay script dynamically
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    // Retrieve logged-in user details to pre-fill name/mobile
+    const storedUser = sessionStorage.getItem('user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+      setFormData(prev => ({
+        ...prev,
+        name: prev.name || parsedUser.name || '',
+        mobile: prev.mobile || parsedUser.mobile || ''
+      }));
+    }
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
   }, []);
 
   const calculateDistance = (pincode) => {
@@ -81,65 +104,106 @@ const Checkout = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleCardChange = (e) => {
-    setCardData({ ...cardData, [e.target.name]: e.target.value });
-  };
-
-  const handleUpiChange = (e) => {
-    setUpiData({ ...upiData, [e.target.name]: e.target.value });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    const token = sessionStorage.getItem('token');
+    const config = { headers: { Authorization: `Bearer ${token}` } };
+
+    const orderData = {
+      items: cart.items.map(item => ({
+        product: item.product._id,
+        quantity: item.quantity,
+        priceAtPurchase: item.product.price
+      })),
+      totalAmount: grandTotal,
+      shippingAddress: {
+        name: formData.name,
+        mobile: formData.mobile,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode
+      },
+      paymentMethod: formData.paymentMethod,
+      shippingCharge: deliveryCharge,
+      distanceKm: distance
+    };
+
     try {
-      let finalPaymentMethod = formData.paymentMethod;
-      if (formData.paymentMethod === 'Card') {
-        if (!cardData.number || !cardData.expiry || !cardData.cvv) {
-          alert('Please fill card details');
-          setLoading(false);
-          return;
+      if (formData.paymentMethod === 'COD') {
+        // Direct COD checkout
+        await api.post('/orders', orderData, config);
+        setOrderSuccess(true);
+        setTimeout(() => navigate('/dashboard'), 3000);
+      } else {
+        // Razorpay flow: first create a Razorpay Order in backend
+        const rzpOrderRes = await api.post('/orders/razorpay-order', { totalAmount: grandTotal }, config);
+        const rzpOrderId = rzpOrderRes.data.id;
+
+        if (rzpOrderRes.data.isMock) {
+          // Simulation mode
+          const confirmPayment = window.confirm(`[RAZORPAY SIMULATION]\nSimulate payment of ₹${grandTotal.toLocaleString('en-IN')}?`);
+          if (confirmPayment) {
+            const mockPaymentId = 'pay_mock_' + Math.random().toString(36).substring(2, 15);
+            const mockSignature = 'sig_mock_' + Math.random().toString(36).substring(2, 15);
+
+            await api.post('/orders/verify-payment', {
+              orderData,
+              razorpay_payment_id: mockPaymentId,
+              razorpay_order_id: rzpOrderId,
+              razorpay_signature: mockSignature
+            }, config);
+
+            setOrderSuccess(true);
+            setTimeout(() => navigate('/dashboard'), 3000);
+          } else {
+            setLoading(false);
+          }
+        } else {
+          // Live Razorpay Mode
+          const options = {
+            key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_mockKeyId123',
+            amount: rzpOrderRes.data.amount,
+            currency: rzpOrderRes.data.currency,
+            name: "Brahmani Jewellers",
+            description: "Luxury Jewellery Purchase",
+            order_id: rzpOrderId,
+            handler: async function (response) {
+              try {
+                setLoading(true);
+                await api.post('/orders/verify-payment', {
+                  orderData,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature
+                }, config);
+
+                setOrderSuccess(true);
+                setTimeout(() => navigate('/dashboard'), 3000);
+              } catch (verifyErr) {
+                alert(verifyErr.response?.data?.message || 'Payment verification failed');
+              } finally {
+                setLoading(false);
+              }
+            },
+            prefill: {
+              name: formData.name,
+              contact: formData.mobile,
+              email: user?.email || ''
+            },
+            theme: {
+              color: "#b08968"
+            }
+          };
+
+          const rzp = new window.Razorpay(options);
+          rzp.open();
         }
-        finalPaymentMethod = `Card (ending in ${cardData.number.slice(-4)})`;
-      } else if (formData.paymentMethod === 'UPI') {
-        if (!upiData.upiId) {
-          alert('Please enter UPI ID');
-          setLoading(false);
-          return;
-        }
-        finalPaymentMethod = `UPI (${upiData.upiId})`;
       }
-
-      const orderData = {
-        items: cart.items.map(item => ({
-          product: item.product._id,
-          quantity: item.quantity,
-          priceAtPurchase: item.product.price
-        })),
-        totalAmount: grandTotal,
-        shippingAddress: {
-          name: formData.name,
-          mobile: formData.mobile,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          pincode: formData.pincode
-        },
-        paymentMethod: finalPaymentMethod,
-        shippingCharge: deliveryCharge,
-        distanceKm: distance
-      };
-
-      const token = sessionStorage.getItem('token');
-      await api.post('/orders', orderData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setOrderSuccess(true);
-      // Wait and navigate to home or orders page
-      setTimeout(() => navigate('/dashboard'), 3000);
     } catch (err) {
-      alert(err.response?.data?.message || 'Error placing order');
-    } finally {
+      alert(err.response?.data?.message || 'Error processing checkout');
       setLoading(false);
     }
   };
@@ -217,27 +281,16 @@ const Checkout = () => {
                 </label>
               </div>
 
-              {/* Conditional Payment Forms */}
-              {formData.paymentMethod === 'Card' && (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-cream border border-ochre/25 rounded-lg space-y-4 mt-4 shadow-inner">
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-coffee/80 mb-2">Card Details</h4>
-                  <div className="space-y-4">
-                    <input type="text" name="number" required placeholder="Card Number (e.g. 4111 2222 3333 4444)" value={cardData.number} onChange={handleCardChange} maxLength="19" className="w-full bg-cream-alt border border-ochre/20 p-3 rounded focus:outline-none focus:border-ochre text-coffee text-sm" />
-                    <div className="grid grid-cols-2 gap-4">
-                      <input type="text" name="expiry" required placeholder="MM/YY" value={cardData.expiry} onChange={handleCardChange} maxLength="5" className="w-full bg-cream-alt border border-ochre/20 p-3 rounded focus:outline-none focus:border-ochre text-coffee text-sm" />
-                      <input type="password" name="cvv" required placeholder="CVV" value={cardData.cvv} onChange={handleCardChange} maxLength="4" className="w-full bg-cream-alt border border-ochre/20 p-3 rounded focus:outline-none focus:border-ochre text-coffee text-sm" />
-                    </div>
+              {/* Conditional Payment Forms / Info */}
+              {formData.paymentMethod !== 'COD' && (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-cream border border-ochre/25 rounded-lg space-y-2 mt-4 shadow-inner">
+                  <div className="flex items-center gap-2 text-ochre">
+                    <CreditCard size={18} />
+                    <h4 className="text-sm font-bold uppercase tracking-wider text-coffee/80">Secure Checkout via Razorpay</h4>
                   </div>
-                </motion.div>
-              )}
-
-              {formData.paymentMethod === 'UPI' && (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-cream border border-ochre/25 rounded-lg space-y-4 mt-4 shadow-inner">
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-coffee/80 mb-2">UPI Details</h4>
-                  <div className="space-y-3">
-                    <input type="text" name="upiId" required placeholder="Enter UPI ID (e.g. name@upi)" value={upiData.upiId} onChange={handleUpiChange} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded focus:outline-none focus:border-ochre text-coffee text-sm" />
-                    <p className="text-xs text-coffee/60 italic">Please enter your UPI ID. You will receive a payment request on your UPI app to authorize the transaction.</p>
-                  </div>
+                  <p className="text-xs text-coffee/60">
+                    You will be redirected to Razorpay to complete your payment securely using UPI, Cards, Netbanking, or Wallet.
+                  </p>
                 </motion.div>
               )}
 

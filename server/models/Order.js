@@ -30,7 +30,12 @@ const OrderSchema = new mongoose.Schema({
     enum: ['Unpaid', 'Paid'], 
     default: 'Unpaid' 
   },
-  paymentMethod: { type: String, default: 'COD' } // Cash on Delivery or UPI
+  paymentMethod: { type: String, default: 'COD' }, // Cash on Delivery or Razorpay
+  trackingId: { type: String },
+  deliveryPartner: { type: String, default: 'Delhivery' },
+  razorpayOrderId: { type: String },
+  razorpayPaymentId: { type: String },
+  razorpaySignature: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', OrderSchema);

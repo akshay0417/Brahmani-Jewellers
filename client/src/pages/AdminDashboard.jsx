@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogOut, Upload, Trash2, TrendingUp, Image as ImageIcon, CheckCircle, AlertCircle, User, MessageSquare, Lock, X, Mail } from 'lucide-react';
+import { LogOut, Upload, Trash2, TrendingUp, Image as ImageIcon, CheckCircle, AlertCircle, User, MessageSquare, Lock, X, Mail, Star } from 'lucide-react';
 
 const AdminDashboard = () => {
   const [rates, setRates] = useState({ isManual: true, goldImpFine: '', silverFine: '', manualGold24K: '', manualGold22K: '', manualGold18K: '', manualSilver90: '', freeDeliveryKmLimit: '', deliveryChargePerKm: '' });
@@ -123,6 +123,21 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error(err);
       setStatus({ type: 'error', message: 'Failed to update order status.' });
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    }
+  };
+
+  const handleShipDelhivery = async (orderId) => {
+    setLoading(true);
+    try {
+      const res = await api.post(`/admin/orders/${orderId}/ship-delhivery`, {}, config);
+      setStatus({ type: 'success', message: res.data.message || 'Shipment created successfully!' });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Failed to create Delhivery shipment.' });
+    } finally {
+      setLoading(false);
       setTimeout(() => setStatus({ type: '', message: '' }), 3000);
     }
   };
@@ -926,6 +941,25 @@ const AdminDashboard = () => {
                     <div>
                       <p className="text-xs text-coffee/50 font-bold uppercase">Payment Method</p>
                       <p className="text-sm font-semibold text-ochre">{order.paymentMethod || 'COD'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-coffee/50 font-bold uppercase">Shipping</p>
+                      {order.trackingId ? (
+                        <div className="mt-1 space-y-0.5">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-ochre/25 text-coffee border border-ochre/30">
+                            {order.deliveryPartner || 'Delhivery'}
+                          </span>
+                          <p className="text-xs font-mono text-coffee font-medium">{order.trackingId}</p>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleShipDelhivery(order._id)}
+                          disabled={loading}
+                          className="mt-1 px-3 py-1 bg-ochre text-cream text-[10px] font-bold uppercase tracking-wider hover:bg-ochre/90 transition-all rounded-sm disabled:opacity-50 shadow-sm"
+                        >
+                          Ship Delhivery
+                        </button>
+                      )}
                     </div>
                     <div>
                       <p className="text-xs text-coffee/50 font-bold uppercase">Status</p>

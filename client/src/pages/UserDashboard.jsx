@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogOut, User as UserIcon, Shield, Clock } from 'lucide-react';
+import { LogOut, User as UserIcon, Shield, Clock, ExternalLink, ShoppingBag } from 'lucide-react';
 
 const UserDashboard = () => {
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ name: '', email: '', mobile: '' });
   const [status, setStatus] = useState({ type: '', message: '' });
+  const [orders, setOrders] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,7 +25,19 @@ const UserDashboard = () => {
       setEditForm({ name: parsed.name || '', email: parsed.email || '', mobile: parsed.mobile || '' });
     } else {
       navigate('/login');
+      return;
     }
+
+    const fetchOrders = async () => {
+      try {
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        const res = await api.get('/orders/my', config);
+        setOrders(res.data || []);
+      } catch (err) {
+        console.error("Error fetching my orders", err);
+      }
+    };
+    fetchOrders();
   }, [navigate]);
 
   const logout = () => {
@@ -104,11 +117,11 @@ const UserDashboard = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="col-span-1 md:col-span-2 bg-cream-alt border border-ochre/10 p-8 rounded-lg shadow-sm transition-colors duration-300"
+            className="lg:col-span-1 bg-cream-alt border border-ochre/10 p-8 rounded-lg shadow-sm transition-colors duration-300"
           >
             <div className="flex items-center justify-between mb-6 border-b border-ochre/10 pb-4 transition-colors duration-300">
               <div className="flex items-center gap-3">
@@ -117,7 +130,7 @@ const UserDashboard = () => {
               </div>
               {!isEditing && (
                 <button onClick={() => setIsEditing(true)} className="text-sm font-bold text-ochre uppercase hover:underline">
-                  Edit Profile
+                  Edit
                 </button>
               )}
             </div>
@@ -165,7 +178,7 @@ const UserDashboard = () => {
             {isEditing && (
               <div className="mt-8 flex gap-4">
                 <button onClick={handleSave} className="px-6 py-2 bg-ochre text-coffee font-bold uppercase text-sm rounded shadow hover:bg-ochre/90 transition-colors">
-                  Save Changes
+                  Save
                 </button>
                 <button onClick={() => {
                   setIsEditing(false);
@@ -181,11 +194,101 @@ const UserDashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="col-span-1 bg-cream border border-ochre/20 p-8 rounded-lg flex flex-col items-center justify-center text-center transition-colors duration-300 shadow-sm"
+            className="lg:col-span-2 bg-cream-alt border border-ochre/10 p-8 rounded-lg shadow-sm flex flex-col transition-colors duration-300"
           >
-            <Clock className="text-ochre mb-4" size={40} />
-            <h3 className="text-lg font-serif font-bold text-coffee uppercase tracking-widest mb-2 transition-colors duration-300">Order History</h3>
-            <p className="text-sm text-coffee/70 transition-colors duration-300">Your recent orders and inquiries will appear here soon.</p>
+            <div className="flex items-center gap-3 mb-6 border-b border-ochre/10 pb-4">
+              <Clock className="text-ochre" size={24} />
+              <h2 className="text-xl font-serif font-bold text-coffee uppercase tracking-widest">Order History</h2>
+            </div>
+
+            {orders.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <ShoppingBag className="text-ochre/40 mb-4" size={48} />
+                <p className="text-sm text-coffee/70 mb-4">You have not placed any orders yet.</p>
+                <Link to="/shop" className="px-6 py-2.5 bg-coffee text-cream text-xs font-bold uppercase tracking-wider hover:bg-coffee/90 transition-all rounded shadow-md">
+                  Explore Shop
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2">
+                {orders.map((order) => (
+                  <div key={order._id} className="bg-cream border border-ochre/20 p-5 rounded-lg space-y-4 shadow-sm">
+                    <div className="flex flex-wrap justify-between items-start gap-4 border-b border-ochre/10 pb-3">
+                      <div>
+                        <p className="text-[10px] text-coffee/50 font-bold uppercase">Order ID</p>
+                        <p className="text-xs font-mono text-coffee font-semibold">{order._id}</p>
+                        <p className="text-[10px] text-coffee/40 mt-0.5">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                          order.status === 'Delivered' ? 'bg-green-100 text-green-700 border border-green-200' :
+                          order.status === 'Cancelled' ? 'bg-red-100 text-red-700 border border-red-200' :
+                          'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                        }`}>
+                          {order.status}
+                        </span>
+                        <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                          order.paymentStatus === 'Paid' ? 'bg-green-500/10 text-green-700 border border-green-500/20' : 'bg-red-500/10 text-red-600 border border-red-500/20'
+                        }`}>
+                          {order.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid'} ({order.paymentMethod})
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Order Items */}
+                    <div className="space-y-2">
+                      {order.items?.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-3 bg-cream-alt/50 p-2.5 rounded border border-ochre/5">
+                          {item.product?.imageUrl ? (
+                            <img src={item.product.imageUrl} alt={item.product.name || item.product.category} className="w-10 h-10 object-cover rounded border border-ochre/20" />
+                          ) : (
+                            <div className="w-10 h-10 bg-ochre/10 rounded flex items-center justify-center text-ochre text-xs font-bold">
+                              Jewel
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-serif text-coffee font-bold truncate">
+                              {item.product?.name || item.product?.category}
+                              {item.product?.weight ? ` (${item.product.weight}g)` : ''}
+                            </p>
+                            <p className="text-[10px] text-coffee/60">
+                              Qty: {item.quantity} | ₹{(item.priceAtPurchase || item.product?.price || 0).toLocaleString('en-IN')}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Shipping and Actions */}
+                    <div className="flex flex-wrap justify-between items-center gap-4 pt-3 border-t border-ochre/10">
+                      <div>
+                        {order.trackingId && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] uppercase font-bold text-coffee/50">Tracking:</span>
+                            <a
+                              href={`https://www.delhivery.com/track/package/${order.trackingId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[10px] text-ochre font-bold hover:underline"
+                            >
+                              {order.trackingId} <ExternalLink size={10} />
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-coffee/60">
+                          Shipping: {order.shippingCharge > 0 ? `₹${order.shippingCharge.toLocaleString('en-IN')}` : 'Free'}
+                        </p>
+                        <p className="text-sm font-serif text-coffee font-bold">
+                          Grand Total: <span className="text-ochre">₹{order.totalAmount?.toLocaleString('en-IN')}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </motion.div>
         </div>
       </div>
