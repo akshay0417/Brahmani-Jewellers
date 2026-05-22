@@ -1178,6 +1178,25 @@ router.post('/instagram', auth, isAdmin, (req, res, next) => {
   }
 });
 
+// Edit Instagram Post details (Admin only)
+router.put('/instagram/:id', auth, isAdmin, async (req, res) => {
+  const { postUrl, caption, likes, comments } = req.body;
+  try {
+    const post = await InstagramPost.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: 'Instagram post not found' });
+
+    if (postUrl !== undefined) post.postUrl = postUrl;
+    if (caption !== undefined) post.caption = caption;
+    if (likes !== undefined) post.likes = Number(likes) || 0;
+    if (comments !== undefined) post.comments = Number(comments) || 0;
+
+    await post.save();
+    res.json(post);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Delete Instagram Post (Admin only)
 router.delete('/instagram/:id', auth, isAdmin, async (req, res) => {
   try {

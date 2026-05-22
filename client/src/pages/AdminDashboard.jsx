@@ -19,6 +19,7 @@ const AdminDashboard = () => {
   const [instaCaption, setInstaCaption] = useState('');
   const [instaLikes, setInstaLikes] = useState('');
   const [instaComments, setInstaComments] = useState('');
+  const [editingInstaItem, setEditingInstaItem] = useState(null);
 
   const [newImage, setNewImage] = useState(null);
   const [category, setCategory] = useState('gold');
@@ -204,6 +205,22 @@ const AdminDashboard = () => {
       setStatus({ type: 'success', message: 'Instagram post deleted successfully!' });
     } catch (err) {
       setStatus({ type: 'error', message: 'Failed to delete Instagram post.' });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    }
+  };
+
+  const handleInstaEditSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await api.put(`/instagram/${editingInstaItem._id}`, editingInstaItem, config);
+      setStatus({ type: 'success', message: 'Instagram post updated successfully!' });
+      setEditingInstaItem(null);
+      fetchData();
+    } catch (err) {
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Update failed.' });
     } finally {
       setLoading(false);
       setTimeout(() => setStatus({ type: '', message: '' }), 3000);
@@ -845,9 +862,14 @@ const AdminDashboard = () => {
                       </svg>
                     </a>
                     {post._id !== 'default1' && post._id !== 'default2' && post._id !== 'default3' && post._id !== 'default4' && post._id !== 'default5' && post._id !== 'default6' && (
-                      <button onClick={() => deleteInstagramPost(post._id)} className="p-3 bg-red-600/90 rounded-full text-white hover:bg-red-600 transform hover:scale-110 transition-all shadow-lg" title="Delete">
-                        <Trash2 size={20} />
-                      </button>
+                      <>
+                        <button onClick={() => setEditingInstaItem(post)} className="p-3 bg-blue-600/90 rounded-full text-white hover:bg-blue-600 transform hover:scale-110 transition-all shadow-lg" title="Edit">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                        <button onClick={() => deleteInstagramPost(post._id)} className="p-3 bg-red-600/90 rounded-full text-white hover:bg-red-600 transform hover:scale-110 transition-all shadow-lg" title="Delete">
+                          <Trash2 size={20} />
+                        </button>
+                      </>
                     )}
                   </div>
                   {post.caption && (
@@ -1277,6 +1299,65 @@ const AdminDashboard = () => {
                 <label htmlFor="editIsFeatured" className="text-sm text-coffee font-bold cursor-pointer">
                   Highlight this photo on Home Page? (Large display)
                 </label>
+              </div>
+              <button disabled={loading} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 rounded-sm mt-4">
+                {loading ? 'Saving...' : 'Save Changes'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {editingInstaItem && (
+        <div className="fixed inset-0 z-[100] bg-coffee/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-cream rounded-xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-serif font-bold text-coffee uppercase tracking-widest text-ochre">Edit Instagram Post</h3>
+              <button onClick={() => setEditingInstaItem(null)} className="text-coffee/50 hover:text-ochre">
+                <X size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleInstaEditSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs text-coffee/70 uppercase tracking-widest font-bold">Instagram Post URL (ઇન્સ્ટાગ્રામ પોસ્ટ લિંક)</label>
+                <input 
+                  type="url" 
+                  value={editingInstaItem.postUrl || ''} 
+                  onChange={(e) => setEditingInstaItem({ ...editingInstaItem, postUrl: e.target.value })} 
+                  className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors text-sm" 
+                  placeholder="https://www.instagram.com/p/..." 
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-coffee/70 uppercase tracking-widest font-bold">Caption / Description (લખાણ)</label>
+                <input 
+                  type="text" 
+                  value={editingInstaItem.caption || ''} 
+                  onChange={(e) => setEditingInstaItem({ ...editingInstaItem, caption: e.target.value })} 
+                  className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors text-sm" 
+                  placeholder="e.g. Timeless gold necklace... ✨" 
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest font-bold">Likes Count (લાઇક્સ)</label>
+                  <input 
+                    type="number" 
+                    value={editingInstaItem.likes ?? ''} 
+                    onChange={(e) => setEditingInstaItem({ ...editingInstaItem, likes: e.target.value })} 
+                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors text-sm" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest font-bold">Comments Count (કોમેન્ટ્સ)</label>
+                  <input 
+                    type="number" 
+                    value={editingInstaItem.comments ?? ''} 
+                    onChange={(e) => setEditingInstaItem({ ...editingInstaItem, comments: e.target.value })} 
+                    className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors text-sm" 
+                  />
+                </div>
               </div>
               <button disabled={loading} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 rounded-sm mt-4">
                 {loading ? 'Saving...' : 'Save Changes'}
