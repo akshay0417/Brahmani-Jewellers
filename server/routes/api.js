@@ -1713,6 +1713,16 @@ router.post('/orders', auth, async (req, res) => {
     // Clear the cart after placing order
     await Cart.findOneAndDelete({ user: req.user });
 
+    // Update targetPage to 'collection' for all purchased items in the order
+    try {
+      for (const item of items) {
+        await Gallery.findByIdAndUpdate(item.product, { targetPage: 'collection' });
+      }
+      console.log(`[Gallery Auto-Hide] Updated ordered items to collection-only page for order ${newOrder._id}`);
+    } catch (hideErr) {
+      console.error('[Gallery Auto-Hide Error]:', hideErr.message);
+    }
+
     res.status(201).json({ message: 'Order placed successfully!', order: newOrder });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -1814,6 +1824,16 @@ router.post('/orders/verify-payment', auth, async (req, res) => {
 
       // Clear the cart
       await Cart.findOneAndDelete({ user: req.user });
+
+      // Update targetPage to 'collection' for all purchased items in the order
+      try {
+        for (const item of orderData.items) {
+          await Gallery.findByIdAndUpdate(item.product, { targetPage: 'collection' });
+        }
+        console.log(`[Gallery Auto-Hide] Updated paid items to collection-only page for order ${newOrder._id}`);
+      } catch (hideErr) {
+        console.error('[Gallery Auto-Hide Error]:', hideErr.message);
+      }
 
       res.status(201).json({ message: 'Payment verified and order placed successfully!', order: newOrder });
     }
