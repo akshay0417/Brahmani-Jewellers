@@ -5,40 +5,40 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const HERO_SLIDES = [
   {
-    image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Light Gold Necklace
-    subtitle: 'Timeless Traditional Elegance',
-    title: 'The Divine\nBridal Heritage',
-    italicWord: 'Bridal Heritage',
-    description: 'Adorn yourself with our majestic bridal collections. Handcrafted in pure gold to make your special day absolutely divine.',
-    shopText: 'Shop Bridal 👑',
-    viewText: 'View Collection'
+    image: '/hero_rings.png',
+    subtitle: 'LUXURY SHOWROOM',
+    title: 'Timeless Elegance,\nCrafted for You',
+    italicWord: 'Crafted for You',
+    description: 'Discover elegance that reflects your perfect style. Handcrafted rings with certified purity and lifetime trust.',
+    shopText: 'Explore Rings 💍',
+    viewText: 'Explore Collection'
   },
   {
-    image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Gold on model
-    subtitle: 'The Art of Fine Jewellery',
-    title: 'Exquisite Pure\nGold Designs',
-    italicWord: 'Gold Designs',
-    description: 'Discover our premium range of hallmarked gold necklaces, designed for the modern woman who cherishes her roots.',
-    shopText: 'Shop Gold 🪙',
-    viewText: 'Explore Catalog'
+    image: '/hero_necklace.png',
+    subtitle: 'ROYAL HERITAGE',
+    title: 'Exquisite Artistry,\nDesigned to Inspire',
+    italicWord: 'Designed to Inspire',
+    description: 'Experience the majesty of pure gold and fine diamonds with our classic and traditional necklace collections.',
+    shopText: 'Explore Necklaces ✨',
+    viewText: 'Explore Collection'
   },
   {
-    image: 'https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Antique / Polki Gold
-    subtitle: 'Heritage & Antique Collection',
-    title: 'Royal Antique\nMasterpieces',
-    italicWord: 'Masterpieces',
-    description: 'Immerse yourself in history with our royal antique collections, crafted to echo the grandeur of ancient times.',
-    shopText: 'Explore Antique 🏺',
-    viewText: 'View Gallery'
+    image: '/hero_bracelet.png',
+    subtitle: 'FINE CRAFTSMANSHIP',
+    title: 'Modern Aesthetics,\nShaped with Passion',
+    italicWord: 'Shaped with Passion',
+    description: 'Adorn your wrist with our premium diamond-studded gold bracelets, handcrafted to perfection.',
+    shopText: 'Explore Bracelets 💎',
+    viewText: 'Explore Collection'
   },
   {
-    image: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Heavy gold jewelry on Indian bride
-    subtitle: 'Exclusive 22k Gold',
-    title: 'Authentic Indian\nGold Jewellery',
-    italicWord: 'Gold Jewellery',
-    description: 'Explore our breathtaking range of pure 22-karat gold necklaces, bangles, and earrings crafted for perfection.',
-    shopText: 'Shop Gold 🪙',
-    viewText: 'View Catalog'
+    image: '/hero_earrings.png',
+    subtitle: 'TIMELESS BEAUTY',
+    title: 'Elegance in Detail,\nMade for Royalty',
+    italicWord: 'Made for Royalty',
+    description: 'Breathtaking gold and diamond drop earrings designed to make every occasion memorable.',
+    shopText: 'Explore Earrings 🌟',
+    viewText: 'Explore Collection'
   }
 ];
 
@@ -48,7 +48,7 @@ const Hero = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % HERO_SLIDES.length);
-    }, 3000); 
+    }, 4000); 
     return () => clearInterval(timer);
   }, [currentIndex]); 
 
@@ -61,122 +61,110 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative h-screen flex items-center justify-center overflow-hidden bg-cream group">
-      {/* Background Auto-Sliding Carousel with AnimatePresence Crossfade */}
-      <div className="absolute inset-0 w-full h-full">
-        <AnimatePresence initial={false}>
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.2, ease: "easeInOut" }}
-            className="absolute inset-0 w-full h-full"
-          >
-            {/* Background Image with Ken Burns Zoom Effect */}
-            <motion.div 
-              initial={{ scale: 1.06 }}
-              animate={{ scale: 1.01 }}
-              transition={{ duration: 5, ease: "easeOut" }}
-              style={{ backgroundImage: `url(${HERO_SLIDES[currentIndex].image})` }}
-              className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
-            />
-            
-            {/* Lighter Transparent overlay for 'light color' theme */}
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-cream/95 via-cream/60 to-transparent transition-colors duration-300"></div>
+    <section className="relative h-screen flex items-center justify-center overflow-hidden bg-cream pt-24 md:pt-16 group transition-colors duration-300">
+      {/* Background Decorative Subtle Texture Overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(#d4af37_0.5px,transparent_0.5px)] [background-size:24px_24px] opacity-[0.04]"></div>
 
-            {/* Slide Content positioned absolute inside the active slide */}
-            <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-24 w-full h-full flex flex-col justify-center">
-              <div className="max-w-2xl text-left mt-16 md:mt-24">
-                <motion.span 
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                  className="text-ochre tracking-[0.6em] uppercase text-[10px] md:text-xs font-bold mb-3 block drop-shadow-sm font-sans"
+      {/* Main Grid Content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full grid grid-cols-1 md:grid-cols-2 items-center gap-12">
+        
+        {/* Left Side: Animated Text Content */}
+        <div className="text-left flex flex-col justify-center h-full order-2 md:order-1">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentIndex}
+              initial={{ opacity: 0, x: -40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 40 }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="max-w-xl space-y-4 md:space-y-6"
+            >
+              <span className="text-ochre tracking-[0.5em] uppercase text-[10px] md:text-xs font-bold block font-sans">
+                {HERO_SLIDES[currentIndex].subtitle}
+              </span>
+              
+              <h1 className="text-4xl md:text-6xl font-serif font-bold text-coffee leading-tight">
+                {HERO_SLIDES[currentIndex].title.split('\n')[0]} <br />
+                <span className="text-ochre italic font-normal">
+                  {HERO_SLIDES[currentIndex].italicWord}
+                </span>
+              </h1>
+              
+              <p className="text-coffee/70 text-sm md:text-base font-sans font-medium max-w-lg leading-relaxed">
+                {HERO_SLIDES[currentIndex].description}
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Link 
+                  to="/shop" 
+                  className="px-8 py-3.5 bg-ochre hover:bg-coffee hover:text-cream text-coffee text-xs font-sans font-extrabold uppercase tracking-widest transition-all duration-300 rounded-sm text-center shadow-lg shadow-ochre/15 hover:scale-[1.02] active:scale-95"
                 >
-                  {HERO_SLIDES[currentIndex].subtitle}
-                </motion.span>
-                
-                <motion.h1 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-                  className="text-3xl md:text-5xl font-serif font-bold text-coffee leading-tight mb-4"
+                  {HERO_SLIDES[currentIndex].shopText}
+                </Link>
+                <Link 
+                  to="/gallery" 
+                  className="px-8 py-3.5 border-2 border-coffee hover:bg-coffee hover:text-cream text-coffee text-xs font-sans font-extrabold uppercase tracking-widest transition-all duration-300 rounded-sm text-center hover:scale-[1.02] active:scale-95"
                 >
-                  {HERO_SLIDES[currentIndex].title.split('\n')[0]} <br />
-                  <span className="text-ochre italic drop-shadow-sm">
-                    {HERO_SLIDES[currentIndex].italicWord}
-                  </span>
-                </motion.h1>
-                
-                <motion.p 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
-                  className="text-coffee/80 text-sm md:text-base font-sans font-medium mb-8 max-w-lg leading-relaxed"
-                >
-                  {HERO_SLIDES[currentIndex].description}
-                </motion.p>
-                
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
-                  className="flex flex-col sm:flex-row gap-3"
-                >
-                  <Link 
-                    to="/shop" 
-                    className="px-6 py-2.5 bg-ochre text-cream text-xs font-sans font-extrabold uppercase tracking-widest hover:bg-coffee transition-all duration-300 rounded-sm text-center shadow-lg hover:shadow-ochre/30 hover:scale-[1.02] active:scale-95"
-                  >
-                    {HERO_SLIDES[currentIndex].shopText}
-                  </Link>
-                  <Link 
-                    to="/gallery" 
-                    className="px-6 py-2.5 border-2 border-coffee text-coffee text-xs font-sans font-extrabold uppercase tracking-widest hover:bg-coffee hover:text-cream transition-all duration-300 rounded-sm text-center shadow-lg hover:scale-[1.02] active:scale-95"
-                  >
-                    {HERO_SLIDES[currentIndex].viewText}
-                  </Link>
-                </motion.div>
+                  {HERO_SLIDES[currentIndex].viewText}
+                </Link>
               </div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Right Side: Showcase Image with Zoom & Slide Transition */}
+        <div className="relative w-full h-[40vh] md:h-[65vh] flex items-center justify-center order-1 md:order-2">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentIndex}
+              initial={{ opacity: 0, scale: 0.95, rotate: 1 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={{ opacity: 0, scale: 0.95, rotate: -1 }}
+              transition={{ duration: 0.9, ease: "easeInOut" }}
+              className="w-full h-full overflow-hidden rounded-2xl border border-ochre/15 shadow-2xl bg-cream-alt flex items-center justify-center"
+            >
+              <motion.img 
+                src={HERO_SLIDES[currentIndex].image}
+                alt="Brahmani Jewellers Premium Showcase"
+                className="w-full h-full object-cover"
+                initial={{ scale: 1.08 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 5, ease: "easeOut" }}
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* Manual Scroll Navigation Arrows (visible on hover) */}
       <button 
         onClick={prevSlide}
-        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-coffee/40 text-cream opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-ochre hover:text-coffee backdrop-blur-sm shadow-lg"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 rounded-full bg-coffee/20 text-coffee opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-ochre hover:text-coffee backdrop-blur-sm shadow-md"
         aria-label="Previous Slide"
       >
-        <ChevronLeft size={32} />
+        <ChevronLeft size={24} className="md:w-8 md:h-8" />
       </button>
 
       <button 
         onClick={nextSlide}
-        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-coffee/40 text-cream opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-ochre hover:text-coffee backdrop-blur-sm shadow-lg"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 rounded-full bg-coffee/20 text-coffee opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-ochre hover:text-coffee backdrop-blur-sm shadow-md"
         aria-label="Next Slide"
       >
-        <ChevronRight size={32} />
+        <ChevronRight size={24} className="md:w-8 md:h-8" />
       </button>
 
       {/* Slide Indicators (Dots) */}
-      <div className="absolute bottom-10 right-10 z-20 flex gap-2">
+      <div className="absolute bottom-6 right-6 md:bottom-10 md:right-10 z-20 flex gap-2">
         {HERO_SLIDES.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
-            className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-              currentIndex === index ? 'bg-ochre w-8' : 'bg-cream/40 hover:bg-cream/70'
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              currentIndex === index ? 'bg-ochre w-6' : 'bg-coffee/30 hover:bg-coffee/60'
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}
-      </div>
-
-      {/* Decorative Bounce Line */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce cursor-pointer hidden md:block z-20">
-        <div className="w-px h-16 bg-gradient-to-b from-ochre to-transparent"></div>
       </div>
     </section>
   );
