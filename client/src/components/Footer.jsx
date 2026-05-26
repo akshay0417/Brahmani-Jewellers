@@ -70,6 +70,10 @@ const Footer = () => {
               <li><Link to="/gallery" className="hover:text-ochre transition-colors">Design Collection</Link></li>
               <li><Link to="/#about" className="hover:text-ochre transition-colors">Our Heritage</Link></li>
               <li><Link to="/#contact" className="hover:text-ochre transition-colors">Contact Us</Link></li>
+              <li className="pt-2 border-t border-ochre/10"><Link to="/privacy-policy" className="hover:text-ochre transition-colors text-xs opacity-80">Privacy Policy</Link></li>
+              <li><Link to="/terms-and-conditions" className="hover:text-ochre transition-colors text-xs opacity-80">Terms & Conditions</Link></li>
+              <li><Link to="/refund-policy" className="hover:text-ochre transition-colors text-xs opacity-80">Refund & Cancellation</Link></li>
+              <li><Link to="/shipping-policy" className="hover:text-ochre transition-colors text-xs opacity-80">Shipping & Delivery</Link></li>
             </ul>
           </div>
 
