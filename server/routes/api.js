@@ -331,7 +331,7 @@ router.post('/auth/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new User({ name, email: email ? email.toLowerCase() : undefined, mobile, password: hashedPassword, country, state, city, isApproved: true });
+    const newUser = new User({ name, email: email ? email.toLowerCase() : undefined, mobile, password: hashedPassword, country, state, city, isApproved: false });
     
     // Generate OTP for mobile/fallback verification
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -593,7 +593,6 @@ router.post('/auth/verify-email', async (req, res) => {
     }
 
     user.isVerified = true;
-    user.isApproved = true;
     user.verificationToken = undefined;
     user.verificationTokenExpiry = undefined;
     
@@ -659,7 +658,7 @@ router.post('/auth/verify-email', async (req, res) => {
 
 // User Login (Password)
 router.post('/auth/login', async (req, res) => {
-  const { identifier, password } = req.body;
+  const { identifier, password, source } = req.body;
   try {
     let email = null;
     let mobile = null;
@@ -684,10 +683,9 @@ router.post('/auth/login', async (req, res) => {
       return res.status(403).json({ message: 'Your account is not verified yet. Please click the verification link sent to your email or verify via OTP.', unverified: true });
     }
 
-    // Approval check removed as requested by user
-    // if (!user.isApproved && user.role !== 'admin') {
-    //   return res.status(403).json({ message: 'Your account is pending approval from the administrator. You will receive an email once approved.', unapproved: true });
-    // }
+    if (source === 'app' && !user.isApproved && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Your account is pending approval from the administrator to access the mobile application. You will receive an email once approved.', unapproved: true });
+    }
 
     user.lastLogin = new Date();
     await user.save();
@@ -725,7 +723,7 @@ router.put('/auth/change-password', auth, async (req, res) => {
 
 // Request OTP for Login
 router.post('/auth/request-otp', async (req, res) => {
-  const { identifier } = req.body;
+  const { identifier, source } = req.body;
   try {
     let email = null;
     let mobile = null;
@@ -748,10 +746,9 @@ router.post('/auth/request-otp', async (req, res) => {
       return res.status(403).json({ message: 'Your account is not verified yet. Please check your email for the verification link.', unverified: true });
     }
 
-    // Approval check removed as requested by user
-    // if (!user.isApproved && user.role !== 'admin') {
-    //   return res.status(403).json({ message: 'Your account is pending approval from the administrator. You will receive an email once approved.', unapproved: true });
-    // }
+    if (source === 'app' && !user.isApproved && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Your account is pending approval from the administrator to access the mobile application. You will receive an email once approved.', unapproved: true });
+    }
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -900,7 +897,7 @@ router.post('/auth/reset-password', async (req, res) => {
 
 // Verify OTP
 router.post('/auth/verify-otp', async (req, res) => {
-  const { identifier, otp } = req.body;
+  const { identifier, otp, source } = req.body;
   try {
     let email = null;
     let mobile = null;
@@ -920,6 +917,10 @@ router.post('/auth/verify-otp', async (req, res) => {
 
     if (user.otp !== otp || user.otpExpiry < new Date()) {
       return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+    if (source === 'app' && !user.isApproved && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Your account is pending approval from the administrator to access the mobile application. You will receive an email once approved.', unapproved: true });
     }
 
     // Clear OTP

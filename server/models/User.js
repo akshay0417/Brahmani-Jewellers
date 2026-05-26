@@ -10,7 +10,7 @@ const UserSchema = new mongoose.Schema({
   city: { type: String },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
   isVerified: { type: Boolean, default: false },
-  isApproved: { type: Boolean, default: true },
+  isApproved: { type: Boolean, default: false },
   otp: { type: String },
   otpExpiry: { type: Date },
   resetToken: { type: String },

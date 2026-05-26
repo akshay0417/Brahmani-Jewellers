@@ -22,7 +22,7 @@ export default function LoginScreen() {
       const response = await fetch('http://192.168.1.13:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password }),
+        body: JSON.stringify({ identifier, password, source: 'app' }),
       });
       
       const data = await response.json();
