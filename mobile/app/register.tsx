@@ -79,7 +79,7 @@ export default function RegisterScreen() {
     
     setLoading(true);
     try {
-      const response = await fetch('http://192.168.1.13:5000/api/auth/register', {
+      const response = await fetch('http://192.168.1.4:5000/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, mobile, password, country: 'India', state, city }),

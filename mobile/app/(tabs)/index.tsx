@@ -16,7 +16,7 @@ export default function HomeScreen() {
   const fetchRates = async () => {
     try {
       // Note: localhost works for Web. For Android emulator, use 10.0.2.2
-      const response = await fetch('http://192.168.1.13:5000/api/rates');
+      const response = await fetch('http://192.168.1.4:5000/api/rates');
       const data = await response.json();
       setRates(data);
     } catch (error) {
