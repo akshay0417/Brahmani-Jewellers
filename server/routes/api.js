@@ -331,7 +331,7 @@ router.post('/auth/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new User({ name, email: email ? email.toLowerCase() : undefined, mobile, password: hashedPassword, country, state, city });
+    const newUser = new User({ name, email: email ? email.toLowerCase() : undefined, mobile, password: hashedPassword, country, state, city, isApproved: true });
     
     // Generate OTP for mobile/fallback verification
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -467,6 +467,7 @@ router.get('/auth/verify-email', async (req, res) => {
     }
 
     user.isVerified = true;
+    user.isApproved = true;
     user.verificationToken = undefined;
     user.verificationTokenExpiry = undefined;
     
@@ -515,8 +516,8 @@ router.get('/auth/verify-email', async (req, res) => {
       }
     }
 
-    // Redirect to login page with success message (pending admin approval)
-    const redirectUrl = `${clientUrl}/login?verified=true&pendingApproval=true&message=Your email has been successfully verified! Your account is now pending approval from the administrator. You will be notified via email once approved.`;
+    // Redirect to login page with success message
+    const redirectUrl = `${clientUrl}/login?verified=true&message=Your email has been successfully verified! You can now log in.`;
     return res.redirect(redirectUrl);
   } catch (err) {
     console.error('[VERIFY EMAIL ERROR]:', err);
@@ -557,9 +558,10 @@ router.post('/auth/login', async (req, res) => {
       return res.status(403).json({ message: 'Your account is not verified yet. Please click the verification link sent to your email or verify via OTP.', unverified: true });
     }
 
-    if (!user.isApproved && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Your account is pending approval from the administrator. You will receive an email once approved.', unapproved: true });
-    }
+    // Approval check removed as requested by user
+    // if (!user.isApproved && user.role !== 'admin') {
+    //   return res.status(403).json({ message: 'Your account is pending approval from the administrator. You will receive an email once approved.', unapproved: true });
+    // }
 
     user.lastLogin = new Date();
     await user.save();
@@ -620,9 +622,10 @@ router.post('/auth/request-otp', async (req, res) => {
       return res.status(403).json({ message: 'Your account is not verified yet. Please check your email for the verification link.', unverified: true });
     }
 
-    if (!user.isApproved && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Your account is pending approval from the administrator. You will receive an email once approved.', unapproved: true });
-    }
+    // Approval check removed as requested by user
+    // if (!user.isApproved && user.role !== 'admin') {
+    //   return res.status(403).json({ message: 'Your account is pending approval from the administrator. You will receive an email once approved.', unapproved: true });
+    // }
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
