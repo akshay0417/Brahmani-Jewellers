@@ -437,7 +437,7 @@ router.post('/auth/register', async (req, res) => {
   }
 });
 
-// Verify Email Link
+// 1. GET /auth/verify-email - Renders a luxurious confirmation landing page
 router.get('/auth/verify-email', async (req, res) => {
   const { token } = req.query;
   try {
@@ -453,6 +453,132 @@ router.get('/auth/verify-email', async (req, res) => {
           <h2 style="color: #d9534f;">Verification Failed</h2>
           <p>Verification token is missing.</p>
           <a href="${clientUrl}/login" style="background-color: #3D2B1F; color: #EBA938; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">Go to Login</a>
+        </div>
+      `);
+    }
+
+    const user = await User.findOne({
+      verificationToken: token,
+      verificationTokenExpiry: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).send(`
+        <div style="font-family: Georgia, serif; text-align: center; margin-top: 100px; padding: 40px; background-color: #FFFDF9; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; max-width: 500px; margin-left: auto; margin-right: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+          <h2 style="color: #d9534f; margin-bottom: 20px;">Invalid or Expired Link</h2>
+          <p style="color: #5C4A3E; margin-bottom: 30px; line-height: 1.6;">The verification link is invalid, expired, or has already been used.</p>
+          <a href="${clientUrl}/login" style="background-color: #3D2B1F; color: #FFFDF9; border: 1px solid #d4af37; padding: 12px 30px; text-decoration: none; border-radius: 4px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">Go to Login</a>
+        </div>
+      `);
+    }
+
+    // Render verification landing page
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Verify Your Account - Brahmani Jewellers</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body {
+            font-family: 'Georgia', serif;
+            background-color: #FCF9F3;
+            color: #3D2B1F;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+          }
+          .card {
+            background-color: #FFFDF9;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 50px 30px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(61, 43, 31, 0.05);
+          }
+          h1 {
+            font-size: 28px;
+            margin-top: 0;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #3D2B1F;
+          }
+          .subtitle {
+            color: #d4af37;
+            font-size: 11px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+            font-weight: bold;
+          }
+          p {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #5C4A3E;
+            margin-bottom: 35px;
+          }
+          button {
+            background-color: #3D2B1F;
+            color: #FFFDF9;
+            border: 1px solid #d4af37;
+            padding: 15px 40px;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(61, 43, 31, 0.15);
+          }
+          button:hover {
+            background-color: #d4af37;
+            color: #3D2B1F;
+            border-color: #3D2B1F;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h1>Brahmani Jewellers</h1>
+          <div class="subtitle">Purity & Trust Since 1992</div>
+          <p>Please click the button below to confirm your email address and activate your account.</p>
+          <form action="/api/auth/verify-email" method="POST">
+            <input type="hidden" name="token" value="${token}" />
+            <button type="submit">Verify & Activate Account</button>
+          </form>
+        </div>
+      </body>
+      </html>
+    `);
+  } catch (err) {
+    console.error('[VERIFY EMAIL GET ERROR]:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// 2. POST /auth/verify-email - Performs the actual user verification
+router.post('/auth/verify-email', async (req, res) => {
+  const { token } = req.body;
+  try {
+    let clientUrl = process.env.FRONTEND_URL || 'https://brahmanijewellers.com';
+    const host = req.get('host') || '';
+    if (host.includes('localhost') || host.includes('127.0.0.1') || host.includes('192.168')) {
+      clientUrl = 'http://localhost:5173';
+    }
+
+    if (!token) {
+      return res.status(400).send(`
+        <div style="font-family: Arial, sans-serif; text-align: center; margin-top: 100px; padding: 20px;">
+          <h2 style="color: #d9534f;">Verification Failed</h2>
+          <p>Verification token is missing.</p>
         </div>
       `);
     }
