@@ -61,7 +61,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative h-screen flex items-center justify-center overflow-hidden bg-cream pt-24 md:pt-16 group transition-colors duration-300">
+    <section className="relative min-h-screen md:h-screen flex items-center justify-center overflow-hidden bg-cream pt-28 pb-12 md:py-0 group transition-colors duration-300">
       {/* Background Decorative Subtle Texture Overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(#d4af37_0.5px,transparent_0.5px)] [background-size:24px_24px] opacity-[0.04]"></div>
 

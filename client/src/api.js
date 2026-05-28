@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000/api`,
+  timeout: 5000,
 });
 
 // Add a request interceptor to automatically attach authorization tokens if they exist

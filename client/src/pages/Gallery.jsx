@@ -13,6 +13,53 @@ const Gallery = () => {
   const [subFilter, setSubFilter] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 });
+
+  const closeLightbox = () => {
+    setSelectedItem(null);
+    setIsZoomed(false);
+    setZoomOrigin({ x: 50, y: 50 });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isZoomed) return;
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setZoomOrigin({ x, y });
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isZoomed) return;
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+      const x = Math.max(0, Math.min(100, ((touch.clientX - left) / width) * 100));
+      const y = Math.max(0, Math.min(100, ((touch.clientY - top) / height) * 100));
+      setZoomOrigin({ x, y });
+    }
+  };
+
+  const handleImageClick = (e) => {
+    e.stopPropagation();
+    if (isZoomed) {
+      setIsZoomed(false);
+    } else {
+      const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+      const clientX = e.clientX || (e.touches && e.touches[0]?.clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0]?.clientY);
+      if (clientX && clientY) {
+        const x = ((clientX - left) / width) * 100;
+        const y = ((clientY - top) / height) * 100;
+        setZoomOrigin({ x, y });
+      } else {
+        setZoomOrigin({ x: 50, y: 50 });
+      }
+      setIsZoomed(true);
+    }
+  };
+
   useEffect(() => {
     if (categoryParam) {
       setFilter(categoryParam.toLowerCase());
@@ -141,24 +188,38 @@ const Gallery = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] bg-coffee/95 flex flex-col items-center justify-center p-4 md:p-10 backdrop-blur-md"
-            onClick={() => setSelectedItem(null)}
+            onClick={closeLightbox}
           >
             <button
               className="absolute top-10 right-10 text-cream/50 hover:text-ochre transition-colors z-50 p-4"
-              onClick={() => setSelectedItem(null)}
+              onClick={closeLightbox}
             >
               <X size={40} />
             </button>
             <div className="relative flex flex-col items-center max-w-full max-h-full" onClick={(e) => e.stopPropagation()}>
-              <motion.img
-                initial={{ scale: 0.8, opacity: 0, y: 50 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.8, opacity: 0, y: 50 }}
-                src={selectedItem.imageUrl}
-                alt="Preview"
-                className="max-w-full max-h-[75vh] object-contain shadow-2xl rounded-sm ring-1 ring-cream/10 bg-cream-alt"
-                onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
-              />
+              <div 
+                className="overflow-hidden rounded-sm ring-1 ring-cream/10 bg-cream-alt max-w-full max-h-[75vh] relative"
+                onMouseMove={handleMouseMove}
+                onTouchMove={handleTouchMove}
+                onClick={handleImageClick}
+              >
+                <motion.img
+                  initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.8, opacity: 0, y: 50 }}
+                  src={selectedItem.imageUrl}
+                  alt="Preview"
+                  className={`max-w-full max-h-[75vh] object-contain shadow-2xl transition-transform duration-200 ease-out ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+                  style={{
+                    transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
+                    transform: isZoomed ? 'scale(2.5)' : 'scale(1)'
+                  }}
+                  onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
+                />
+              </div>
+              <p className="text-cream/50 text-xs mt-3 select-none">
+                {isZoomed ? "Move mouse or drag touch to pan. Click to zoom out." : "Click or tap image to zoom."}
+              </p>
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

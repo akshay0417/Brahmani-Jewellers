@@ -59,7 +59,7 @@ const Navbar = () => {
           <div className="flex justify-between items-center relative min-h-[50px] md:min-h-0">
             
             {/* Left Section: Brand Logo (aligned to left) */}
-            <div className="flex-1 flex justify-start items-center">
+            <div className="flex-shrink-0 flex justify-start items-center">
               <Link to="/" className={`flex items-center group transition-all duration-500 ${scrolled ? 'gap-0' : 'gap-1 sm:gap-3'}`}>
                 {useImageLogo ? (
                   <img 

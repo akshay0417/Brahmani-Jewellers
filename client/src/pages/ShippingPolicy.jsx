@@ -36,18 +36,8 @@ const ShippingPolicy = () => {
 
           <section className="space-y-3">
             <div className="flex items-center gap-3 text-ochre">
-              <ShieldCheck className="w-6 h-6" />
-              <h2 className="text-2xl font-serif font-bold">2. Insured Shipments</h2>
-            </div>
-            <p className="leading-relaxed text-coffee/80">
-              Jewellery is highly valuable, and security is paramount. Every single package dispatched from Brahmani Jewellers is <strong>100% transit-insured</strong>. In the rare event of transit loss or package tampering before delivery, you are fully protected.
-            </p>
-          </section>
-
-          <section className="space-y-3">
-            <div className="flex items-center gap-3 text-ochre">
               <Clock className="w-6 h-6" />
-              <h2 className="text-2xl font-serif font-bold">3. Shipping Verification & Charges</h2>
+              <h2 className="text-2xl font-serif font-bold">2. Shipping Verification & Charges</h2>
             </div>
             <p className="leading-relaxed text-coffee/80">
               Any shipping charges, if applicable, are calculated and displayed during the checkout process based on delivery distance and order value. For security, delivery requires verification (an OTP or Signature at the time of delivery to the verified recipient).
@@ -57,7 +47,7 @@ const ShippingPolicy = () => {
           <section className="space-y-3">
             <div className="flex items-center gap-3 text-ochre">
               <MapPin className="w-6 h-6" />
-              <h2 className="text-2xl font-serif font-bold">4. Tracking Your Order</h2>
+              <h2 className="text-2xl font-serif font-bold">3. Tracking Your Order</h2>
             </div>
             <p className="leading-relaxed text-coffee/80">
               Once shipped, you will receive an SMS and email notification with your tracking details and tracking link (powered by our logistics partners like Delhivery) so you can track your package's movement in real-time.
@@ -65,7 +55,7 @@ const ShippingPolicy = () => {
           </section>
 
           <section className="space-y-3 pt-6 border-t border-ochre/15">
-            <h2 className="text-xl font-serif font-bold text-coffee">5. Support</h2>
+            <h2 className="text-xl font-serif font-bold text-coffee">4. Support</h2>
             <p className="leading-relaxed text-coffee/80">
               For any queries regarding shipping status or delivery issues, please reach out:
             </p>
