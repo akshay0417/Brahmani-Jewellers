@@ -120,7 +120,7 @@ export default function CartScreen() {
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total Amount:</Text>
           <Text style={styles.totalValue}>₹{total.toLocaleString('en-IN')}</Text>
-        </div>
+        </View>
         <TouchableOpacity style={styles.checkoutBtn} onPress={() => Alert.alert("Coming Soon", "Checkout flow is being integrated.")}>
           <Text style={styles.checkoutText}>PROCEED TO CHECKOUT</Text>
         </TouchableOpacity>
