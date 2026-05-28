@@ -200,51 +200,64 @@ const Gallery = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative flex flex-col items-center max-w-full max-h-full" 
+              className="relative flex flex-col md:flex-row items-center justify-center max-w-5xl w-full bg-coffee border border-ochre/20 rounded-lg p-6 md:p-10 gap-8 overflow-y-auto max-h-[90vh]" 
               onClick={(e) => e.stopPropagation()}
             >
-              <div 
-                className="overflow-hidden rounded-sm ring-1 ring-cream/10 bg-cream-alt max-w-full max-h-[75vh] relative"
-                onMouseMove={handleMouseMove}
-                onTouchMove={handleTouchMove}
-                onClick={handleImageClick}
-              >
-                <img
-                  src={selectedItem.imageUrl}
-                  alt="Preview"
-                  className={`max-w-full max-h-[75vh] object-contain shadow-2xl transition-transform duration-200 ease-out ${isZoomed ? 'cursor-zoom-out font-bold' : 'cursor-zoom-in'}`}
-                  style={{
-                    transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
-                    transform: isZoomed ? 'scale(2.5)' : 'scale(1)'
-                  }}
-                  onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
-                />
+              {/* Left Side: Image container */}
+              <div className="flex-1 flex flex-col items-center justify-center w-full max-h-[55vh] md:max-h-[75vh]">
+                <div 
+                  className="overflow-hidden rounded-md ring-1 ring-cream/10 bg-cream-alt relative w-full flex items-center justify-center"
+                  onMouseMove={handleMouseMove}
+                  onTouchMove={handleTouchMove}
+                  onClick={handleImageClick}
+                >
+                  <img
+                    src={selectedItem.imageUrl}
+                    alt="Preview"
+                    className={`max-w-full max-h-[50vh] md:max-h-[65vh] object-contain shadow-2xl transition-transform duration-200 ease-out ${isZoomed ? 'cursor-zoom-out font-bold' : 'cursor-zoom-in'}`}
+                    style={{
+                      transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
+                      transform: isZoomed ? 'scale(2.5)' : 'scale(1)'
+                    }}
+                    onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
+                  />
+                </div>
+                <p className="text-cream/50 text-xs mt-3 select-none">
+                  {isZoomed ? "Move mouse or drag touch to pan. Click to zoom out." : "Click or tap image to zoom."}
+                </p>
               </div>
-              <p className="text-cream/50 text-xs mt-3 select-none">
-                {isZoomed ? "Move mouse or drag touch to pan. Click to zoom out." : "Click or tap image to zoom."}
-              </p>
+
+              {/* Right Side: Details container */}
               <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
-                className="mt-8 text-center"
+                className="flex-1 w-full flex flex-col justify-center text-center md:text-left"
               >
-                <h3 className="text-2xl font-serif text-ochre mb-2 tracking-widest uppercase">{selectedItem.name || `${selectedItem.category} Design`}</h3>
-                {selectedItem.description && <p className="text-cream/80 text-sm italic mb-2 max-w-lg mx-auto">{selectedItem.description}</p>}
-                {(selectedItem.weight || selectedItem.purity || selectedItem.subCategory) && (
-                  <p className="text-cream/60 text-xs tracking-widest uppercase mt-2">
-                    {selectedItem.subCategory && `${selectedItem.subCategory}`}
-                    {selectedItem.subCategory && (selectedItem.weight || selectedItem.purity) && ` • `}
-                    {selectedItem.weight && `Weight: ${selectedItem.weight}`} 
-                    {selectedItem.weight && selectedItem.purity && ` • `}
-                    {selectedItem.purity && `Purity: ${selectedItem.purity}`}
-                  </p>
-                )}
+                <h3 className="text-3xl font-serif text-ochre mb-4 tracking-widest uppercase">{selectedItem.name || `${selectedItem.category} Design`}</h3>
+                {selectedItem.description && <p className="text-cream/80 text-base italic mb-4 max-w-lg leading-relaxed">{selectedItem.description}</p>}
+                
+                <div className="border-t border-b border-cream/10 py-4 my-4">
+                  {(selectedItem.weight || selectedItem.purity || selectedItem.subCategory) && (
+                    <div className="space-y-2">
+                      {selectedItem.subCategory && (
+                        <p className="text-cream/70 text-sm"><strong className="text-ochre uppercase tracking-wider text-xs">Category:</strong> {selectedItem.subCategory}</p>
+                      )}
+                      {selectedItem.weight && (
+                        <p className="text-cream/70 text-sm"><strong className="text-ochre uppercase tracking-wider text-xs">Weight:</strong> {selectedItem.weight} grams</p>
+                      )}
+                      {selectedItem.purity && (
+                        <p className="text-cream/70 text-sm"><strong className="text-ochre uppercase tracking-wider text-xs">Purity:</strong> {selectedItem.purity}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <a
                   href={`https://wa.me/917621967577?text=${encodeURIComponent("Hello! I love this design from your collection: " + selectedItem.imageUrl)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-6 inline-block border border-ochre text-cream px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-ochre hover:text-coffee transition-colors"
+                  className="mt-6 border border-ochre text-cream px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-ochre hover:text-coffee transition-colors text-center w-full md:w-fit"
                 >
                   Inquire Design
                 </a>
