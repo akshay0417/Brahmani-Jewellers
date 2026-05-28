@@ -196,20 +196,23 @@ const Gallery = () => {
             >
               <X size={40} />
             </button>
-            <div className="relative flex flex-col items-center max-w-full max-h-full" onClick={(e) => e.stopPropagation()}>
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative flex flex-col items-center max-w-full max-h-full" 
+              onClick={(e) => e.stopPropagation()}
+            >
               <div 
                 className="overflow-hidden rounded-sm ring-1 ring-cream/10 bg-cream-alt max-w-full max-h-[75vh] relative"
                 onMouseMove={handleMouseMove}
                 onTouchMove={handleTouchMove}
                 onClick={handleImageClick}
               >
-                <motion.img
-                  initial={{ scale: 0.8, opacity: 0, y: 50 }}
-                  animate={{ scale: 1, opacity: 1, y: 0 }}
-                  exit={{ scale: 0.8, opacity: 0, y: 50 }}
+                <img
                   src={selectedItem.imageUrl}
                   alt="Preview"
-                  className={`max-w-full max-h-[75vh] object-contain shadow-2xl transition-transform duration-200 ease-out ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+                  className={`max-w-full max-h-[75vh] object-contain shadow-2xl transition-transform duration-200 ease-out ${isZoomed ? 'cursor-zoom-out font-bold' : 'cursor-zoom-in'}`}
                   style={{
                     transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
                     transform: isZoomed ? 'scale(2.5)' : 'scale(1)'
@@ -246,7 +249,7 @@ const Gallery = () => {
                   Inquire Design
                 </a>
               </motion.div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
