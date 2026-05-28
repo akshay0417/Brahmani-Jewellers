@@ -363,19 +363,19 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cream pt-8 pb-16 px-4 md:px-8 transition-colors duration-300 relative flex flex-col lg:flex-row max-w-7xl mx-auto">
+    <div className="min-h-screen bg-cream pt-8 pb-16 px-4 md:px-8 transition-colors duration-300 relative">
       
       {/* Drawer Overlay */}
       {isDrawerOpen && (
         <div 
-          className="fixed inset-0 bg-coffee/40 backdrop-blur-sm z-40 transition-opacity lg:hidden"
+          className="fixed inset-0 bg-coffee/40 backdrop-blur-sm z-40 transition-opacity"
           onClick={() => setIsDrawerOpen(false)}
         />
       )}
 
       {/* Slide-out Sidebar Drawer */}
       <div 
-        className={`fixed top-0 left-0 h-full w-80 bg-cream-alt border-r border-ochre/25 z-50 shadow-2xl p-6 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:h-auto lg:min-h-[70vh] lg:w-64 lg:shadow-none lg:z-0 lg:mr-8 lg:rounded-lg ${isDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed top-0 left-0 h-full w-80 bg-cream-alt border-r border-ochre/25 z-50 shadow-2xl p-6 transform transition-transform duration-300 ease-in-out ${isDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex justify-between items-center mb-8 border-b border-ochre/10 pb-4">
           <div>
@@ -384,7 +384,7 @@ const AdminDashboard = () => {
           </div>
           <button 
             onClick={() => setIsDrawerOpen(false)}
-            className="p-1.5 rounded-full hover:bg-coffee/5 text-coffee/60 hover:text-ochre transition-colors lg:hidden"
+            className="p-1.5 rounded-full hover:bg-coffee/5 text-coffee/60 hover:text-ochre transition-colors"
           >
             <X size={24} />
           </button>
@@ -424,14 +424,14 @@ const AdminDashboard = () => {
         </nav>
       </div>
 
-      <div className="flex-1 max-w-full">
+      <div className="max-w-6xl mx-auto">
         
         {/* Header Area */}
         <div className="flex justify-between items-center mb-8 bg-cream-alt p-6 border border-ochre/15 rounded-lg shadow-sm">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsDrawerOpen(true)}
-              className="p-2 rounded-md hover:bg-coffee/5 text-coffee transition-colors shadow-sm border border-ochre/15 lg:hidden"
+              className="p-2 rounded-md hover:bg-coffee/5 text-coffee transition-colors shadow-sm border border-ochre/15"
               title="Open Navigation Menu"
             >
               <Menu size={24} />
