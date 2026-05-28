@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, TextInput } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, TextInput, Platform } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -116,7 +116,7 @@ export default function CollectionsScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFF6E6' },
   header: { padding: 20, backgroundColor: '#3D2B1F', alignItems: 'center', paddingTop: 40 },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#EBA938', letterSpacing: 1, marginBottom: 12 },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#EBA938', letterSpacing: 1, marginBottom: 12, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   card: { width: '48%', backgroundColor: '#FCF0DA', borderRadius: 12, marginBottom: 16, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(235, 169, 56, 0.2)' },
   image: { width: '100%', height: 150 },
   cardInfo: { padding: 12 },
-  itemName: { fontSize: 14, fontWeight: '700', color: '#3D2B1F', marginBottom: 2, textTransform: 'capitalize' },
+  itemName: { fontSize: 14, fontWeight: '700', color: '#3D2B1F', marginBottom: 2, textTransform: 'capitalize', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   itemDetails: { fontSize: 11, color: 'rgba(61, 43, 31, 0.5)', marginBottom: 8, textTransform: 'capitalize' },
   itemPrice: { fontSize: 15, fontWeight: 'bold', color: '#EBA938', marginBottom: 12 },
   button: { backgroundColor: '#3D2B1F', paddingVertical: 8, borderRadius: 6, alignItems: 'center' },

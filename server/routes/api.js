@@ -691,7 +691,8 @@ router.post('/auth/login', async (req, res) => {
     await user.save();
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile, role: user.role } });
+    const userRole = (user.role === 'admin' && user.email === 'info.brahmanijewellers@gmail.com') ? 'admin' : 'customer';
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile, role: userRole } });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -1057,7 +1058,7 @@ router.get('/rates', async (req, res) => {
 
 // Update Rates (Admin only)
 router.post('/rates', auth, isAdmin, async (req, res) => {
-  const { isManual, goldImpFine, silverFine, manualGold24K, manualGold22K, manualGold18K, manualSilver90, freeDeliveryKmLimit, deliveryChargePerKm } = req.body;
+  const { isManual, goldImpFine, silverFine, manualGold24K, manualGold22K, manualGold18K, manualSilver90, freeDeliveryKmLimit, deliveryChargePerKm, bankName, bankAccountName, bankAccountNumber, bankIfsc, bankBranch } = req.body;
   try {
     let rate = await Rate.findOne();
     if (!rate) {
@@ -1068,6 +1069,13 @@ router.post('/rates', auth, isAdmin, async (req, res) => {
     if (freeDeliveryKmLimit !== undefined) rate.freeDeliveryKmLimit = freeDeliveryKmLimit;
     if (deliveryChargePerKm !== undefined) rate.deliveryChargePerKm = deliveryChargePerKm;
     
+    // Update Bank Details if provided
+    if (bankName !== undefined) rate.bankName = bankName;
+    if (bankAccountName !== undefined) rate.bankAccountName = bankAccountName;
+    if (bankAccountNumber !== undefined) rate.bankAccountNumber = bankAccountNumber;
+    if (bankIfsc !== undefined) rate.bankIfsc = bankIfsc;
+    if (bankBranch !== undefined) rate.bankBranch = bankBranch;
+
     if (rate.isManual) {
       if (manualGold24K !== undefined) rate.gold24K = manualGold24K;
       if (manualGold22K !== undefined) rate.gold22K = manualGold22K;

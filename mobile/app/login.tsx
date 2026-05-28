@@ -28,7 +28,7 @@ export default function LoginScreen() {
       const data = await response.json();
       
       if (response.ok) {
-        login(data.user);
+        login({ ...data.user, token: data.token });
         alert('Login Successful!');
         router.push('/');
       } else {

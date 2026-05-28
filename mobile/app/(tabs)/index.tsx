@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, Image, FlatList, Modal, Pressable, Alert, Linking, TextInput } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { StyleSheet, Text, View, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, Image, FlatList, Modal, Pressable, Alert, Linking, TextInput, Animated, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -59,8 +59,15 @@ export default function HomeScreen() {
 
   const { user, logout } = useAuth();
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     fetchRates();
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 650,
+      useNativeDriver: true,
+    }).start();
   }, []);
 
   useEffect(() => {
@@ -125,7 +132,8 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Modern Header */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
@@ -141,10 +149,7 @@ export default function HomeScreen() {
                     <Text style={styles.userNameText}>{user.name}</Text>
                   </>
                 ) : (
-                  <>
-                    <Text style={styles.greetingText}>Welcome to</Text>
-                    <Text style={styles.brandTitleText}>Brahmani Jewellers</Text>
-                  </>
+                  <Text style={styles.welcomeText}>Welcome to Brahmani Jewellers</Text>
                 )}
               </View>
             </View>
@@ -458,15 +463,15 @@ export default function HomeScreen() {
             <Text style={styles.modalTitle}>Official Bank Details</Text>
             <View style={styles.bankDetailContainer}>
               <Text style={styles.bankLabel}>Bank Name:</Text>
-              <Text style={styles.bankValue}>HDFC Bank</Text>
+              <Text style={styles.bankValue}>{rates?.bankName || 'HDFC Bank'}</Text>
               <Text style={styles.bankLabel}>Account Name:</Text>
-              <Text style={styles.bankValue}>Brahmani Jewellers</Text>
+              <Text style={styles.bankValue}>{rates?.bankAccountName || 'Brahmani Jewellers'}</Text>
               <Text style={styles.bankLabel}>Account Number:</Text>
-              <Text style={styles.bankValue}>50200081273891</Text>
+              <Text style={styles.bankValue}>{rates?.bankAccountNumber || '50200081273891'}</Text>
               <Text style={styles.bankLabel}>IFSC Code:</Text>
-              <Text style={styles.bankValue}>HDFC0001203</Text>
+              <Text style={styles.bankValue}>{rates?.bankIfsc || 'HDFC0001203'}</Text>
               <Text style={styles.bankLabel}>Branch:</Text>
-              <Text style={styles.bankValue}>Amraiwadi, Ahmedabad</Text>
+              <Text style={styles.bankValue}>{rates?.bankBranch || 'Amraiwadi, Ahmedabad'}</Text>
             </View>
             <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowBankDetails(false)}>
               <Text style={styles.modalCloseBtnText}>Close</Text>
@@ -544,6 +549,7 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
+      </Animated.View>
 
       <StatusBar style="dark" />
     </SafeAreaView>
@@ -593,12 +599,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#3D2B1F',
     marginTop: 1,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
+  welcomeText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#3D2B1F',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   brandTitleText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#3D2B1F',
     marginTop: 1,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   cartIconBtn: {
     padding: 8,
@@ -696,6 +710,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#3D2B1F',
     marginBottom: 12,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   categoriesRow: {
     flexDirection: 'row',
@@ -739,6 +754,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#3D2B1F',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   ratesGrid: {
     flexDirection: 'row',
@@ -788,6 +804,7 @@ const styles = StyleSheet.create({
     color: '#FFF6E6',
     fontWeight: 'bold',
     fontSize: 14,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   consultDesc: {
     color: '#EBA938',

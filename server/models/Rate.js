@@ -16,6 +16,13 @@ const RateSchema = new mongoose.Schema({
   freeDeliveryKmLimit: { type: Number, default: 10 },
   deliveryChargePerKm: { type: Number, default: 15 },
   
+  // Bank Details
+  bankName: { type: String, default: 'HDFC Bank' },
+  bankAccountName: { type: String, default: 'Brahmani Jewellers' },
+  bankAccountNumber: { type: String, default: '50200081273891' },
+  bankIfsc: { type: String, default: 'HDFC0001203' },
+  bankBranch: { type: String, default: 'Amraiwadi, Ahmedabad' },
+  
   lastUpdated: { type: Date, default: Date.now }
 });
 
