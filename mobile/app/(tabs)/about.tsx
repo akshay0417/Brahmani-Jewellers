@@ -25,9 +25,9 @@ export default function AboutScreen() {
           
           <View style={styles.contactBox}>
             <Text style={styles.contactTitle}>Contact Details</Text>
-            <Text style={styles.contactText}>📞 +91 97255 08307</Text>
-            <Text style={styles.contactText}>📧 info@brahmanijewellers.com</Text>
-            <Text style={styles.contactText}>📍 Ahmedabad, Gujarat</Text>
+            <Text style={styles.contactText}>📞 +91 99258 11771</Text>
+            <Text style={styles.contactText}>📧 info.brahmanijewellers@gmail.com</Text>
+            <Text style={styles.contactText}>📍 Choksi Bazar, Azad Chowk, Amraiwadi, Ahmedabad</Text>
           </View>
         </View>
       </ScrollView>
