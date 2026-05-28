@@ -3,6 +3,8 @@ import { Routes, Route, useLocation, Link } from 'react-router-dom';
 import { X } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import api from './api';
+
 import Home from './pages/Home';
 import About from './pages/About';
 import Gallery from './pages/Gallery';
@@ -31,6 +33,15 @@ function App() {
   const isDashboard = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin/dashboard');
   const hideNavbar = isDashboard;
   const hideFooter = isAuthPage || isDashboard;
+
+  useEffect(() => {
+    const hasIncremented = sessionStorage.getItem('hasIncrementedVisitor');
+    if (!hasIncremented) {
+      api.post('/analytics/hit')
+        .then(() => sessionStorage.setItem('hasIncrementedVisitor', 'true'))
+        .catch(err => console.error('Failed to register visitor hit:', err));
+    }
+  }, []);
 
   useEffect(() => {
     // Check if user is logged in

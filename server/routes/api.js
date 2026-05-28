@@ -87,6 +87,38 @@ const Order = require('../models/Order');
 const Subscriber = require('../models/Subscriber');
 const Review = require('../models/Review');
 const InstagramPost = require('../models/InstagramPost');
+const Analytics = require('../models/Analytics');
+
+// --- ANALYTICS ROUTES ---
+// Increment visitor count (Public)
+router.post('/analytics/hit', async (req, res) => {
+  try {
+    let stats = await Analytics.findOne({ key: 'visitor_stats' });
+    if (!stats) {
+      stats = new Analytics({ key: 'visitor_stats', views: 0 });
+    }
+    stats.views += 1;
+    await stats.save();
+    res.json({ success: true, views: stats.views });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Fetch visitor count (Admin only)
+router.get('/analytics', auth, isAdmin, async (req, res) => {
+  try {
+    let stats = await Analytics.findOne({ key: 'visitor_stats' });
+    if (!stats) {
+      stats = new Analytics({ key: 'visitor_stats', views: 0 });
+      await stats.save();
+    }
+    res.json({ success: true, views: stats.views });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 // Gmail API OAuth2 Helpers
 const getGmailAccessToken = async () => {

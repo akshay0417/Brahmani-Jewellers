@@ -39,6 +39,8 @@ export default function ProfileScreen() {
   const [gold18kInput, setGold18kInput] = useState('');
   const [silverInput, setSilverInput] = useState('');
   const [updatingRates, setUpdatingRates] = useState(false);
+  const [visitorCount, setVisitorCount] = useState(0);
+
 
   // Admin Bank inputs
   const [bankNameInput, setBankNameInput] = useState('');
@@ -81,12 +83,21 @@ export default function ProfileScreen() {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       setAdminOrders(response.data || []);
+
+      // Fetch analytics count
+      const analyticsRes = await axios.get(`${API_URL}/analytics`, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      if (analyticsRes.data) {
+        setVisitorCount(analyticsRes.data.views || 0);
+      }
     } catch (error) {
-      console.error('Error fetching admin orders:', error);
+      console.error('Error fetching admin orders/analytics:', error);
     } finally {
       setLoadingAdminOrders(false);
     }
   };
+
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -249,6 +260,14 @@ export default function ProfileScreen() {
 
               {activeSection === 'admin' && (
                 <View style={[styles.expandedContent, { borderColor: '#EBA938', borderWidth: 1 }]}>
+                  {/* WEBSITE TRAFFIC STATS */}
+                  <Text style={styles.adminSectionTitle}>Website Traffic</Text>
+                  <View style={{ backgroundColor: 'rgba(235, 169, 56, 0.1)', padding: 16, borderRadius: 8, marginBottom: 16, alignItems: 'center' }}>
+                    <Text style={{ fontSize: 12, color: 'rgba(61,43,31,0.6)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>Total Unique Visitors</Text>
+                    <Text style={{ fontSize: 36, fontWeight: 'bold', color: '#EBA938', marginTop: 4, fontFamily: Platform.OS === 'android' ? 'serif' : 'Georgia' }}>{visitorCount}</Text>
+                    <Text style={{ fontSize: 9, color: 'rgba(61,43,31,0.4)', marginTop: 4 }}>Live session-based counter</Text>
+                  </View>
+
                   {/* 1. UPDATE RATES */}
                   <Text style={styles.adminSectionTitle}>Live Market Rates (INR)</Text>
                   

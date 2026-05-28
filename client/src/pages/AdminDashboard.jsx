@@ -11,6 +11,7 @@ const AdminDashboard = () => {
   const [messages, setMessages] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [visitorCount, setVisitorCount] = useState(0);
   
   // Instagram Showcase State
   const [instagramPosts, setInstagramPosts] = useState([]);
@@ -69,14 +70,15 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [rateRes, galleryRes, usersRes, messagesRes, subscribersRes, ordersRes, instagramRes] = await Promise.all([
+      const [rateRes, galleryRes, usersRes, messagesRes, subscribersRes, ordersRes, instagramRes, analyticsRes] = await Promise.all([
         api.get('/rates'),
         api.get('/gallery'),
         api.get('/users', config),
         api.get('/messages', config),
         api.get('/subscribers', config),
         api.get('/admin/orders', config),
-        api.get('/instagram')
+        api.get('/instagram'),
+        api.get('/analytics', config).catch(() => ({ data: { views: 0 } }))
       ]);
 
       if (rateRes.data) setRates({ 
@@ -97,10 +99,12 @@ const AdminDashboard = () => {
       if (subscribersRes.data) setSubscribers(subscribersRes.data);
       if (ordersRes.data) setOrders(ordersRes.data);
       if (instagramRes.data) setInstagramPosts(instagramRes.data);
+      if (analyticsRes && analyticsRes.data) setVisitorCount(analyticsRes.data.views || 0);
     } catch (err) {
       console.error("Error loading dashboard data", err);
     }
   };
+
 
   const handleRateUpdate = async (e) => {
     e.preventDefault();
@@ -605,6 +609,18 @@ const AdminDashboard = () => {
                       {loading ? 'Processing...' : 'Save Market Prices'}
                     </button>
                   </form>
+                </section>
+
+                <section className="bg-cream-alt p-6 rounded-lg shadow-sm border border-ochre/10 transition-colors duration-300 mb-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <User className="text-ochre" size={24} />
+                    <h2 className="text-xl font-serif font-bold text-coffee uppercase tracking-widest">Website Traffic</h2>
+                  </div>
+                  <div className="bg-cream p-6 rounded border border-ochre/20 text-center">
+                    <p className="text-xs text-coffee/70 font-bold uppercase tracking-widest mb-1">Total Unique Visitors</p>
+                    <h1 className="text-5xl font-serif font-bold text-ochre tracking-tight">{visitorCount}</h1>
+                    <p className="text-[10px] text-coffee/50 mt-2">Calculated dynamically based on unique sessions</p>
+                  </div>
                 </section>
 
                 <section className="bg-cream-alt p-6 rounded-lg shadow-sm border border-ochre/10 transition-colors duration-300">
