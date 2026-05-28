@@ -126,18 +126,26 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        {/* Brand Header */}
+        {/* Modern Header */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
-            <TouchableOpacity onPress={() => setIsDrawerOpen(true)} style={styles.menuBtn}>
-              <FontAwesome name="navicon" size={26} color="#3D2B1F" />
-            </TouchableOpacity>
-            
-            <View style={styles.brandRow}>
-              <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
-              <View>
-                <Text style={styles.title}>Brahmani</Text>
-                <Text style={styles.subtitle}>JEWELLERS</Text>
+            <View style={styles.headerLeft}>
+              <TouchableOpacity onPress={() => setIsDrawerOpen(true)} style={styles.menuBtn}>
+                <FontAwesome name="navicon" size={26} color="#3D2B1F" />
+              </TouchableOpacity>
+              
+              <View style={styles.greetingContainer}>
+                {user ? (
+                  <>
+                    <Text style={styles.greetingText}>{getGreeting()},</Text>
+                    <Text style={styles.userNameText}>{user.name}</Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.greetingText}>Welcome to</Text>
+                    <Text style={styles.brandTitleText}>Brahmani Jewellers</Text>
+                  </>
+                )}
               </View>
             </View>
 
@@ -145,13 +153,6 @@ export default function HomeScreen() {
               <Ionicons name="cart-outline" size={28} color="#3D2B1F" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.headerTagline}>ELEGANCE THAT DEFINES YOU</Text>
-        </View>
-
-        {/* Time-based Greeting & User Name */}
-        <View style={styles.greetingContainer}>
-          <Text style={styles.greetingText}>{getGreeting()},</Text>
-          <Text style={styles.userNameText}>{user ? user.name : 'Guest User'}</Text>
         </View>
 
         {/* Search Bar */}
@@ -559,15 +560,45 @@ const styles = StyleSheet.create({
     paddingTop: 36,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 16,
+    paddingTop: 8,
   },
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
   menuBtn: {
     padding: 8,
+    marginRight: 10,
+  },
+  greetingContainer: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
+  greetingText: {
+    fontSize: 12,
+    color: '#EBA938',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  userNameText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#3D2B1F',
+    marginTop: 1,
+  },
+  brandTitleText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#3D2B1F',
+    marginTop: 1,
   },
   cartIconBtn: {
     padding: 8,
@@ -602,22 +633,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
     textAlign: 'center',
     fontWeight: '600',
-  },
-  greetingContainer: {
-    marginTop: 10,
-    marginBottom: 16,
-    paddingHorizontal: 8,
-  },
-  greetingText: {
-    fontSize: 14,
-    color: '#EBA938',
-    fontWeight: '600',
-  },
-  userNameText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#3D2B1F',
-    marginTop: 2,
   },
   searchBarContainer: {
     flexDirection: 'row',
