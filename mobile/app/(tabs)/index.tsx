@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, Image, FlatList, Modal, Pressable, Alert, Linking } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, Image, FlatList, Modal, Pressable, Alert, Linking, TextInput } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -51,7 +51,7 @@ export default function HomeScreen() {
   
   // Drawer & Modals State
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState(null); // 'profile' or 'orders' or null
+  const [activeSection, setActiveSection] = useState(null); 
   const [showBankDetails, setShowBankDetails] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
@@ -97,6 +97,14 @@ export default function HomeScreen() {
     }
   };
 
+  const getGreeting = () => {
+    const hrs = new Date().getHours();
+    if (hrs < 12) return 'Good Morning';
+    if (hrs < 17) return 'Good Afternoon';
+    if (hrs < 22) return 'Good Evening';
+    return 'Good Night';
+  };
+
   const initiateWhatsApp = () => {
     const message = "Hello Brahmani Jewellers! I would like to consult about a custom design.";
     const url = `https://wa.me/919925811771?text=${encodeURIComponent(message)}`;
@@ -140,6 +148,25 @@ export default function HomeScreen() {
           <Text style={styles.headerTagline}>ELEGANCE THAT DEFINES YOU</Text>
         </View>
 
+        {/* Time-based Greeting & User Name */}
+        <View style={styles.greetingContainer}>
+          <Text style={styles.greetingText}>{getGreeting()},</Text>
+          <Text style={styles.userNameText}>{user ? user.name : 'Guest User'}</Text>
+        </View>
+
+        {/* Search Bar */}
+        <View style={styles.searchBarContainer}>
+          <Ionicons name="search-outline" size={20} color="#3D2B1F" style={styles.searchIcon} />
+          <TextInput
+            placeholder="Search gold rings, silver chains..."
+            placeholderTextColor="rgba(61, 43, 31, 0.4)"
+            style={styles.searchInput}
+            onTouchStart={() => {
+              router.push('/collections');
+            }}
+          />
+        </View>
+
         {/* Carousel / Banner Slider */}
         <FlatList
           data={HERO_SLIDES}
@@ -150,14 +177,6 @@ export default function HomeScreen() {
           showsHorizontalScrollIndicator={false}
           style={styles.carousel}
         />
-
-        {/* Welcome Text */}
-        {user && (
-          <View style={styles.welcomeBox}>
-            <Text style={styles.welcomeText}>Namaste, {user.name}! 🙏</Text>
-            <Text style={styles.welcomeSub}>Tap the menu icon (☰) to view your profile, orders, and options.</Text>
-          </View>
-        )}
 
         {/* Categories Section */}
         <View style={styles.sectionContainer}>
@@ -375,7 +394,7 @@ export default function HomeScreen() {
                   style={styles.sidebarLink} 
                   onPress={() => {
                     setIsDrawerOpen(false);
-                    router.push('/about');
+                    router.push('/profile');
                   }}
                 >
                   <Ionicons name="information-circle-outline" size={22} color="#3D2B1F" />
@@ -584,6 +603,42 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
   },
+  greetingContainer: {
+    marginTop: 10,
+    marginBottom: 16,
+    paddingHorizontal: 8,
+  },
+  greetingText: {
+    fontSize: 14,
+    color: '#EBA938',
+    fontWeight: '600',
+  },
+  userNameText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#3D2B1F',
+    marginTop: 2,
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FCF0DA',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 46,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(235, 169, 56, 0.25)',
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#3D2B1F',
+    fontWeight: '500',
+  },
   carousel: {
     height: 180,
     borderRadius: 16,
@@ -617,24 +672,6 @@ const styles = StyleSheet.create({
     color: '#EBA938',
     fontSize: 11,
     marginTop: 2,
-  },
-  welcomeBox: {
-    backgroundColor: '#FCF0DA',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(235, 169, 56, 0.2)',
-  },
-  welcomeText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#3D2B1F',
-  },
-  welcomeSub: {
-    fontSize: 12,
-    color: 'rgba(61, 43, 31, 0.6)',
-    marginTop: 4,
   },
   sectionContainer: {
     marginBottom: 20,
