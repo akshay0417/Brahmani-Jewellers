@@ -31,6 +31,8 @@ const OrderSchema = new mongoose.Schema({
     default: 'Unpaid' 
   },
   paymentMethod: { type: String, default: 'COD' }, // Cash on Delivery or Razorpay
+  deliveryMode: { type: String, enum: ['Delivery', 'Pickup'], default: 'Delivery' },
+  pickupCode: { type: String },
   trackingId: { type: String },
   deliveryPartner: { type: String, default: 'Delhivery' },
   razorpayOrderId: { type: String },

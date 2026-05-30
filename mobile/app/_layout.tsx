@@ -2,7 +2,7 @@ import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated, Image, Platform } from 'react-native';
 import { AuthProvider } from '../context/AuthContext';
 
 export default function RootLayout() {
@@ -25,9 +25,10 @@ export default function RootLayout() {
   if (showSplash) {
     return (
       <Animated.View style={[styles.splashContainer, { opacity: fadeAnim }]}>
+        <Image source={require('../assets/images/logo.png')} style={styles.splashLogo} />
         <Text style={styles.splashTitle}>Brahmani</Text>
         <Text style={styles.splashSubtitle}>JEWELLERS</Text>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
       </Animated.View>
     );
   }
@@ -39,6 +40,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal' }} />
           <Stack.Screen name="register" options={{ headerShown: false, presentation: 'modal' }} />
+          <Stack.Screen name="checkout" options={{ headerShown: false, presentation: 'card' }} />
         </Stack>
         <StatusBar style="dark" />
       </ThemeProvider>
@@ -49,20 +51,28 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   splashContainer: {
     flex: 1,
-    backgroundColor: '#3D2B1F', // Coffee background for rich feel
+    backgroundColor: '#FFFFFF', // Premium White Background
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 12,
+  },
+  splashLogo: {
+    width: 110,
+    height: 110,
+    resizeMode: 'contain',
+    marginBottom: 8,
   },
   splashTitle: {
-    fontSize: 42,
+    fontSize: 38,
     fontWeight: 'bold',
-    color: '#FFF6E6', // Cream text
+    color: '#1C1C1E', // Charcoal
     letterSpacing: 2,
-    marginBottom: 4,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   splashSubtitle: {
-    fontSize: 16,
-    color: '#EBA938', // Ochre text
+    fontSize: 14,
+    color: '#D4AF37', // Shiny Gold
     letterSpacing: 6,
+    fontWeight: 'bold',
   }
 });

@@ -1,94 +1,253 @@
 import { useEffect, useRef } from 'react';
-import { Animated } from 'react-native';
+import { Animated, Text, View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Tabs } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 
-function TabIcon({ name, color, focused }) {
-  const scaleValue = useRef(new Animated.Value(1)).current;
+function TabBarButton({ iconName, isFocused, onPress }) {
+  const animatedValue = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.spring(scaleValue, {
-      toValue: focused ? 1.28 : 1,
+    Animated.spring(animatedValue, {
+      toValue: isFocused ? 1 : 0,
       useNativeDriver: true,
-      friction: 4,
-      tension: 40,
+      friction: 8,
+      tension: 70,
     }).start();
-  }, [focused]);
+  }, [isFocused]);
+
+  // Translate active button upwards
+  const translateY = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -18],
+  });
+
+  // Scale active button up slightly
+  const scale = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.12],
+  });
+
+  // Slide white notch cutout up/down
+  const notchTranslateY = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [30, -22],
+  });
+
+  // Scale notch cutout
+  const notchScale = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
 
   return (
-    <Animated.View style={{ transform: [{ scale: scaleValue }], paddingVertical: 4 }}>
-      <FontAwesome size={22} name={name} color={color} />
-    </Animated.View>
+    <View style={styles.tabItemContainer}>
+      {/* Smoothly animated white notch background */}
+      <Animated.View
+        style={[
+          styles.notchCutout,
+          {
+            transform: [{ translateY: notchTranslateY }, { scale: notchScale }],
+            opacity: animatedValue,
+          },
+        ]}
+      />
+      {/* Animated button container */}
+      <Animated.View
+        style={[
+          styles.btnContainer,
+          {
+            transform: [{ translateY: translateY }, { scale: scale }],
+          },
+        ]}
+      >
+        <TouchableOpacity
+          onPress={onPress}
+          activeOpacity={0.9}
+          style={[
+            styles.buttonCircle,
+            {
+              backgroundColor: isFocused ? '#D4AF37' : 'transparent', // Royal Gold for active button
+              borderWidth: isFocused ? 0 : 0,
+            },
+          ]}
+        >
+          <FontAwesome
+            name={iconName}
+            size={20}
+            color={isFocused ? '#FFFFFF' : '#8E8E93'} // White icon when active, Warm Gray when inactive
+          />
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
+}
+
+function CustomTabBar({ state, descriptors, navigation }) {
+  const allowedRoutes = ['index', 'collections', 'invest', 'coins', 'profile'];
+
+  return (
+    <View style={styles.tabBarContainer}>
+      {state.routes.map((route, index) => {
+        // Explicitly only show the allowed 5 tabs
+        if (!allowedRoutes.includes(route.name)) return null;
+
+        const { options } = descriptors[route.key];
+        const isFocused = state.index === index;
+
+        const onPress = () => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        };
+
+        let iconName = 'home';
+        if (route.name === 'index') iconName = 'home';
+        else if (route.name === 'collections') iconName = 'diamond';
+        else if (route.name === 'invest') iconName = 'line-chart';
+        else if (route.name === 'coins') iconName = 'circle-o';
+        else if (route.name === 'profile') iconName = 'user';
+
+        return (
+          <TabBarButton
+            key={route.key}
+            iconName={iconName}
+            isFocused={isFocused}
+            onPress={onPress}
+          />
+        );
+      })}
+    </View>
   );
 }
 
 export default function TabLayout() {
   return (
     <Tabs
+      tabBar={props => <CustomTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: '#EBA938', // Ochre
-        tabBarInactiveTintColor: 'rgba(255, 246, 230, 0.6)', // Faded Cream
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: 'bold',
-          letterSpacing: 0.5,
-          marginTop: -4,
-          paddingBottom: 4,
-        },
-        tabBarStyle: {
-          backgroundColor: '#3D2B1F', // Coffee
-          borderTopWidth: 0,
-          height: 64,
-          paddingBottom: 6,
-          paddingTop: 6,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 10,
-          elevation: 10,
-        },
         headerShown: false,
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, focused }) => <TabIcon name="home" color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="collections"
         options={{
-          title: 'Designs',
-          tabBarIcon: ({ color, focused }) => <TabIcon name="diamond" color={color} focused={focused} />,
+          title: 'Shop',
         }}
       />
       <Tabs.Screen
-        name="cart"
+        name="invest"
         options={{
-          title: 'Cart',
-          tabBarIcon: ({ color, focused }) => <TabIcon name="shopping-cart" color={color} focused={focused} />,
+          title: 'Invest',
+        }}
+      />
+      <Tabs.Screen
+        name="coins"
+        options={{
+          title: 'Coins',
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, focused }) => <TabIcon name="user-circle" color={color} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="orders"
+        options={{
+          href: null, // Hidden from bottom bar
+        }}
+      />
+      <Tabs.Screen
+        name="cart"
+        options={{
+          href: null, // Hidden from bottom bar
         }}
       />
       <Tabs.Screen
         name="about"
         options={{
-          href: null, // Hide old about tab
+          href: null,
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
-          href: null, // Hide old explore tab
+          href: null,
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBarContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF', // Dashboard theme base color: White
+    height: 60,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    elevation: 12,
+    shadowColor: '#D4AF37', // Dashboard theme shadow accent
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5EA',
+  },
+  tabItemContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    position: 'relative',
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+  },
+  btnContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notchCutout: {
+    position: 'absolute',
+    top: -22,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF', // Clean cutout blending with white tab bar background
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+  },
+});

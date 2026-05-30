@@ -17,7 +17,8 @@ const UserSchema = new mongoose.Schema({
   resetTokenExpiry: { type: Date },
   verificationToken: { type: String },
   verificationTokenExpiry: { type: Date },
-  lastLogin: { type: Date }
+  lastLogin: { type: Date },
+  termsAccepted: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

@@ -88,6 +88,7 @@ const Subscriber = require('../models/Subscriber');
 const Review = require('../models/Review');
 const InstagramPost = require('../models/InstagramPost');
 const Analytics = require('../models/Analytics');
+const Investment = require('../models/Investment');
 
 // --- ANALYTICS ROUTES ---
 // Increment visitor count (Public)
@@ -351,8 +352,12 @@ const upload = multer({
 
 // User Registration
 router.post('/auth/register', async (req, res) => {
-  const { name, email, mobile, password, country, state, city } = req.body;
+  const { name, email, mobile, password, country, state, city, termsAccepted } = req.body;
   try {
+    if (!termsAccepted) {
+      return res.status(400).json({ message: 'You must accept the Terms & Conditions and Privacy Policy.' });
+    }
+
     const query = [];
     if (email) query.push({ email: email.toLowerCase() });
     if (mobile) query.push({ mobile });
@@ -363,7 +368,17 @@ router.post('/auth/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new User({ name, email: email ? email.toLowerCase() : undefined, mobile, password: hashedPassword, country, state, city, isApproved: false });
+    const newUser = new User({ 
+      name, 
+      email: email ? email.toLowerCase() : undefined, 
+      mobile, 
+      password: hashedPassword, 
+      country, 
+      state, 
+      city, 
+      isApproved: false,
+      termsAccepted: true
+    });
     
     // Generate OTP for mobile/fallback verification
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -2064,6 +2079,276 @@ router.put('/admin/orders/:id', auth, isAdmin, async (req, res) => {
 
     await order.save();
     res.json(order);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// --- INVESTMENT ROUTES ---
+
+// Get User vault balance and transactions
+router.get('/investments/balance', auth, async (req, res) => {
+  try {
+    let inv = await Investment.findOne({ user: req.user });
+    if (!inv) {
+      inv = new Investment({ user: req.user, goldGrams: 0, silverGrams: 0, transactions: [] });
+      await inv.save();
+    }
+    res.json(inv);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Buy digital gold/silver
+router.post('/investments/buy', auth, async (req, res) => {
+  const { metal, amount, ratePerGram, paymentMethod, paymentReference } = req.body;
+  try {
+    if (!metal || !amount || amount <= 0 || !ratePerGram || ratePerGram <= 0) {
+      return res.status(400).json({ message: 'Invalid metal, amount, or rate' });
+    }
+
+    const m = metal.toUpperCase();
+    if (m !== 'GOLD' && m !== 'SILVER') {
+      return res.status(400).json({ message: 'Metal must be GOLD or SILVER' });
+    }
+
+    const baseAmount = amount / 1.03;
+    const gstAmount = amount - baseAmount;
+    const grams = baseAmount / ratePerGram;
+
+    let inv = await Investment.findOne({ user: req.user });
+    if (!inv) {
+      inv = new Investment({ user: req.user, goldGrams: 0, silverGrams: 0, transactions: [] });
+    }
+
+    if (m === 'GOLD') {
+      inv.goldGrams += grams;
+    } else {
+      inv.silverGrams += grams;
+    }
+
+    inv.transactions.push({
+      type: 'BUY',
+      metal: m,
+      grams,
+      amount,
+      ratePerGram,
+      gstAmount,
+      paymentMethod: paymentMethod || 'UPI / QR',
+      paymentReference: paymentReference || 'N/A',
+      status: 'Pending'
+    });
+
+    await inv.save();
+
+    // Send email to user
+    const userObj = await User.findById(req.user);
+    if (userObj && userObj.email) {
+      const emailHtml = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eeba30; border-radius: 10px; background-color: #ffffff;">
+          <div style="text-align: center; border-bottom: 2px solid #eeba30; padding-bottom: 20px; margin-bottom: 20px;">
+            <h2 style="color: #3D2B1F; margin: 0;">Brahmani Jewellers</h2>
+            <p style="color: #EBA938; margin: 5px 0 0 0; font-weight: bold; letter-spacing: 2px; font-size: 12px; text-transform: uppercase;">Digital Vault Investment</p>
+          </div>
+          
+          <h3 style="color: #3D2B1F; border-bottom: 1px solid #f2f2f7; padding-bottom: 10px;">Investment Order Received</h3>
+          <p>Hello ${userObj.name},</p>
+          <p>Thank you for investing with Brahmani Jewellers. Your digital vault purchase transaction has been recorded and is pending verification.</p>
+          
+          <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+            <tr style="background-color: #fcfcfc; border-bottom: 1px solid #f2f2f7;">
+              <td style="padding: 10px; font-weight: bold; color: #3D2B1F;">Metal</td>
+              <td style="padding: 10px; text-align: right;">${m === 'GOLD' ? '24K Gold' : '99.9% Silver'}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f2f2f7;">
+              <td style="padding: 10px; font-weight: bold; color: #3D2B1F;">Weight Added</td>
+              <td style="padding: 10px; text-align: right; font-weight: bold; color: #EBA938;">${grams.toFixed(4)} grams</td>
+            </tr>
+            <tr style="background-color: #fcfcfc; border-bottom: 1px solid #f2f2f7;">
+              <td style="padding: 10px; font-weight: bold; color: #3D2B1F;">Rate per Gram</td>
+              <td style="padding: 10px; text-align: right;">₹${Math.round(ratePerGram)}/g</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f2f2f7;">
+              <td style="padding: 10px; font-weight: bold; color: #3D2B1F;">Amount Paid (3% GST Included)</td>
+              <td style="padding: 10px; text-align: right; font-weight: bold;">₹${amount.toLocaleString('en-IN')}</td>
+            </tr>
+            <tr style="background-color: #fcfcfc; border-bottom: 1px solid #f2f2f7;">
+              <td style="padding: 10px; font-weight: bold; color: #3D2B1F;">Payment Method</td>
+              <td style="padding: 10px; text-align: right;">${paymentMethod || 'UPI / QR'}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f2f2f7;">
+              <td style="padding: 10px; font-weight: bold; color: #3D2B1F;">Payment Reference</td>
+              <td style="padding: 10px; text-align: right; font-family: monospace;">${paymentReference || 'N/A'}</td>
+            </tr>
+            <tr style="background-color: #fcfcfc; border-bottom: 1px solid #eeba30;">
+              <td style="padding: 10px; font-weight: bold; color: #3D2B1F;">Status</td>
+              <td style="padding: 10px; text-align: right; color: #d4af37; font-weight: bold;">Pending Verification</td>
+            </tr>
+          </table>
+
+          <p style="font-size: 13px; color: #7a695d;">Our team will verify the payment reference ID against our bank statement. Once verified, your vault balance will be officially settled.</p>
+          
+          <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #f2f2f7; text-align: center; font-size: 12px; color: #8e8e93;">
+            <p>Brahmani Jewellers, Amraiwadi, Ahmedabad</p>
+            <p>For inquiries: <a href="mailto:info.brahmanijewellers@gmail.com" style="color: #eeba30; text-decoration: none;">info.brahmanijewellers@gmail.com</a></p>
+          </div>
+        </div>
+      `;
+      sendEmail(userObj.email, `Digital Vault Investment Order - Brahmani Jewellers`, emailHtml).catch(console.error);
+    }
+
+    res.status(201).json({ message: 'Investment successful! Pending payment verification.', balance: inv });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Redeem accumulated gold/silver balance for physical coins
+router.post('/investments/redeem', auth, async (req, res) => {
+  const { metal, grams, ratePerGram, deliveryMode, shippingAddress } = req.body;
+  try {
+    if (!metal || !grams || grams <= 0 || !ratePerGram || ratePerGram <= 0) {
+      return res.status(400).json({ message: 'Invalid redemption parameters' });
+    }
+
+    const m = metal.toUpperCase();
+    if (m !== 'GOLD' && m !== 'SILVER') {
+      return res.status(400).json({ message: 'Metal must be GOLD or SILVER' });
+    }
+
+    let inv = await Investment.findOne({ user: req.user });
+    if (!inv) return res.status(404).json({ message: 'Investment profile not found' });
+
+    if (m === 'GOLD' && inv.goldGrams < grams) {
+      return res.status(400).json({ message: 'Insufficient gold balance in vault' });
+    }
+    if (m === 'SILVER' && inv.silverGrams < grams) {
+      return res.status(400).json({ message: 'Insufficient silver balance in vault' });
+    }
+
+    // Deduct grams
+    if (m === 'GOLD') {
+      inv.goldGrams -= grams;
+    } else {
+      inv.silverGrams -= grams;
+    }
+
+    const baseValue = grams * ratePerGram;
+    const gstAmount = baseValue * 0.03;
+    const amount = baseValue + gstAmount;
+
+    inv.transactions.push({
+      type: 'REDEEM',
+      metal: m,
+      grams,
+      amount,
+      ratePerGram,
+      gstAmount,
+      status: 'Completed'
+    });
+
+    await inv.save();
+
+    const randomPickupCode = Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit code
+    const isPickup = deliveryMode === 'Pickup';
+
+    let coinProduct = await Gallery.findOne({ subCategory: 'coin', category: metal.toLowerCase() });
+    if (!coinProduct) {
+      coinProduct = await Gallery.findOne({ category: metal.toLowerCase() });
+    }
+
+    const newOrder = new Order({
+      user: req.user,
+      items: [
+        {
+          product: coinProduct ? coinProduct._id : undefined,
+          quantity: 1,
+          priceAtPurchase: Math.round(amount)
+        }
+      ],
+      totalAmount: Math.round(amount),
+      shippingAddress: isPickup ? {
+        name: 'In-Store Pickup',
+        mobile: 'N/A',
+        address: 'Brahmani Jewellers Showroom, Ahmedabad',
+        city: 'Ahmedabad',
+        state: 'Gujarat',
+        pincode: '380026'
+      } : shippingAddress,
+      deliveryMode: isPickup ? 'Pickup' : 'Delivery',
+      pickupCode: isPickup ? randomPickupCode : undefined,
+      paymentMethod: 'Vault Redemption',
+      paymentStatus: 'Paid',
+      status: isPickup ? 'Pending' : 'Processing' 
+    });
+
+    await newOrder.save();
+
+    res.status(201).json({ message: 'Vault redemption request processed successfully!', balance: inv, order: newOrder });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Admin endpoint to adjust client balances manually (offline resell / adjustment)
+router.post('/admin/investments/adjust', auth, isAdmin, async (req, res) => {
+  const { userId, metal, grams, amount, type, ratePerGram } = req.body;
+  try {
+    if (!userId || !metal || !grams || grams <= 0 || !type) {
+      return res.status(400).json({ message: 'Missing adjustment parameters' });
+    }
+
+    const m = metal.toUpperCase();
+    if (m !== 'GOLD' && m !== 'SILVER') {
+      return res.status(400).json({ message: 'Metal must be GOLD or SILVER' });
+    }
+
+    const t = type.toUpperCase(); // BUY, SELL, REDEEM
+    if (t !== 'BUY' && t !== 'SELL' && t !== 'REDEEM') {
+      return res.status(400).json({ message: 'Type must be BUY, SELL, or REDEEM' });
+    }
+
+    let inv = await Investment.findOne({ user: userId });
+    if (!inv) {
+      inv = new Investment({ user: userId, goldGrams: 0, silverGrams: 0, transactions: [] });
+    }
+
+    if (t === 'BUY') {
+      if (m === 'GOLD') inv.goldGrams += Number(grams);
+      else inv.silverGrams += Number(grams);
+    } else {
+      if (m === 'GOLD') {
+        if (inv.goldGrams < grams) return res.status(400).json({ message: 'User has insufficient gold balance' });
+        inv.goldGrams -= Number(grams);
+      } else {
+        if (inv.silverGrams < grams) return res.status(400).json({ message: 'User has insufficient silver balance' });
+        inv.silverGrams -= Number(grams);
+      }
+    }
+
+    inv.transactions.push({
+      type: t,
+      metal: m,
+      grams: Number(grams),
+      amount: Number(amount) || 0,
+      ratePerGram: Number(ratePerGram) || 0,
+      gstAmount: (Number(amount) || 0) * 0.03,
+      status: 'Completed'
+    });
+
+    await inv.save();
+    res.json({ message: 'User balance adjusted successfully!', balance: inv });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Admin view all user investments
+router.get('/admin/investments', auth, isAdmin, async (req, res) => {
+  try {
+    const investments = await Investment.find().populate('user', 'name email mobile');
+    res.json(investments);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

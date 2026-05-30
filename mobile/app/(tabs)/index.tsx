@@ -5,8 +5,57 @@ import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icon
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
+import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence } from 'react-native-reanimated';
 
 const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
+
+// Subtle spring animation wrapper on press
+function AnimatedCategoryCard({ children, onPress, style }) {
+  const scale = useSharedValue(1);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+  const handlePressIn = () => { scale.value = withSpring(0.92, { damping: 10 }); };
+  const handlePressOut = () => { scale.value = withSpring(1, { damping: 10 }); };
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={style}
+    >
+      <Reanimated.View style={animatedStyle}>
+        {children}
+      </Reanimated.View>
+    </TouchableOpacity>
+  );
+}
+
+// Subtle glow pulse animation wrapper
+function AnimatedLiveRatesCard({ children, style }) {
+  const opacity = useSharedValue(0.92);
+  useEffect(() => {
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 2500 }),
+        withTiming(0.92, { duration: 2500 })
+      ),
+      -1,
+      true
+    );
+  }, []);
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Reanimated.View style={[style, animatedStyle]}>
+      {children}
+    </Reanimated.View>
+  );
+}
 
 const HERO_SLIDES = [
   {
@@ -189,29 +238,68 @@ export default function HomeScreen() {
           <Text style={styles.sectionTitle}>Browse Categories</Text>
           <View style={styles.categoriesRow}>
             {CATEGORIES.map((cat) => (
-              <TouchableOpacity 
+              <AnimatedCategoryCard 
                 key={cat.id} 
                 style={styles.categoryCard} 
                 onPress={() => router.push('/collections')}
               >
                 <View style={styles.categoryIconBg}>
-                  <FontAwesome name={cat.icon} size={22} color="#3D2B1F" />
+                  <FontAwesome name={cat.icon} size={22} color="#D4AF37" />
                 </View>
                 <Text style={styles.categoryName}>{cat.name}</Text>
-              </TouchableOpacity>
+              </AnimatedCategoryCard>
             ))}
           </View>
         </View>
 
+        {/* Premium Quick Services */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Premium Services</Text>
+          <View style={styles.quickActionsRow}>
+            <AnimatedCategoryCard
+              style={styles.quickActionCard}
+              onPress={() => router.push('/invest')}
+            >
+              <View style={styles.quickActionIconBg}>
+                <Ionicons name="trending-up" size={20} color="#D4AF37" />
+              </View>
+              <Text style={styles.quickActionName}>Invest</Text>
+              <Text style={styles.quickActionDesc}>Gold & Silver</Text>
+            </AnimatedCategoryCard>
+
+            <AnimatedCategoryCard
+              style={styles.quickActionCard}
+              onPress={() => router.push('/coins')}
+            >
+              <View style={styles.quickActionIconBg}>
+                <MaterialCommunityIcons name="database" size={20} color="#D4AF37" />
+              </View>
+              <Text style={styles.quickActionName}>Coins</Text>
+              <Text style={styles.quickActionDesc}>Store & GST</Text>
+            </AnimatedCategoryCard>
+
+            <AnimatedCategoryCard
+              style={styles.quickActionCard}
+              onPress={() => router.push('/orders')}
+            >
+              <View style={styles.quickActionIconBg}>
+                <Ionicons name="receipt-outline" size={20} color="#D4AF37" />
+              </View>
+              <Text style={styles.quickActionName}>Orders</Text>
+              <Text style={styles.quickActionDesc}>Track & Code</Text>
+            </AnimatedCategoryCard>
+          </View>
+        </View>
+
         {/* Live Market Rates Card */}
-        <View style={styles.card}>
+        <AnimatedLiveRatesCard style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="trending-up" size={20} color="#EBA938" />
+            <Ionicons name="trending-up" size={20} color="#D4AF37" />
             <Text style={styles.cardTitle}>Live Market Rates</Text>
           </View>
           
           {loadingRates ? (
-            <ActivityIndicator size="small" color="#EBA938" style={{ marginVertical: 20 }} />
+            <ActivityIndicator size="small" color="#D4AF37" style={{ marginVertical: 20 }} />
           ) : (
             <View style={styles.ratesGrid}>
               <View style={styles.rateBox}>
@@ -233,7 +321,7 @@ export default function HomeScreen() {
             </View>
           )}
           <Text style={styles.rateFooter}>* Prices are subject to market fluctuations.</Text>
-        </View>
+        </AnimatedLiveRatesCard>
 
         {/* WhatsApp Custom Consult Section */}
         <TouchableOpacity 
@@ -511,15 +599,29 @@ export default function HomeScreen() {
         <View style={styles.modalBg}>
           <View style={styles.modalBody}>
             <Text style={styles.modalTitle}>Terms & Conditions</Text>
-            <ScrollView style={{ maxHeight: 300, marginVertical: 10 }}>
+            <ScrollView style={{ maxHeight: 320, marginVertical: 10 }}>
               <Text style={styles.legalBodyText}>
-                1. All jewellery products purchased are subject to actual store policies.
+                <Text style={{ fontWeight: 'bold' }}>1. Acceptance of Terms</Text>
+                {"\n"}
+                By accessing and using this app, you agree to be bound by these Terms & Conditions. Please read them carefully before making any purchases.
                 {"\n\n"}
-                2. Live market rates listed are indicators. Final invoice rates are locked during order confirmation.
+                <Text style={{ fontWeight: 'bold' }}>2. Pricing & Live Gold/Silver Rates</Text>
+                {"\n"}
+                Gold and silver rates fluctuate daily according to the bullion market. The pricing for products on our site/app is dynamically calculated based on current live rates. The price presented at checkout when you place your order is final and binding. Even if gold/silver market rates change afterwards, the price of your placed order remains unchanged.
                 {"\n\n"}
-                3. Delivery charges are calculated based on distance from store location.
+                <Text style={{ fontWeight: 'bold' }}>3. Product Details & Weight Variance</Text>
+                {"\n"}
+                All our jewellery pieces are handcrafted. Because they are handmade, the final weight of the delivered jewellery may vary by approximately +/- 5% compared to the estimated weight listed online. The final bill will be adjusted and calculated according to the actual weight of the shipped product.
                 {"\n\n"}
-                4. Order verification via OTP/Signature is required upon delivery for safety.
+                <Text style={{ fontWeight: 'bold' }}>4. Order Validation & Cancellation</Text>
+                {"\n"}
+                Brahmani Jewellers reserves the right to cancel any orders under exceptional circumstances (e.g. wrong price displays, lack of raw materials, or verification issues). If we cancel an order, we will issue a full refund to the customer.
+                {"\n\n"}
+                <Text style={{ fontWeight: 'bold' }}>5. Contact Information</Text>
+                {"\n"}
+                Email: info.brahmanijewellers@gmail.com
+                {"\n"}
+                Phone: +91 9925811771
               </Text>
             </ScrollView>
             <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowTerms(false)}>
@@ -534,13 +636,39 @@ export default function HomeScreen() {
         <View style={styles.modalBg}>
           <View style={styles.modalBody}>
             <Text style={styles.modalTitle}>Privacy Policy</Text>
-            <ScrollView style={{ maxHeight: 300, marginVertical: 10 }}>
+            <ScrollView style={{ maxHeight: 320, marginVertical: 10 }}>
               <Text style={styles.legalBodyText}>
-                1. We collect minimal personal data (Name, Email, Mobile) required to process orders and customize app experience.
+                <Text style={{ fontWeight: 'bold' }}>1. Introduction</Text>
+                {"\n"}
+                Welcome to Brahmani Jewellers. We value your trust and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your data.
                 {"\n\n"}
-                2. User credentials and verification data are stored securely and never shared with third-party networks.
+                <Text style={{ fontWeight: 'bold' }}>2. Information We Collect</Text>
+                {"\n"}
+                A. Personal Info: Name, shipping address, billing address, email, and phone number when you create an account or order.
+                {"\n"}
+                B. Payments: We do NOT store your credit card, debit card, or UPI credentials on our servers. All transaction details are processed securely by Razorpay.
                 {"\n\n"}
-                3. Live rates and search tracking cookies are purely used for optimization.
+                <Text style={{ fontWeight: 'bold' }}>3. How We Use Your Data</Text>
+                {"\n"}
+                - To process, ship, and deliver your luxury jewellery orders.
+                {"\n"}
+                - To send order confirmations, tracking information, and customer support updates.
+                {"\n"}
+                - To share daily live rate updates.
+                {"\n"}
+                - To prevent fraud and maintain security.
+                {"\n\n"}
+                <Text style={{ fontWeight: 'bold' }}>4. Data Sharing & Third Parties</Text>
+                {"\n"}
+                We never sell or rent your personal data. We only share details with courier services to ship packages and payment gateways to process payments.
+                {"\n\n"}
+                <Text style={{ fontWeight: 'bold' }}>5. Contact Us</Text>
+                {"\n"}
+                Email: info.brahmanijewellers@gmail.com
+                {"\n"}
+                Phone: +91 9925811771
+                {"\n"}
+                Address: Near Amraiwadi Metro, Ahmedabad, Gujarat, India
               </Text>
             </ScrollView>
             <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowPrivacy(false)}>
@@ -559,11 +687,12 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFF6E6',
+    backgroundColor: '#FFFFFF', // Clean pearl white background
   },
   scrollContainer: {
     padding: 16,
     paddingTop: 36,
+    paddingBottom: 80,
   },
   header: {
     marginBottom: 16,
@@ -589,7 +718,7 @@ const styles = StyleSheet.create({
   },
   greetingText: {
     fontSize: 12,
-    color: '#EBA938',
+    color: '#D4AF37',
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -597,20 +726,20 @@ const styles = StyleSheet.create({
   userNameText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     marginTop: 1,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   welcomeText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   brandTitleText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     marginTop: 1,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
@@ -630,19 +759,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     letterSpacing: 1,
   },
   subtitle: {
     fontSize: 10,
-    color: '#EBA938',
+    color: '#D4AF37',
     letterSpacing: 4,
     marginTop: 1,
     fontWeight: 'bold',
   },
   headerTagline: {
     fontSize: 9,
-    color: 'rgba(61, 43, 31, 0.4)',
+    color: 'rgba(28, 28, 30, 0.4)',
     letterSpacing: 3,
     marginTop: 6,
     textAlign: 'center',
@@ -651,13 +780,13 @@ const styles = StyleSheet.create({
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FCF0DA',
+    backgroundColor: '#F2F2F7', // Soft light gray
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 46,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(235, 169, 56, 0.25)',
+    borderColor: '#E5E5EA',
   },
   searchIcon: {
     marginRight: 10,
@@ -665,7 +794,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     fontWeight: '500',
   },
   carousel: {
@@ -689,16 +818,16 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(61, 43, 31, 0.65)',
+    backgroundColor: 'rgba(28, 28, 30, 0.75)',
     padding: 14,
   },
   bannerTitle: {
-    color: '#FFF6E6',
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
   },
   bannerSubtitle: {
-    color: '#EBA938',
+    color: '#D4AF37',
     fontSize: 11,
     marginTop: 2,
   },
@@ -708,7 +837,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     marginBottom: 12,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
@@ -721,28 +850,38 @@ const styles = StyleSheet.create({
     width: '22%',
   },
   categoryIconBg: {
-    backgroundColor: '#FCF0DA',
+    backgroundColor: '#FAF9F6', // Clean warm white
     width: 48,
     height: 48,
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(235, 169, 56, 0.25)',
+    borderColor: 'rgba(212, 175, 55, 0.25)', // Thin gold border accent
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   categoryName: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     marginTop: 6,
   },
   card: {
-    backgroundColor: '#FCF0DA',
+    backgroundColor: '#FFFFFF', // Pure white card
     borderRadius: 16,
     padding: 18,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(235, 169, 56, 0.2)',
+    borderColor: '#E5E5EA', // Thin clean border
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 4,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -753,7 +892,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   ratesGrid: {
@@ -764,50 +903,54 @@ const styles = StyleSheet.create({
   },
   rateBox: {
     width: '48%',
-    backgroundColor: '#FFF6E6',
+    backgroundColor: '#FAF9F6', // Clean warm white background
     padding: 10,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
     borderLeftWidth: 3,
-    borderLeftColor: '#EBA938',
+    borderLeftColor: '#C5A059', // Subtle champagne gold highlight
   },
   rateLabel: {
     fontSize: 11,
-    color: 'rgba(61, 43, 31, 0.5)',
+    color: 'rgba(28, 28, 30, 0.5)',
     marginBottom: 2,
     fontWeight: '600',
   },
   rateValue: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#3D2B1F',
+    color: '#1C1C1E',
   },
   rateFooter: {
     fontSize: 9,
-    color: 'rgba(61, 43, 31, 0.4)',
+    color: 'rgba(28, 28, 30, 0.4)',
     textAlign: 'center',
     marginTop: 10,
     fontStyle: 'italic',
   },
   consultBanner: {
-    backgroundColor: '#3D2B1F',
+    backgroundColor: '#1C1C1E',
     padding: 16,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.3)',
   },
   consultTextContainer: {
     flex: 1,
   },
   consultTitle: {
-    color: '#FFF6E6',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   consultDesc: {
-    color: '#EBA938',
+    color: '#D4AF37',
     fontSize: 11,
     marginTop: 2,
   },
@@ -820,15 +963,15 @@ const styles = StyleSheet.create({
   drawerBackdrop: {
     width: '20%',
     height: '100%',
-    backgroundColor: 'rgba(61, 43, 31, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   drawerContent: {
     width: '80%',
     height: '100%',
-    backgroundColor: '#FFF6E6',
+    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: { width: -2, height: 0 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 16,
   },
@@ -842,8 +985,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(61, 43, 31, 0.1)',
-    backgroundColor: '#FCF0DA',
+    borderBottomColor: '#E5E5EA',
+    backgroundColor: '#FAF9F6',
   },
   drawerBrandRow: {
     flexDirection: 'row',
@@ -858,11 +1001,11 @@ const styles = StyleSheet.create({
   drawerBrandName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#3D2B1F',
+    color: '#1C1C1E',
   },
   drawerBrandSub: {
     fontSize: 8,
-    color: '#EBA938',
+    color: '#D4AF37',
     letterSpacing: 2,
     fontWeight: 'bold',
   },
@@ -878,13 +1021,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(61, 43, 31, 0.08)',
+    borderBottomColor: '#F2F2F7',
   },
   sidebarLinkText: {
     flex: 1,
     marginLeft: 12,
     fontSize: 15,
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     fontWeight: '600',
   },
   logoutLink: {
@@ -896,57 +1039,59 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   expandedSection: {
-    backgroundColor: '#FCF0DA',
+    backgroundColor: '#FAF9F6',
     padding: 12,
     borderRadius: 8,
     marginTop: 4,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
   },
   profileDetailLabel: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: 'rgba(61, 43, 31, 0.5)',
+    color: 'rgba(28, 28, 30, 0.5)',
     textTransform: 'uppercase',
     marginTop: 6,
   },
   profileDetailValue: {
     fontSize: 14,
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     fontWeight: '600',
     marginBottom: 6,
   },
   noOrdersTextMobile: {
     fontSize: 12,
-    color: 'rgba(61, 43, 31, 0.5)',
+    color: 'rgba(28, 28, 30, 0.5)',
     fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: 10,
   },
   orderHistoryItem: {
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(61, 43, 31, 0.05)',
+    borderBottomColor: '#E5E5EA',
     paddingVertical: 8,
   },
   orderHistoryId: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#3D2B1F',
+    color: '#1C1C1E',
   },
   orderHistoryStatus: {
     fontSize: 11,
-    color: '#EBA938',
+    color: '#D4AF37',
     fontWeight: 'bold',
     marginTop: 2,
   },
   orderHistoryTotal: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     textAlign: 'right',
   },
   drawerDivider: {
     height: 1,
-    backgroundColor: 'rgba(61, 43, 31, 0.1)',
+    backgroundColor: '#E5E5EA',
     marginVertical: 20,
   },
   legalLinksRow: {
@@ -958,25 +1103,25 @@ const styles = StyleSheet.create({
   },
   legalLinkText: {
     fontSize: 11,
-    color: 'rgba(61, 43, 31, 0.5)',
+    color: 'rgba(28, 28, 30, 0.5)',
     fontWeight: 'bold',
     textDecorationLine: 'underline',
   },
   legalLinkSeparator: {
     fontSize: 11,
-    color: 'rgba(61, 43, 31, 0.3)',
+    color: 'rgba(28, 28, 30, 0.3)',
   },
 
   // Modal styling
   modalBg: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   modalBody: {
-    backgroundColor: '#FFF6E6',
+    backgroundColor: '#FFFFFF',
     width: '90%',
     borderRadius: 16,
     padding: 20,
@@ -985,46 +1130,48 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.25)',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(61, 43, 31, 0.1)',
+    borderBottomColor: '#E5E5EA',
     paddingBottom: 10,
     marginBottom: 14,
     textAlign: 'center',
   },
   bankDetailContainer: {
-    backgroundColor: '#FCF0DA',
+    backgroundColor: '#FAF9F6',
     padding: 14,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(235, 169, 56, 0.2)',
+    borderColor: '#E5E5EA',
   },
   bankLabel: {
     fontSize: 11,
-    color: 'rgba(61, 43, 31, 0.5)',
+    color: 'rgba(28, 28, 30, 0.5)',
     fontWeight: 'bold',
     textTransform: 'uppercase',
     marginTop: 6,
   },
   bankValue: {
     fontSize: 14,
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     fontWeight: 'bold',
     marginBottom: 4,
   },
   modalCloseBtn: {
-    backgroundColor: '#3D2B1F',
+    backgroundColor: '#1C1C1E',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 16,
   },
   modalCloseBtnText: {
-    color: '#FFF6E6',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 14,
     textTransform: 'uppercase',
@@ -1032,24 +1179,69 @@ const styles = StyleSheet.create({
   notiBox: {
     flexDirection: 'row',
     gap: 10,
-    backgroundColor: '#FCF0DA',
+    backgroundColor: '#FAF9F6',
     padding: 12,
     borderRadius: 8,
     marginBottom: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(235, 169, 56, 0.1)',
+    borderColor: '#E5E5EA',
   },
   notiText: {
     fontSize: 13,
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     flex: 1,
     lineHeight: 18,
   },
   legalBodyText: {
     fontSize: 13,
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     lineHeight: 20,
     paddingHorizontal: 4,
+  },
+  quickActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  quickActionCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  quickActionIconBg: {
+    backgroundColor: '#FAF9F6',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.18)',
+    marginBottom: 6,
+  },
+  quickActionName: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+    textAlign: 'center',
+  },
+  quickActionDesc: {
+    fontSize: 9,
+    color: 'rgba(28, 28, 30, 0.5)',
+    marginTop: 2,
+    textAlign: 'center',
+    fontWeight: '500',
   }
 });

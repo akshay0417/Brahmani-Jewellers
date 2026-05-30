@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Lock, Mail, User, Gem, Phone } from 'lucide-react';
 
 const Register = () => {
-  const [formData, setFormData] = useState({ name: '', email: '', mobile: '', password: '', confirmPassword: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', mobile: '', password: '', confirmPassword: '', termsAccepted: false });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,6 +18,9 @@ const Register = () => {
   const validateForm = () => {
     if (!formData.name || !formData.email || !formData.mobile || !formData.password || !formData.confirmPassword) {
       return 'All fields are required.';
+    }
+    if (!formData.termsAccepted) {
+      return 'You must agree to the Terms & Conditions and Privacy Policy.';
     }
     if (formData.password.length < 6) {
       return 'Password must be at least 6 characters long.';
@@ -74,6 +77,9 @@ const Register = () => {
             src="/logo.png" 
             alt="Brahmani Jewellers Logo" 
             className="h-16 w-16 mx-auto mb-4 object-contain transition-transform duration-300 hover:scale-105" 
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
           />
           <h2 className="text-3xl font-serif font-bold text-coffee italic uppercase">Create Account</h2>
           <p className="text-coffee/70 text-sm mt-2 uppercase tracking-widest transition-colors duration-300">Join Brahmani Jewellers</p>
@@ -145,6 +151,27 @@ const Register = () => {
               className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-4 text-coffee focus:outline-none focus:border-ochre transition-colors"
               onChange={handleChange}
             />
+          </div>
+
+          <div className="flex items-center space-x-2 py-1">
+            <input
+              type="checkbox"
+              id="termsAccepted"
+              name="termsAccepted"
+              checked={formData.termsAccepted}
+              onChange={(e) => setFormData({ ...formData, termsAccepted: e.target.checked })}
+              className="w-4 h-4 rounded text-ochre focus:ring-ochre border-ochre/20 cursor-pointer"
+            />
+            <label htmlFor="termsAccepted" className="text-xs text-coffee/80 cursor-pointer">
+              I agree to the{' '}
+              <Link to="/terms-conditions" className="text-ochre hover:underline font-bold" target="_blank">
+                Terms & Conditions
+              </Link>{' '}
+              and{' '}
+              <Link to="/privacy-policy" className="text-ochre hover:underline font-bold" target="_blank">
+                Privacy Policy
+              </Link>
+            </label>
           </div>
 
           <button

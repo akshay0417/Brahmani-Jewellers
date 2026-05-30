@@ -13,6 +13,15 @@ const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [visitorCount, setVisitorCount] = useState(0);
   
+  // Investments State
+  const [investments, setInvestments] = useState([]);
+  const [selectedInvestUser, setSelectedInvestUser] = useState('');
+  const [adjustMetal, setAdjustMetal] = useState('GOLD');
+  const [adjustGrams, setAdjustGrams] = useState('');
+  const [adjustAmount, setAdjustAmount] = useState('');
+  const [adjustType, setAdjustType] = useState('SELL'); // SELL = Resell, BUY = Deposit
+  const [adjustRate, setAdjustRate] = useState('');
+  
   // Instagram Showcase State
   const [instagramPosts, setInstagramPosts] = useState([]);
   const [newInstaImage, setNewInstaImage] = useState(null);
@@ -70,7 +79,7 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [rateRes, galleryRes, usersRes, messagesRes, subscribersRes, ordersRes, instagramRes, analyticsRes] = await Promise.all([
+      const [rateRes, galleryRes, usersRes, messagesRes, subscribersRes, ordersRes, instagramRes, analyticsRes, investmentsRes] = await Promise.all([
         api.get('/rates'),
         api.get('/gallery'),
         api.get('/users', config),
@@ -78,7 +87,8 @@ const AdminDashboard = () => {
         api.get('/subscribers', config),
         api.get('/admin/orders', config),
         api.get('/instagram'),
-        api.get('/analytics', config).catch(() => ({ data: { views: 0 } }))
+        api.get('/analytics', config).catch(() => ({ data: { views: 0 } })),
+        api.get('/admin/investments', config).catch(() => ({ data: [] }))
       ]);
 
       if (rateRes.data) setRates({ 
@@ -100,11 +110,42 @@ const AdminDashboard = () => {
       if (ordersRes.data) setOrders(ordersRes.data);
       if (instagramRes.data) setInstagramPosts(instagramRes.data);
       if (analyticsRes && analyticsRes.data) setVisitorCount(analyticsRes.data.views || 0);
+      if (investmentsRes && investmentsRes.data) setInvestments(investmentsRes.data);
     } catch (err) {
       console.error("Error loading dashboard data", err);
     }
   };
 
+
+  const handleInvestmentAdjust = async (e) => {
+    e.preventDefault();
+    if (!selectedInvestUser || !adjustGrams || !adjustType) {
+      alert("Please select a user, enter weight, and choose transaction type.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await api.post('/admin/investments/adjust', {
+        userId: selectedInvestUser,
+        metal: adjustMetal,
+        grams: adjustGrams,
+        amount: adjustAmount || 0,
+        ratePerGram: adjustRate || 0,
+        type: adjustType
+      }, config);
+      
+      setStatus({ type: 'success', message: 'Vault balance adjusted successfully!' });
+      setAdjustGrams('');
+      setAdjustAmount('');
+      setAdjustRate('');
+      fetchData();
+    } catch (err) {
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Failed to adjust vault balance.' });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setStatus({ type: '', message: '' }), 4000);
+    }
+  };
 
   const handleRateUpdate = async (e) => {
     e.preventDefault();
@@ -401,6 +442,7 @@ const AdminDashboard = () => {
             { id: 'collection', label: 'Manage Collection', icon: ImageIcon },
             { id: 'instagram', label: 'Instagram Feed', icon: Star },
             { id: 'orders', label: 'Manage Orders', icon: ShoppingBag },
+            { id: 'investments', label: 'Vault Investments', icon: TrendingUp },
             { id: 'users', label: 'Registered Users', icon: User },
             { id: 'subscribers', label: 'Subscribers & Campaign', icon: Mail },
             { id: 'messages', label: 'Customer Messages', icon: MessageSquare },
@@ -447,6 +489,7 @@ const AdminDashboard = () => {
                 {activeTab === 'collection' && 'Manage Collection'}
                 {activeTab === 'instagram' && 'Instagram Showcase'}
                 {activeTab === 'orders' && 'Manage Orders'}
+                {activeTab === 'investments' && 'Digital Vault Investments'}
                 {activeTab === 'users' && 'Registered Users'}
                 {activeTab === 'subscribers' && 'VIP Subscribers & Campaign'}
                 {activeTab === 'messages' && 'Direct Messages'}
@@ -1110,9 +1153,20 @@ const AdminDashboard = () => {
 
                         <div className="flex flex-wrap justify-between items-end gap-6 pt-4 border-t border-ochre/10">
                           <div className="text-xs text-coffee/70 max-w-md">
-                            <p className="font-bold text-coffee uppercase text-[10px] mb-1">Shipping Address</p>
-                            <p className="font-semibold">{order.shippingAddress?.name} ({order.shippingAddress?.mobile})</p>
-                            <p>{order.shippingAddress?.address}, {order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}</p>
+                            <p className="font-bold text-coffee uppercase text-[10px] mb-1">Fulfillment Mode</p>
+                            <p className="font-semibold uppercase tracking-wider text-[11px] mb-1">
+                              {order.deliveryMode === 'Pickup' ? '🏪 In-Store Pickup' : '🚚 Home Delivery'}
+                            </p>
+                            {order.deliveryMode === 'Pickup' ? (
+                              <div className="p-2 bg-ochre/15 border border-ochre/30 text-coffee font-bold text-xs rounded-sm inline-block">
+                                Secure Pickup OTP: {order.pickupCode || 'N/A'}
+                              </div>
+                            ) : (
+                              <>
+                                <p className="font-semibold">{order.shippingAddress?.name} ({order.shippingAddress?.mobile})</p>
+                                <p>{order.shippingAddress?.address}, {order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}</p>
+                              </>
+                            )}
                           </div>
                           <div className="text-right space-y-1">
                             {order.distanceKm > 0 && (
@@ -1129,6 +1183,135 @@ const AdminDashboard = () => {
                   </div>
                 )}
               </section>
+            )}
+
+            {activeTab === 'investments' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                {/* Adjustments Form */}
+                <section className="bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm lg:col-span-1">
+                  <h3 className="text-lg font-serif font-bold text-coffee mb-4 border-b border-ochre/10 pb-2">Vault Adjustments</h3>
+                  <form onSubmit={handleInvestmentAdjust} className="space-y-4">
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Select VIP Customer</label>
+                      <select
+                        value={selectedInvestUser}
+                        onChange={(e) => setSelectedInvestUser(e.target.value)}
+                        className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm focus:outline-none focus:border-ochre text-coffee"
+                        required
+                      >
+                        <option value="">-- Choose User --</option>
+                        {users.map(u => (
+                          <option key={u._id} value={u._id}>{u.name} ({u.mobile || u.email})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Vault Metal</label>
+                        <select
+                          value={adjustMetal}
+                          onChange={(e) => setAdjustMetal(e.target.value)}
+                          className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm focus:outline-none focus:border-ochre text-coffee"
+                        >
+                          <option value="GOLD">Gold (24K)</option>
+                          <option value="SILVER">Silver</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Action Type</label>
+                        <select
+                          value={adjustType}
+                          onChange={(e) => setAdjustType(e.target.value)}
+                          className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm focus:outline-none focus:border-ochre text-coffee"
+                        >
+                          <option value="SELL">Offline Resell (Deduct)</option>
+                          <option value="BUY">Offline Purchase (Add)</option>
+                          <option value="REDEEM">Coin Handover (Deduct)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Weight (Grams)</label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={adjustGrams}
+                        onChange={(e) => setAdjustGrams(e.target.value)}
+                        className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm text-coffee focus:border-ochre outline-none"
+                        placeholder="e.g. 0.5230"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Rate per Gram (₹ - Optional)</label>
+                      <input
+                        type="number"
+                        value={adjustRate}
+                        onChange={(e) => setAdjustRate(e.target.value)}
+                        className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm text-coffee focus:border-ochre outline-none"
+                        placeholder="e.g. 6820"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Settlement Amount (₹ - Optional)</label>
+                      <input
+                        type="number"
+                        value={adjustAmount}
+                        onChange={(e) => setAdjustAmount(e.target.value)}
+                        className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm text-coffee focus:border-ochre outline-none"
+                        placeholder="e.g. 3500"
+                      />
+                    </div>
+
+                    <button disabled={loading} className="w-full py-3 bg-ochre text-cream text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-ochre/90 transition-all shadow-md">
+                      {loading ? 'Adjusting...' : 'Save Vault Adjustment'}
+                    </button>
+                  </form>
+                </section>
+
+                {/* Vault Portfolio View */}
+                <section className="bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm lg:col-span-2">
+                  <h3 className="text-lg font-serif font-bold text-coffee mb-4 border-b border-ochre/10 pb-2">Customer Portfolios</h3>
+                  
+                  {investments.length === 0 ? (
+                    <p className="text-coffee/50 text-center py-8">No investment vaults found.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-sm">
+                        <thead>
+                          <tr className="border-b border-ochre/25 text-[10px] font-bold uppercase text-coffee/60">
+                            <th className="py-3">Customer</th>
+                            <th className="py-3">Gold Balance</th>
+                            <th className="py-3">Silver Balance</th>
+                            <th className="py-3">Transactions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-ochre/10">
+                          {investments.map(inv => (
+                            <tr key={inv._id} className="text-coffee">
+                              <td className="py-3 font-semibold">
+                                {inv.user?.name || 'N/A'}<br />
+                                <span className="text-[10px] text-coffee/50 font-mono font-medium">{inv.user?.mobile || inv.user?.email || 'Guest'}</span>
+                              </td>
+                              <td className="py-3 font-bold text-ochre">{(inv.goldGrams || 0).toFixed(4)} g</td>
+                              <td className="py-3 font-bold text-coffee/70">{(inv.silverGrams || 0).toFixed(4)} g</td>
+                              <td className="py-3">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-coffee/5 text-coffee border border-coffee/20">
+                                  {inv.transactions?.length || 0} logs
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </section>
+              </div>
             )}
 
             {activeTab === 'users' && (
@@ -1154,6 +1337,7 @@ const AdminDashboard = () => {
                         <th className="py-4 px-4">Mobile</th>
                         <th className="py-4 px-4">Role</th>
                         <th className="py-4 px-4">Approval</th>
+                        <th className="py-4 px-4">T&C Accept</th>
                         <th className="py-4 px-4">Joined Date</th>
                         <th className="py-4 px-4">Last Login</th>
                         <th className="py-4 px-4 text-right">Actions</th>
@@ -1162,7 +1346,7 @@ const AdminDashboard = () => {
                     <tbody>
                       {users.length === 0 ? (
                         <tr>
-                          <td colSpan="8" className="text-center py-8 text-coffee/50">No users found.</td>
+                          <td colSpan="9" className="text-center py-8 text-coffee/50">No users found.</td>
                         </tr>
                       ) : (
                         users.map((u, i) => (
@@ -1190,6 +1374,11 @@ const AdminDashboard = () => {
                                   {u.isApproved ? 'Approved ✓' : 'Pending ⏳'}
                                 </button>
                               )}
+                            </td>
+                            <td className="py-4 px-4">
+                              <span className={`px-2 py-0.5 rounded text-xs font-bold ${u.termsAccepted ? 'bg-green-500/10 text-green-600 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+                                {u.termsAccepted ? 'Accepted ✓' : 'No ✗'}
+                              </span>
                             </td>
                             <td className="py-4 px-4 text-sm text-coffee/60">
                               {new Date(u.createdAt).toLocaleDateString()}

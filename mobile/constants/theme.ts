@@ -10,20 +10,24 @@ const tintColorDark = '#FFFDF9';
 
 export const Colors = {
   light: {
-    text: '#3D2B1F',
-    background: '#FCF9F3',
-    tint: tintColorLight,
-    icon: '#EBA938',
-    tabIconDefault: '#8C7A6D',
-    tabIconSelected: tintColorLight,
+    text: '#1C1C1E',
+    background: '#FFFFFF',
+    tint: '#C5A059',
+    icon: '#D4AF37', // Shiny Gold
+    tabIconDefault: '#8E8E93',
+    tabIconSelected: '#D4AF37',
+    cardBackground: '#FAF9F6',
+    border: 'rgba(212, 175, 55, 0.25)', // Subtle gold border
   },
   dark: {
-    text: '#FCF9F3',
-    background: '#3D2B1F',
-    tint: tintColorDark,
-    icon: '#EBA938',
-    tabIconDefault: '#8C7A6D',
-    tabIconSelected: tintColorDark,
+    text: '#F2F2F7',
+    background: '#1C1C1E',
+    tint: '#D4AF37',
+    icon: '#D4AF37',
+    tabIconDefault: '#8E8E93',
+    tabIconSelected: '#D4AF37',
+    cardBackground: '#2C2C2E',
+    border: 'rgba(212, 175, 55, 0.4)',
   },
 };
 

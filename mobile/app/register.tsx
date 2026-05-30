@@ -20,6 +20,9 @@ export default function RegisterScreen() {
 
   const [showStatePicker, setShowStatePicker] = useState(false);
   const [showCityPicker, setShowCityPicker] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   useEffect(() => {
     fetchStates();
@@ -76,13 +79,17 @@ export default function RegisterScreen() {
       alert('All fields are required to register!');
       return;
     }
+    if (!termsAccepted) {
+      alert('You must accept the Terms & Conditions and Privacy Policy to register.');
+      return;
+    }
     
     setLoading(true);
     try {
       const response = await fetch('https://brahmani-jewellers-api.onrender.com/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, mobile, password, country: 'India', state, city }),
+        body: JSON.stringify({ name, email, mobile, password, country: 'India', state, city, termsAccepted }),
       });
       
       const data = await response.json();
@@ -183,6 +190,26 @@ export default function RegisterScreen() {
             />
           </View>
 
+          {/* Terms & Conditions Checkbox */}
+          <View style={styles.checkboxRow}>
+            <TouchableOpacity 
+              style={[styles.checkbox, termsAccepted && styles.checkboxActive]}
+              onPress={() => setTermsAccepted(!termsAccepted)}
+            >
+              {termsAccepted && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+            </TouchableOpacity>
+            <View style={styles.checkboxLabelContainer}>
+              <Text style={styles.checkboxText}>I agree to the </Text>
+              <TouchableOpacity onPress={() => setShowTermsModal(true)}>
+                <Text style={styles.checkboxLink}>Terms & Conditions</Text>
+              </TouchableOpacity>
+              <Text style={styles.checkboxText}> and </Text>
+              <TouchableOpacity onPress={() => setShowPrivacyModal(true)}>
+                <Text style={styles.checkboxLink}>Privacy Policy</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
           <TouchableOpacity 
             style={[styles.button, loading && styles.buttonDisabled]} 
             onPress={handleRegister}
@@ -242,6 +269,90 @@ export default function RegisterScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* TERMS & CONDITIONS MODAL */}
+      <Modal visible={showTermsModal} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Terms & Conditions</Text>
+            <ScrollView style={{ maxHeight: 300, marginVertical: 10 }}>
+              <Text style={styles.legalBodyText}>
+                <Text style={{ fontWeight: 'bold' }}>1. Acceptance of Terms</Text>
+                {"\n"}
+                By accessing and using this app, you agree to be bound by these Terms & Conditions. Please read them carefully before making any purchases.
+                {"\n\n"}
+                <Text style={{ fontWeight: 'bold' }}>2. Pricing & Live Gold/Silver Rates</Text>
+                {"\n"}
+                Gold and silver rates fluctuate daily according to the bullion market. The pricing for products on our site/app is dynamically calculated based on current live rates. The price presented at checkout when you place your order is final and binding. Even if gold/silver market rates change afterwards, the price of your placed order remains unchanged.
+                {"\n\n"}
+                <Text style={{ fontWeight: 'bold' }}>3. Product Details & Weight Variance</Text>
+                {"\n"}
+                All our jewellery pieces are handcrafted. Because they are handmade, the final weight of the delivered jewellery may vary by approximately +/- 5% compared to the estimated weight listed online. The final bill will be adjusted and calculated according to the actual weight of the shipped product.
+                {"\n\n"}
+                <Text style={{ fontWeight: 'bold' }}>4. Order Validation & Cancellation</Text>
+                {"\n"}
+                Brahmani Jewellers reserves the right to cancel any orders under exceptional circumstances (e.g. wrong price displays, lack of raw materials, or verification issues). If we cancel an order, we will issue a full refund to the customer.
+                {"\n\n"}
+                <Text style={{ fontWeight: 'bold' }}>5. Contact Information</Text>
+                {"\n"}
+                Email: info.brahmanijewellers@gmail.com
+                {"\n"}
+                Phone: +91 9925811771
+              </Text>
+            </ScrollView>
+            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowTermsModal(false)}>
+              <Text style={styles.modalCloseText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* PRIVACY POLICY MODAL */}
+      <Modal visible={showPrivacyModal} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Privacy Policy</Text>
+            <ScrollView style={{ maxHeight: 300, marginVertical: 10 }}>
+              <Text style={styles.legalBodyText}>
+                <Text style={{ fontWeight: 'bold' }}>1. Introduction</Text>
+                {"\n"}
+                Welcome to Brahmani Jewellers. We value your trust and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your data.
+                {"\n\n"}
+                <Text style={{ fontWeight: 'bold' }}>2. Information We Collect</Text>
+                {"\n"}
+                A. Personal Info: Name, shipping address, billing address, email, and phone number when you create an account or order.
+                {"\n"}
+                B. Payments: We do NOT store your credit card, debit card, or UPI credentials on our servers. All transaction details are processed securely by Razorpay.
+                {"\n\n"}
+                <Text style={{ fontWeight: 'bold' }}>3. How We Use Your Data</Text>
+                {"\n"}
+                - To process, ship, and deliver your luxury jewellery orders.
+                {"\n"}
+                - To send order confirmations, tracking information, and customer support updates.
+                {"\n"}
+                - To share daily live rate updates.
+                {"\n"}
+                - To prevent fraud and maintain security.
+                {"\n\n"}
+                <Text style={{ fontWeight: 'bold' }}>4. Data Sharing & Third Parties</Text>
+                {"\n"}
+                We never sell or rent your personal data. We only share details with courier services to ship packages and payment gateways to process payments.
+                {"\n\n"}
+                <Text style={{ fontWeight: 'bold' }}>5. Contact Us</Text>
+                {"\n"}
+                Email: info.brahmanijewellers@gmail.com
+                {"\n"}
+                Phone: +91 9925811771
+                {"\n"}
+                Address: Near Amraiwadi Metro, Ahmedabad, Gujarat, India
+              </Text>
+            </ScrollView>
+            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowPrivacyModal(false)}>
+              <Text style={styles.modalCloseText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -264,6 +375,48 @@ const styles = StyleSheet.create({
   backButton: { marginTop: 16, alignItems: 'center', padding: 12 },
   backButtonText: { color: '#3D2B1F', fontWeight: '500', fontSize: 16 },
   
+  // Checkbox Styles
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 12,
+    gap: 8,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 1.5,
+    borderColor: '#3D2B1F',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFF6E6',
+  },
+  checkboxActive: {
+    backgroundColor: '#3D2B1F',
+  },
+  checkboxLabelContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    flex: 1,
+    alignItems: 'center',
+  },
+  checkboxText: {
+    fontSize: 12,
+    color: '#3D2B1F',
+  },
+  checkboxLink: {
+    fontSize: 12,
+    color: '#EBA938',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
+  legalBodyText: {
+    fontSize: 13,
+    color: '#3D2B1F',
+    lineHeight: 18,
+  },
+
   // Modal Styles
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
   modalContent: { backgroundColor: '#FFF6E6', borderRadius: 16, maxHeight: '80%', padding: 20 },
