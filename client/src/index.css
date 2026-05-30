@@ -10,10 +10,17 @@
   --gold: #D4AF37;
 }
 
-body {
+html, body {
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
   overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
   background-color: var(--cream);
   color: var(--coffee);
 }
