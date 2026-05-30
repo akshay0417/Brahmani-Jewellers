@@ -210,7 +210,7 @@ const Checkout = () => {
 
   if (orderSuccess) {
     return (
-      <div className="pt-48 pb-24 min-h-screen flex flex-col items-center justify-center bg-cream px-4 text-center">
+      <div className="pt-32 pb-24 min-h-screen flex flex-col items-center justify-center bg-cream px-4 text-center">
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-green-500 mb-6">
           <CheckCircle size={100} />
         </motion.div>
@@ -222,7 +222,7 @@ const Checkout = () => {
   }
 
   return (
-    <div className="pt-48 pb-24 min-h-screen bg-cream px-4">
+    <div className="pt-32 pb-24 min-h-screen bg-cream px-4">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-serif font-bold mb-12 text-coffee text-center">
           Complete Your <span className="text-ochre">Order</span>

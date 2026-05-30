@@ -181,7 +181,7 @@ const Shop = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="pt-48 pb-24 px-4 bg-cream min-h-screen"
+      className="pt-32 pb-24 px-4 bg-cream min-h-screen"
     >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">

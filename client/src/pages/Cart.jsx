@@ -9,7 +9,7 @@ const Cart = () => {
 
   if (cart.items.length === 0) {
     return (
-      <div className="pt-48 pb-24 min-h-screen flex flex-col items-center justify-center bg-cream px-4">
+      <div className="pt-32 pb-24 min-h-screen flex flex-col items-center justify-center bg-cream px-4">
         <ShoppingBag size={80} className="text-ochre/20 mb-6" />
         <h2 className="text-3xl font-serif text-coffee mb-4">Your cart is empty</h2>
         <p className="text-coffee/60 mb-8">Discover our collection and find something beautiful.</p>
@@ -21,7 +21,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="pt-48 pb-24 min-h-screen bg-cream px-4">
+    <div className="pt-32 pb-24 min-h-screen bg-cream px-4">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-serif font-bold mb-12 text-coffee transition-colors duration-300">
           Shopping <span className="text-ochre">Cart</span>

@@ -94,7 +94,7 @@ const Gallery = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="pt-48 pb-24 min-h-screen px-4 bg-cream text-coffee"
+      className="pt-32 pb-24 min-h-screen px-4 bg-cream text-coffee"
     >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
