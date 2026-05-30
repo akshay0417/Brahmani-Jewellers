@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AuthContext = createContext(null);
 
@@ -7,30 +8,57 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Basic load from localStorage for Web testing
-    if (Platform.OS === 'web') {
+    const loadPersistedUser = async () => {
       try {
-        const storedUser = localStorage.getItem('mobile_user');
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+        if (Platform.OS === 'web') {
+          const storedUser = localStorage.getItem('mobile_user');
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          }
+        } else {
+          const storedUser = await AsyncStorage.getItem('mobile_user');
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          }
         }
       } catch (e) {
-        console.error(e);
+        console.error('Failed to load user session', e);
       }
-    }
+    };
+    loadPersistedUser();
   }, []);
 
-  const login = (userData) => {
+  const login = async (userData, rememberMe = true) => {
     setUser(userData);
-    if (Platform.OS === 'web') {
-      localStorage.setItem('mobile_user', JSON.stringify(userData));
+    try {
+      if (rememberMe) {
+        if (Platform.OS === 'web') {
+          localStorage.setItem('mobile_user', JSON.stringify(userData));
+        } else {
+          await AsyncStorage.setItem('mobile_user', JSON.stringify(userData));
+        }
+      } else {
+        if (Platform.OS === 'web') {
+          localStorage.removeItem('mobile_user');
+        } else {
+          await AsyncStorage.removeItem('mobile_user');
+        }
+      }
+    } catch (e) {
+      console.error('Failed to save user session', e);
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     setUser(null);
-    if (Platform.OS === 'web') {
-      localStorage.removeItem('mobile_user');
+    try {
+      if (Platform.OS === 'web') {
+        localStorage.removeItem('mobile_user');
+      } else {
+        await AsyncStorage.removeItem('mobile_user');
+      }
+    } catch (e) {
+      console.error('Failed to clear user session', e);
     }
   };
 

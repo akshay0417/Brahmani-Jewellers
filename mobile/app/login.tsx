@@ -8,6 +8,7 @@ export default function LoginScreen() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const router = useRouter();
   const { login } = useAuth();
 
@@ -28,7 +29,7 @@ export default function LoginScreen() {
       const data = await response.json();
       
       if (response.ok) {
-        login({ ...data.user, token: data.token });
+        login({ ...data.user, token: data.token }, rememberMe);
         alert('Login Successful!');
         router.push('/');
       } else {
@@ -77,6 +78,17 @@ export default function LoginScreen() {
               secureTextEntry
               placeholderTextColor="#A0A0A0"
             />
+          </View>
+
+          {/* Remember Me Checkbox */}
+          <View style={styles.checkboxRow}>
+            <TouchableOpacity 
+              style={[styles.checkbox, rememberMe && styles.checkboxActive]}
+              onPress={() => setRememberMe(!rememberMe)}
+            >
+              {rememberMe && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+            </TouchableOpacity>
+            <Text style={styles.checkboxText}>Remember Me</Text>
           </View>
 
           <TouchableOpacity 
@@ -190,5 +202,29 @@ const styles = StyleSheet.create({
     color: '#3D2B1F',
     fontWeight: '500',
     fontSize: 16,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 12,
+    gap: 8,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 1.5,
+    borderColor: '#3D2B1F',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFF6E6',
+  },
+  checkboxActive: {
+    backgroundColor: '#3D2B1F',
+  },
+  checkboxText: {
+    fontSize: 14,
+    color: '#3D2B1F',
+    fontWeight: '500',
   }
 });
