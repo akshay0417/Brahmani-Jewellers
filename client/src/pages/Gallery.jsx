@@ -146,7 +146,7 @@ const Gallery = () => {
         {loading ? (
            <div className="flex justify-center py-20"><div className="w-12 h-12 border-4 border-ochre border-t-transparent rounded-full animate-spin"></div></div>
         ) : (
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
+          <div className="columns-2 lg:columns-3 gap-4 space-y-4">
             <AnimatePresence>
               {filteredItems.map((item) => (
                 <motion.div
