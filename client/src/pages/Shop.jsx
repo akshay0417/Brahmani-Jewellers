@@ -166,8 +166,7 @@ const Shop = () => {
         </div>
         <div className="p-5 text-center">
           <span className="text-[10px] text-ochre uppercase tracking-[0.2em] font-bold mb-1 block">{item.subCategory ? `${item.subCategory} • ${item.category}` : `${item.category} Collection`}</span>
-          <h3 className="font-serif text-lg text-coffee mb-1 tracking-wide truncate px-2">{item.name || 'Heritage Masterpiece'}</h3>
-          {item.weight && <span className="text-xs text-coffee/60 block mb-2 font-medium">{item.weight} Grams</span>}
+          <h3 className="font-serif text-lg text-coffee mb-2 tracking-wide truncate px-2">{item.name || 'Heritage Masterpiece'}</h3>
           <div className="flex flex-col items-center justify-center gap-1">
             <span className="text-xl font-bold text-coffee">₹{priceData.final.toLocaleString('en-IN')}</span>
             {priceData.breakdown && <span className="text-[10px] text-coffee/50 uppercase tracking-widest">(Incl. 3% GST)</span>}
