@@ -165,11 +165,21 @@ const Gallery = () => {
                     className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
                     onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-coffee/90 via-coffee/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-end p-6">
-                    <span className="text-ochre uppercase tracking-[0.2em] text-xs font-bold mb-2">
+                  <div className="absolute inset-0 bg-gradient-to-t from-coffee/95 via-coffee/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-end p-6 text-center">
+                    {item.name && (
+                      <h4 className="text-cream text-lg font-serif font-semibold tracking-wide mb-1">
+                        {item.name}
+                      </h4>
+                    )}
+                    {item.weight && (
+                      <span className="text-cream/80 text-xs mb-2 font-medium">
+                        {item.weight} Grams
+                      </span>
+                    )}
+                    <span className="text-ochre uppercase tracking-[0.2em] text-[10px] font-bold mb-4">
                       {item.subCategory ? `${item.subCategory} • ${item.category}` : `${item.category} Collection`}
                     </span>
-                    <button className="px-6 py-2 border border-ochre text-cream hover:bg-ochre hover:text-coffee transition-colors rounded-sm uppercase tracking-widest text-xs font-bold">
+                    <button className="px-6 py-2 border border-ochre text-cream hover:bg-ochre hover:text-coffee transition-colors rounded-sm uppercase tracking-widest text-[10px] font-bold">
                       View Details
                     </button>
                   </div>
