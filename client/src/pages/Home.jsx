@@ -4,9 +4,9 @@ import Hero from '../components/Hero';
 import RatesSection from '../components/RatesSection';
 import GoogleReviews from '../components/GoogleReviews';
 import InstagramFeed from '../components/InstagramFeed';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { MapPin, Phone, MessageSquare, CheckCircle, Map, Star, Send, User, Mail } from 'lucide-react';
+import { MapPin, Phone, MessageSquare, CheckCircle, Map, Star, Send, User, Mail, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const About = () => (
   <section className="py-10 md:py-12 bg-cream transition-colors duration-300" id="about">
@@ -94,6 +94,10 @@ const About = () => (
 
 const Categories = () => {
   const [items, setItems] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 });
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   useEffect(() => {
     api.get('/gallery').then(res => {
@@ -103,49 +107,231 @@ const Categories = () => {
     }).catch(err => console.log("Error fetching gallery", err));
   }, []);
 
+  const closeLightbox = () => {
+    setSelectedItem(null);
+    setIsZoomed(false);
+    setZoomOrigin({ x: 50, y: 50 });
+    setCurrentImageIndex(0);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isZoomed) return;
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setZoomOrigin({ x, y });
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isZoomed) return;
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+      const x = Math.max(0, Math.min(100, ((touch.clientX - left) / width) * 100));
+      const y = Math.max(0, Math.min(100, ((touch.clientY - top) / height) * 100));
+      setZoomOrigin({ x, y });
+    }
+  };
+
+  const handleImageClick = (e) => {
+    e.stopPropagation();
+    if (isZoomed) {
+      setIsZoomed(false);
+    } else {
+      const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+      const clientX = e.clientX || (e.touches && e.touches[0]?.clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0]?.clientY);
+      if (clientX && clientY) {
+        const x = ((clientX - left) / width) * 100;
+        const y = ((clientY - top) / height) * 100;
+        setZoomOrigin({ x, y });
+      } else {
+        setZoomOrigin({ x: 50, y: 50 });
+      }
+      setIsZoomed(true);
+    }
+  };
+
   return (
-    <section className="py-10 md:py-12 bg-cream-alt transition-colors duration-300" id="categories">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-10 sm:mb-12">
-          <motion.span initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} className="text-ochre tracking-[0.5em] uppercase text-xs font-bold mb-4 block">Royal Showcase</motion.span>
-          <h2 className="text-4xl font-serif font-bold mb-4 text-coffee transition-colors duration-300">Featured <span className="text-ochre">Masterpieces</span></h2>
-          <p className="text-coffee/70 transition-colors duration-300">Discover the latest arrivals and exquisite designs from our gallery</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:auto-rows-[280px]">
-          {items.map((item, idx) => (
-            <Link
-              key={item._id || idx}
-              to={`/gallery?category=${item.category}`}
-              className={`block group ${item.isFeatured ? 'md:col-span-2 md:row-span-2' : ''}`}
-            >
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: (idx % 4) * 0.15 }}
-                className="relative h-full min-h-[280px] rounded-xl overflow-hidden cursor-pointer shadow-xl shadow-coffee/5 border border-ochre/15 hover:border-ochre/60 transition-colors duration-300"
+    <>
+      <section className="py-10 md:py-12 bg-cream-alt transition-colors duration-300" id="categories">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-10 sm:mb-12">
+            <motion.span initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} className="text-ochre tracking-[0.5em] uppercase text-xs font-bold mb-4 block">Royal Showcase</motion.span>
+            <h2 className="text-4xl font-serif font-bold mb-4 text-coffee transition-colors duration-300">Featured <span className="text-ochre">Masterpieces</span></h2>
+            <p className="text-coffee/70 transition-colors duration-300">Discover the latest arrivals and exquisite designs from our gallery</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:auto-rows-[280px]">
+            {items.map((item, idx) => (
+              <div
+                key={item._id || idx}
+                onClick={() => { setSelectedItem(item); setCurrentImageIndex(0); }}
+                className={`block group cursor-pointer ${item.isFeatured ? 'md:col-span-2 md:row-span-2' : ''}`}
               >
-                <img src={item.imageUrl} alt={item.name || item.category} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-t from-coffee/90 via-coffee/40 to-transparent flex flex-col justify-end p-4 md:p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <h3 className={`${item.isFeatured ? 'text-base md:text-lg' : 'text-xs md:text-sm'} font-serif text-cream mb-1`}>{item.name || `${item.category} Design`}</h3>
-                  <p className="text-cream/80 text-[10px] line-clamp-2">{item.description || item.subCategory || "Exquisite craftsmanship"}</p>
-                  <span className="text-[9px] tracking-[0.2em] text-ochre uppercase font-bold mt-1">View Category →</span>
-                </div>
-              </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: (idx % 4) * 0.15 }}
+                  className="relative h-full min-h-[280px] rounded-xl overflow-hidden shadow-xl shadow-coffee/5 border border-ochre/15 hover:border-ochre/60 transition-colors duration-300"
+                >
+                  <img src={item.imageUrl} alt={item.name || item.category} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-coffee/90 via-coffee/40 to-transparent flex flex-col justify-end p-4 md:p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <h3 className={`${item.isFeatured ? 'text-base md:text-lg' : 'text-xs md:text-sm'} font-serif text-cream mb-1`}>{item.name || `${item.category} Design`}</h3>
+                    <p className="text-cream/80 text-[10px] line-clamp-2">{item.description || item.subCategory || "Exquisite craftsmanship"}</p>
+                    <span className="text-[9px] tracking-[0.2em] text-ochre uppercase font-bold mt-1">View Details →</span>
+                  </div>
+                </motion.div>
+              </div>
+            ))}
+          </div>
+          
+          {items.length === 0 && (
+            <div className="text-center text-coffee/50 py-10">Loading masterpieces...</div>
+          )}
+          
+          <div className="mt-16 text-center">
+            <Link to="/gallery" className="inline-block px-8 py-3 border border-ochre text-coffee font-bold uppercase tracking-widest text-sm hover:bg-ochre hover:text-cream transition-colors duration-300 shadow-sm hover:shadow-md">
+              Explore Full Collection
             </Link>
-          ))}
+          </div>
         </div>
-        
-        {items.length === 0 && (
-          <div className="text-center text-coffee/50 py-10">Loading masterpieces...</div>
+      </section>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {selectedItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-coffee/95 flex flex-col items-center justify-center p-4 md:p-10 backdrop-blur-md"
+            onClick={closeLightbox}
+          >
+            <button
+              className="absolute top-10 right-10 text-cream/50 hover:text-ochre transition-colors z-50 p-4"
+              onClick={closeLightbox}
+            >
+              <X size={40} />
+            </button>
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative flex flex-col md:flex-row items-center justify-center max-w-5xl w-full bg-coffee border border-ochre/20 rounded-lg p-6 md:p-10 gap-8 overflow-y-auto max-h-[90vh]" 
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Left Side: Image container */}
+              {(() => {
+                const allImages = [selectedItem.imageUrl, ...(selectedItem.additionalImages || [])];
+                return (
+                  <div className="flex-1 flex flex-col items-center justify-center w-full max-h-[55vh] md:max-h-[75vh]">
+                    <div 
+                      className="overflow-hidden rounded-md ring-1 ring-cream/10 bg-cream-alt relative w-full flex items-center justify-center min-h-[40vh]"
+                      onMouseMove={handleMouseMove}
+                      onTouchMove={handleTouchMove}
+                      onClick={handleImageClick}
+                    >
+                      <img
+                        src={allImages[currentImageIndex]}
+                        alt="Preview"
+                        className={`max-w-full max-h-[50vh] md:max-h-[65vh] object-contain shadow-2xl transition-transform duration-200 ease-out ${isZoomed ? 'cursor-zoom-out font-bold' : 'cursor-zoom-in'}`}
+                        style={{
+                          transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
+                          transform: isZoomed ? 'scale(2.5)' : 'scale(1)'
+                        }}
+                        onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
+                      />
+
+                      {/* Carousel Left/Right arrows */}
+                      {allImages.length > 1 && !isZoomed && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentImageIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
+                            }}
+                            className="absolute left-4 p-2 rounded-full bg-coffee/80 text-cream border border-ochre/25 hover:bg-ochre hover:text-coffee transition-all"
+                          >
+                            <ChevronLeft size={20} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
+                            }}
+                            className="absolute right-4 p-2 rounded-full bg-coffee/80 text-cream border border-ochre/25 hover:bg-ochre hover:text-coffee transition-all"
+                          >
+                            <ChevronRight size={20} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Dots / Thumbnails */}
+                    {allImages.length > 1 && (
+                      <div className="flex gap-2 mt-4 select-none">
+                        {allImages.map((img, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setCurrentImageIndex(idx)}
+                            className={`w-12 h-12 rounded border overflow-hidden transition-all ${currentImageIndex === idx ? 'border-ochre ring-1 ring-ochre font-bold' : 'border-cream/20 opacity-60 hover:opacity-100'}`}
+                          >
+                            <img src={img} alt="thumb" className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    <p className="text-cream/50 text-xs mt-3 select-none">
+                      {isZoomed ? "Move mouse or drag touch to pan. Click to zoom out." : "Click or tap image to zoom."}
+                    </p>
+                  </div>
+                );
+              })()}
+
+              {/* Right Side: Details container */}
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex-1 w-full flex flex-col justify-center text-center md:text-left animate-fade-in"
+              >
+                <h3 className="text-3xl font-serif text-ochre mb-4 tracking-widest uppercase">{selectedItem.name || `${selectedItem.category} Design`}</h3>
+                {selectedItem.description && <p className="text-cream/80 text-base italic mb-4 max-w-lg leading-relaxed">{selectedItem.description}</p>}
+                
+                <div className="border-t border-b border-cream/10 py-4 my-4">
+                  {(selectedItem.weight || selectedItem.purity || selectedItem.subCategory) && (
+                    <div className="space-y-2">
+                      {selectedItem.subCategory && (
+                        <p className="text-cream/70 text-sm"><strong className="text-ochre uppercase tracking-wider text-xs">Category:</strong> {selectedItem.subCategory}</p>
+                      )}
+                      {selectedItem.weight && (
+                        <p className="text-cream/70 text-sm"><strong className="text-ochre uppercase tracking-wider text-xs">Weight:</strong> {selectedItem.weight} grams</p>
+                      )}
+                      {selectedItem.purity && (
+                        <p className="text-cream/70 text-sm"><strong className="text-ochre uppercase tracking-wider text-xs">Purity:</strong> {selectedItem.purity}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <a
+                  href={`https://wa.me/917621967577?text=${encodeURIComponent("Hello! I love this design from your collection: " + selectedItem.imageUrl)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 border border-ochre text-cream px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-ochre hover:text-coffee transition-colors text-center w-full md:w-fit"
+                >
+                  Inquire Design
+                </a>
+              </motion.div>
+            </motion.div>
+          </motion.div>
         )}
-        
-        <div className="mt-16 text-center">
-          <Link to="/gallery" className="inline-block px-8 py-3 border border-ochre text-coffee font-bold uppercase tracking-widest text-sm hover:bg-ochre hover:text-cream transition-colors duration-300 shadow-sm hover:shadow-md">
-            Explore Full Collection
-          </Link>
-        </div>
-      </div>
-    </section>
+      </AnimatePresence>
+    </>
   );
 };
 
