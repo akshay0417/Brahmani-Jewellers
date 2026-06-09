@@ -303,14 +303,27 @@ const Gallery = () => {
                   )}
                 </div>
 
-                <a
-                  href={`https://wa.me/917621967577?text=${encodeURIComponent("Hello! I love this design from your collection: " + selectedItem.imageUrl)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-6 border border-ochre text-cream px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-ochre hover:text-coffee transition-colors text-center w-full md:w-fit"
-                >
-                  Inquire Design
-                </a>
+                {(() => {
+                  let text = `Hello Brahmani Jewellers, I am interested in this design from your collection:\n\n`;
+                  text += `*Name:* ${selectedItem.name || 'Heritage Design'}\n`;
+                  text += `*Category:* ${selectedItem.category}\n`;
+                  if (selectedItem.subCategory) text += `*Item Type:* ${selectedItem.subCategory}\n`;
+                  if (selectedItem.weight) text += `*Weight:* ${selectedItem.weight} Grams\n`;
+                  if (selectedItem.purity) text += `*Purity:* ${selectedItem.purity}\n\n`;
+                  text += `Image Link: ${selectedItem.imageUrl}`;
+
+                  const whatsappUrl = `https://wa.me/917621967577?text=${encodeURIComponent(text)}`;
+                  return (
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-6 border border-ochre text-cream px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-ochre hover:text-coffee transition-colors text-center w-full md:w-fit"
+                    >
+                      Inquire Design
+                    </a>
+                  );
+                })()}
               </motion.div>
             </motion.div>
           </motion.div>
