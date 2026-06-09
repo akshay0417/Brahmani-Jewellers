@@ -26,7 +26,7 @@ function AnimatedCategoryCard({ children, onPress, style }) {
       onPressOut={handlePressOut}
       style={style}
     >
-      <Reanimated.View style={animatedStyle}>
+      <Reanimated.View style={[animatedStyle, { alignItems: 'center', width: '100%' }]}>
         {children}
       </Reanimated.View>
     </TouchableOpacity>
@@ -85,10 +85,10 @@ const HERO_SLIDES = [
 ];
 
 const CATEGORIES = [
-  { id: '1', name: 'Gold', icon: 'diamond' },
-  { id: '2', name: 'Silver', icon: 'star' },
-  { id: '3', name: 'Rudraksha', icon: 'leaf' },
-  { id: '4', name: 'Antique', icon: 'shield' },
+  { id: '1', name: 'Gold', icon: 'diamond', iconType: 'FontAwesome' },
+  { id: '2', name: 'Silver', icon: 'star', iconType: 'FontAwesome' },
+  { id: '3', name: 'Rudraksha', icon: 'dots-circle', iconType: 'MaterialCommunityIcons' },
+  { id: '4', name: 'Antique', icon: 'shield', iconType: 'FontAwesome' },
 ];
 
 export default function HomeScreen() {
@@ -241,12 +241,16 @@ export default function HomeScreen() {
               <AnimatedCategoryCard 
                 key={cat.id} 
                 style={styles.categoryCard} 
-                onPress={() => router.push('/collections')}
+                onPress={() => router.push({ pathname: '/collections', params: { search: cat.name.toLowerCase() } })}
               >
                 <View style={styles.categoryIconBg}>
-                  <FontAwesome name={cat.icon} size={22} color="#D4AF37" />
+                  {cat.iconType === 'MaterialCommunityIcons' ? (
+                    <MaterialCommunityIcons name={cat.icon as any} size={22} color="#D4AF37" />
+                  ) : (
+                    <FontAwesome name={cat.icon} size={22} color="#D4AF37" />
+                  )}
                 </View>
-                <Text style={styles.categoryName}>{cat.name}</Text>
+                <Text style={styles.categoryName} numberOfLines={1} adjustsFontSizeToFit>{cat.name}</Text>
               </AnimatedCategoryCard>
             ))}
           </View>
@@ -869,6 +873,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1C1C1E',
     marginTop: 6,
+    textAlign: 'center',
+    width: '100%',
   },
   card: {
     backgroundColor: '#FFFFFF', // Pure white card

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, TextInput, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
 
@@ -44,80 +45,101 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.backArrow} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={28} color="#3D2B1F" />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Login to your account</Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email or Mobile Number</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter email or mobile"
-              value={identifier}
-              onChangeText={setIdentifier}
-              autoCapitalize="none"
-              placeholderTextColor="#A0A0A0"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              placeholderTextColor="#A0A0A0"
-            />
-          </View>
-
-          {/* Remember Me Checkbox */}
-          <View style={styles.checkboxRow}>
-            <TouchableOpacity 
-              style={[styles.checkbox, rememberMe && styles.checkboxActive]}
-              onPress={() => setRememberMe(!rememberMe)}
-            >
-              {rememberMe && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+          <View style={styles.topBar}>
+            <TouchableOpacity style={styles.backArrow} onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={28} color="#3D2B1F" />
             </TouchableOpacity>
-            <Text style={styles.checkboxText}>Remember Me</Text>
           </View>
+          <View style={styles.container}>
+            <View style={styles.header}>
+              <Text style={styles.title}>Welcome Back</Text>
+              <Text style={styles.subtitle}>Login to your account</Text>
+            </View>
 
-          <TouchableOpacity 
-            style={[styles.button, loading && styles.buttonDisabled]} 
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'LOGIN'}</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Cancel</Text>
-          </TouchableOpacity>
-          
-          <View style={{ marginTop: 24, alignItems: 'center' }}>
-            <Text style={{ color: '#3D2B1F' }}>Don't have an account?</Text>
-            <Link href="/register" asChild>
-              <TouchableOpacity style={{ marginTop: 8 }}>
-                <Text style={{ color: '#EBA938', fontWeight: 'bold', fontSize: 16 }}>Create Account</Text>
+            <View style={styles.form}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Email or Mobile Number</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter email or mobile"
+                  value={identifier}
+                  onChangeText={setIdentifier}
+                  autoCapitalize="none"
+                  placeholderTextColor="#A0A0A0"
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Password</Text>
+                <View style={styles.passwordInputWrapper}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    placeholder="Enter password"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    placeholderTextColor="#A0A0A0"
+                  />
+                  <TouchableOpacity style={styles.eyeIconContainer} onPress={() => setShowPassword(!showPassword)}>
+                    <Ionicons name={showPassword ? "eye" : "eye-off"} size={22} color="#3D2B1F" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Remember Me & Forgot Password Row */}
+              <View style={styles.checkboxForgotPasswordRow}>
+                <View style={styles.checkboxRow}>
+                  <TouchableOpacity 
+                    style={[styles.checkbox, rememberMe && styles.checkboxActive]}
+                    onPress={() => setRememberMe(!rememberMe)}
+                  >
+                    {rememberMe && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+                  </TouchableOpacity>
+                  <Text style={styles.checkboxText}>Remember Me</Text>
+                </View>
+                
+                <TouchableOpacity onPress={() => router.push('/forgot-password')}>
+                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity 
+                style={[styles.button, loading && styles.buttonDisabled]} 
+                onPress={handleLogin}
+                disabled={loading}
+              >
+                <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'LOGIN'}</Text>
               </TouchableOpacity>
-            </Link>
+              
+              <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <Text style={styles.backButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <View style={{ marginTop: 24, alignItems: 'center' }}>
+                <Text style={{ color: '#3D2B1F' }}>Don't have an account?</Text>
+                <Link href="/register" asChild>
+                  <TouchableOpacity style={{ marginTop: 8 }}>
+                    <Text style={{ color: '#EBA938', fontWeight: 'bold', fontSize: 16 }}>Create Account</Text>
+                  </TouchableOpacity>
+                </Link>
+              </View>
+            </View>
           </View>
-        </View>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: '#FFF6E6', // cream
@@ -177,6 +199,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#3D2B1F',
   },
+  passwordInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF6E6',
+    borderWidth: 1,
+    borderColor: 'rgba(61, 43, 31, 0.2)',
+    borderRadius: 8,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 16,
+    fontSize: 16,
+    color: '#3D2B1F',
+  },
+  eyeIconContainer: {
+    paddingHorizontal: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   button: {
     marginTop: 10,
     backgroundColor: '#3D2B1F', // coffee
@@ -206,7 +247,6 @@ const styles = StyleSheet.create({
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 12,
     gap: 8,
   },
   checkbox: {
@@ -226,5 +266,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#3D2B1F',
     fontWeight: '500',
+  },
+  checkboxForgotPasswordRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 12,
+    width: '100%',
+  },
+  forgotPasswordText: {
+    color: '#EBA938',
+    fontWeight: 'bold',
+    fontSize: 14,
   }
 });

@@ -726,7 +726,7 @@ router.post('/auth/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    if (!user.isVerified) {
+    if (source !== 'app' && !user.isVerified) {
       return res.status(403).json({ message: 'Your account is not verified yet. Please click the verification link sent to your email or verify via OTP.', unverified: true });
     }
 

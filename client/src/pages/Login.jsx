@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, Mail, Gem, Key } from 'lucide-react';
+import { Lock, Mail, Gem, Key, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
   const location = useLocation();
@@ -10,6 +10,7 @@ const Login = () => {
   const [identifier, setIdentifier] = useState('');
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -193,13 +194,20 @@ const Login = () => {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/50" size={20} />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 placeholder="Password"
                 required
-                className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-4 text-coffee focus:outline-none focus:border-ochre transition-colors"
+                className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-12 text-coffee focus:outline-none focus:border-ochre transition-colors"
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-ochre/50 hover:text-ochre focus:outline-none"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
             
             <div className="flex justify-end">

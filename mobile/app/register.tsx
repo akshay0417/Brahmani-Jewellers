@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, TextInput, TouchableOpacity, ScrollView, Modal, FlatList } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, TextInput, TouchableOpacity, ScrollView, Modal, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -8,6 +8,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [state, setState] = useState('');
   const [city, setCity] = useState('');
   const [loading, setLoading] = useState(false);
@@ -109,13 +110,17 @@ export default function RegisterScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.backArrow} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={28} color="#3D2B1F" />
-        </TouchableOpacity>
-      </View>
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <View style={styles.topBar}>
+            <TouchableOpacity style={styles.backArrow} onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={28} color="#3D2B1F" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.header}>
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Join Brahmani Jewellers</Text>
         </View>
@@ -180,14 +185,19 @@ export default function RegisterScreen() {
 
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Password *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Create a password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              placeholderTextColor="#A0A0A0"
-            />
+            <View style={styles.passwordInputWrapper}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Create a password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                placeholderTextColor="#A0A0A0"
+              />
+              <TouchableOpacity style={styles.eyeIconContainer} onPress={() => setShowPassword(!showPassword)}>
+                <Ionicons name={showPassword ? "eye" : "eye-off"} size={22} color="#3D2B1F" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Terms & Conditions Checkbox */}
@@ -223,6 +233,7 @@ export default function RegisterScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+    </KeyboardAvoidingView>
 
       {/* State Picker Modal */}
       <Modal visible={showStatePicker} animationType="slide" transparent={true}>
@@ -369,6 +380,25 @@ const styles = StyleSheet.create({
   inputContainer: { marginBottom: 16 },
   label: { fontSize: 14, fontWeight: '600', color: '#3D2B1F', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
   input: { backgroundColor: '#FFF6E6', borderWidth: 1, borderColor: 'rgba(61, 43, 31, 0.2)', borderRadius: 8, padding: 14, color: '#3D2B1F', justifyContent: 'center' },
+  passwordInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF6E6',
+    borderWidth: 1,
+    borderColor: 'rgba(61, 43, 31, 0.2)',
+    borderRadius: 8,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 14,
+    fontSize: 16,
+    color: '#3D2B1F',
+  },
+  eyeIconContainer: {
+    paddingHorizontal: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   button: { marginTop: 10, backgroundColor: '#3D2B1F', paddingVertical: 16, borderRadius: 8, alignItems: 'center' },
   buttonDisabled: { opacity: 0.7 },
   buttonText: { color: '#FFF6E6', fontWeight: 'bold', fontSize: 16, letterSpacing: 1 },

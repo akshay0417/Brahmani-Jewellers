@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import api from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, Mail, User, Gem, Phone } from 'lucide-react';
+import { Lock, Mail, User, Gem, Phone, Eye, EyeOff } from 'lucide-react';
 
 const Register = () => {
   const [formData, setFormData] = useState({ name: '', email: '', mobile: '', password: '', confirmPassword: '', termsAccepted: false });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -133,24 +135,38 @@ const Register = () => {
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/50" size={20} />
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               name="password"
               placeholder="Password"
               required
-              className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-4 text-coffee focus:outline-none focus:border-ochre transition-colors"
+              className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-12 text-coffee focus:outline-none focus:border-ochre transition-colors"
               onChange={handleChange}
             />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-ochre/50 hover:text-ochre focus:outline-none"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/50" size={20} />
             <input
-              type="password"
+              type={showConfirmPassword ? 'text' : 'password'}
               name="confirmPassword"
               placeholder="Confirm Password"
               required
-              className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-4 text-coffee focus:outline-none focus:border-ochre transition-colors"
+              className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-12 text-coffee focus:outline-none focus:border-ochre transition-colors"
               onChange={handleChange}
             />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-ochre/50 hover:text-ochre focus:outline-none"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
 
           <div className="flex items-center space-x-2 py-1">
