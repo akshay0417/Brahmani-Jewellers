@@ -125,10 +125,10 @@ const Categories = () => {
                 className="relative h-full min-h-[280px] rounded-xl overflow-hidden cursor-pointer shadow-xl shadow-coffee/5 border border-ochre/15 hover:border-ochre/60 transition-colors duration-300"
               >
                 <img src={item.imageUrl} alt={item.name || item.category} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-t from-coffee/90 via-coffee/40 to-transparent flex flex-col justify-end p-4 md:p-6">
-                  <h3 className={`${item.isFeatured ? 'text-base md:text-lg' : 'text-xs md:text-sm'} font-serif text-cream mb-1 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300`}>{item.name || `${item.category} Design`}</h3>
-                  <p className="text-cream/80 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 line-clamp-2">{item.description || item.subCategory || "Exquisite craftsmanship"}</p>
-                  <span className="text-[9px] tracking-[0.2em] text-ochre uppercase font-bold mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150">View Category →</span>
+                <div className="absolute inset-0 bg-gradient-to-t from-coffee/90 via-coffee/40 to-transparent flex flex-col justify-end p-4 md:p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <h3 className={`${item.isFeatured ? 'text-base md:text-lg' : 'text-xs md:text-sm'} font-serif text-cream mb-1`}>{item.name || `${item.category} Design`}</h3>
+                  <p className="text-cream/80 text-[10px] line-clamp-2">{item.description || item.subCategory || "Exquisite craftsmanship"}</p>
+                  <span className="text-[9px] tracking-[0.2em] text-ochre uppercase font-bold mt-1">View Category →</span>
                 </div>
               </motion.div>
             </Link>
