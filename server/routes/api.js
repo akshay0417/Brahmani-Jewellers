@@ -1459,7 +1459,7 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
     next();
   });
 }, async (req, res) => {
-  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges } = req.body;
+  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges, isFeatured } = req.body;
   try {
     if (!req.file) return res.status(400).json({ message: 'No image uploaded' });
 
@@ -1501,7 +1501,8 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
       purity,
       price: price ? Number(price) : undefined,
       makingCharges: parseFloat(makingCharges) || 0,
-      otherCharges: parseFloat(otherCharges) || 0
+      otherCharges: parseFloat(otherCharges) || 0,
+      isFeatured: isFeatured === 'true' || isFeatured === true
     });
 
     await newItem.save();
@@ -1514,7 +1515,7 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
 
 // Edit Image/Details (Admin only)
 router.put('/gallery/:id', auth, isAdmin, async (req, res) => {
-  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges } = req.body;
+  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges, isFeatured } = req.body;
   try {
     const item = await Gallery.findById(req.params.id);
     if (!item) return res.status(404).json({ message: 'Item not found' });
@@ -1529,6 +1530,7 @@ router.put('/gallery/:id', auth, isAdmin, async (req, res) => {
     if (price !== undefined) item.price = price ? Number(price) : undefined;
     if (makingCharges !== undefined) item.makingCharges = parseFloat(makingCharges) || 0;
     if (otherCharges !== undefined) item.otherCharges = parseFloat(otherCharges) || 0;
+    if (isFeatured !== undefined) item.isFeatured = isFeatured === 'true' || isFeatured === true;
 
     await item.save();
     res.json(item);
