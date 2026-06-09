@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 const Gallery = () => {
@@ -15,11 +15,13 @@ const Gallery = () => {
   const [loading, setLoading] = useState(true);
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 });
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const closeLightbox = () => {
     setSelectedItem(null);
     setIsZoomed(false);
     setZoomOrigin({ x: 50, y: 50 });
+    setCurrentImageIndex(0);
   };
 
   const handleMouseMove = (e) => {
@@ -157,7 +159,7 @@ const Gallery = () => {
                   exit={{ opacity: 0, scale: 0.9 }}
                   whileHover={{ scale: 1.02 }}
                   className="group relative cursor-zoom-in overflow-hidden rounded-lg break-inside-avoid shadow-xl border border-ochre/10"
-                  onClick={() => setSelectedItem(item)}
+                  onClick={() => { setSelectedItem(item); setCurrentImageIndex(0); }}
                 >
                   <img
                     src={item.imageUrl}
@@ -204,28 +206,76 @@ const Gallery = () => {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Left Side: Image container */}
-              <div className="flex-1 flex flex-col items-center justify-center w-full max-h-[55vh] md:max-h-[75vh]">
-                <div 
-                  className="overflow-hidden rounded-md ring-1 ring-cream/10 bg-cream-alt relative w-full flex items-center justify-center"
-                  onMouseMove={handleMouseMove}
-                  onTouchMove={handleTouchMove}
-                  onClick={handleImageClick}
-                >
-                  <img
-                    src={selectedItem.imageUrl}
-                    alt="Preview"
-                    className={`max-w-full max-h-[50vh] md:max-h-[65vh] object-contain shadow-2xl transition-transform duration-200 ease-out ${isZoomed ? 'cursor-zoom-out font-bold' : 'cursor-zoom-in'}`}
-                    style={{
-                      transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
-                      transform: isZoomed ? 'scale(2.5)' : 'scale(1)'
-                    }}
-                    onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
-                  />
-                </div>
-                <p className="text-cream/50 text-xs mt-3 select-none">
-                  {isZoomed ? "Move mouse or drag touch to pan. Click to zoom out." : "Click or tap image to zoom."}
-                </p>
-              </div>
+              {(() => {
+                const allImages = [selectedItem.imageUrl, ...(selectedItem.additionalImages || [])];
+                return (
+                  <div className="flex-1 flex flex-col items-center justify-center w-full max-h-[55vh] md:max-h-[75vh]">
+                    <div 
+                      className="overflow-hidden rounded-md ring-1 ring-cream/10 bg-cream-alt relative w-full flex items-center justify-center min-h-[40vh]"
+                      onMouseMove={handleMouseMove}
+                      onTouchMove={handleTouchMove}
+                      onClick={handleImageClick}
+                    >
+                      <img
+                        src={allImages[currentImageIndex]}
+                        alt="Preview"
+                        className={`max-w-full max-h-[50vh] md:max-h-[65vh] object-contain shadow-2xl transition-transform duration-200 ease-out ${isZoomed ? 'cursor-zoom-out font-bold' : 'cursor-zoom-in'}`}
+                        style={{
+                          transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
+                          transform: isZoomed ? 'scale(2.5)' : 'scale(1)'
+                        }}
+                        onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
+                      />
+
+                      {/* Carousel Left/Right arrows */}
+                      {allImages.length > 1 && !isZoomed && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentImageIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
+                            }}
+                            className="absolute left-4 p-2 rounded-full bg-coffee/80 text-cream border border-ochre/25 hover:bg-ochre hover:text-coffee transition-all"
+                          >
+                            <ChevronLeft size={20} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
+                            }}
+                            className="absolute right-4 p-2 rounded-full bg-coffee/80 text-cream border border-ochre/25 hover:bg-ochre hover:text-coffee transition-all"
+                          >
+                            <ChevronRight size={20} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Dots / Thumbnails */}
+                    {allImages.length > 1 && (
+                      <div className="flex gap-2 mt-4 select-none">
+                        {allImages.map((img, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setCurrentImageIndex(idx)}
+                            className={`w-12 h-12 rounded border overflow-hidden transition-all ${currentImageIndex === idx ? 'border-ochre ring-1 ring-ochre font-bold' : 'border-cream/20 opacity-60 hover:opacity-100'}`}
+                          >
+                            <img src={img} alt="thumb" className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    <p className="text-cream/50 text-xs mt-3 select-none">
+                      {isZoomed ? "Move mouse or drag touch to pan. Click to zoom out." : "Click or tap image to zoom."}
+                    </p>
+                  </div>
+                );
+              })()}
 
               {/* Right Side: Details container */}
               <motion.div 

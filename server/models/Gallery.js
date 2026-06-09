@@ -13,6 +13,7 @@ const GallerySchema = new mongoose.Schema({
   otherCharges: { type: Number, default: 0 },
   price: { type: Number }, // Fallback fixed price if not calculated
   isFeatured: { type: Boolean, default: false }, // Highlight on home page
+  additionalImages: [{ type: String }], // Supplementary images
   createdAt: { type: Date, default: Date.now }
 });
 

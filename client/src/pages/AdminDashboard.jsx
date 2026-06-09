@@ -42,6 +42,7 @@ const AdminDashboard = () => {
   const [makingCharges, setMakingCharges] = useState('');
   const [otherCharges, setOtherCharges] = useState('');
   const [isFeatured, setIsFeatured] = useState(false);
+  const [additionalImagesFiles, setAdditionalImagesFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '' });
@@ -206,12 +207,20 @@ const AdminDashboard = () => {
     formData.append('makingCharges', makingCharges);
     formData.append('otherCharges', otherCharges);
     formData.append('isFeatured', isFeatured);
+    
+    // Append additional images
+    if (additionalImagesFiles.length > 0) {
+      for (let i = 0; i < additionalImagesFiles.length; i++) {
+        formData.append('additionalImages', additionalImagesFiles[i]);
+      }
+    }
 
     try {
       await api.post('/gallery', formData, {
         headers: { ...config.headers, 'Content-Type': 'multipart/form-data' }
       });
       setNewImage(null);
+      setAdditionalImagesFiles([]);
       setWeight('');
       setPurity('22K');
       setMakingCharges('');
@@ -733,6 +742,39 @@ const AdminDashboard = () => {
                         onChange={(e) => setNewImage(e.target.files[0])}
                       />
                     </div>
+
+                    {/* Additional Images Upload */}
+                    <div className="space-y-2">
+                      <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Additional Images (Optional, max 4)</label>
+                      <div 
+                        className="border-2 border-dashed border-ochre/20 bg-cream rounded-lg p-4 text-center hover:border-ochre/40 transition-colors cursor-pointer"
+                        onClick={() => document.getElementById('additionalImagesInput').click()}
+                      >
+                        {additionalImagesFiles.length > 0 ? (
+                          <div className="space-y-1">
+                            <p className="text-ochre text-xs font-semibold">{additionalImagesFiles.length} file(s) selected</p>
+                            <p className="text-coffee/40 text-[10px] truncate">{Array.from(additionalImagesFiles).map(f => f.name).join(', ')}</p>
+                          </div>
+                        ) : (
+                          <div className="text-coffee/50 transition-colors duration-300">
+                            <ImageIcon className="mx-auto mb-1 opacity-50 text-ochre/70" size={24} />
+                            <p className="text-xs">Click to select extra images (max 4)</p>
+                          </div>
+                        )}
+                        <input
+                          id="additionalImagesInput"
+                          type="file"
+                          multiple
+                          hidden
+                          accept="image/jpeg, image/png"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files).slice(0, 4);
+                            setAdditionalImagesFiles(files);
+                          }}
+                        />
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Select Category</label>
@@ -1622,6 +1664,31 @@ const AdminDashboard = () => {
                   <input type="number" value={editingItem.otherCharges ?? ''} onChange={(e) => setEditingItem({ ...editingItem, otherCharges: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre" />
                 </div>
               </div>
+
+              {/* Existing Additional Images Display & Edit */}
+              {editingItem.additionalImages && editingItem.additionalImages.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest font-bold">Existing Additional Images (Hover to Delete)</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {editingItem.additionalImages.map((imgUrl, index) => (
+                      <div key={index} className="relative group rounded border border-ochre/15 overflow-hidden aspect-square">
+                        <img src={imgUrl} alt="Additional" className="w-full h-full object-cover" />
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            const updated = editingItem.additionalImages.filter((_, i) => i !== index);
+                            setEditingItem({ ...editingItem, additionalImages: updated });
+                          }}
+                          className="absolute inset-0 bg-red-600/80 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity text-xs font-bold"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center gap-3 pt-4">
                 <input 
                   type="checkbox" 

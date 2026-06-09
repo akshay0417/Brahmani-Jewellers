@@ -1450,7 +1450,10 @@ router.get('/gallery', async (req, res) => {
 
 // Upload Image (Admin only)
 router.post('/gallery', auth, isAdmin, (req, res, next) => {
-  upload.single('image')(req, res, function (err) {
+  upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'additionalImages', maxCount: 4 }
+  ])(req, res, function (err) {
     if (err instanceof multer.MulterError) {
       return res.status(400).json({ message: err.message });
     } else if (err) {
@@ -1461,7 +1464,8 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
 }, async (req, res) => {
   const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges, isFeatured } = req.body;
   try {
-    if (!req.file) return res.status(400).json({ message: 'No image uploaded' });
+    const primaryFile = req.files && req.files['image'] ? req.files['image'][0] : null;
+    if (!primaryFile) return res.status(400).json({ message: 'No primary image uploaded' });
 
     let imageUrl = '';
     const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && 
@@ -1470,7 +1474,7 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
     if (isCloudinaryConfigured) {
       // Upload to Cloudinary using stream
       const { Readable } = require('stream');
-      const uploadPromise = () => new Promise((resolve, reject) => {
+      const uploadPromise = (file) => new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
             folder: 'brahmani_jewellers',
@@ -1481,13 +1485,42 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
             resolve(result.secure_url);
           }
         );
-        Readable.from(req.file.buffer).pipe(uploadStream);
+        Readable.from(file.buffer).pipe(uploadStream);
       });
-      imageUrl = await uploadPromise();
+      imageUrl = await uploadPromise(primaryFile);
     } else {
       // Fallback to base64
-      const b64 = Buffer.from(req.file.buffer).toString('base64');
-      imageUrl = `data:${req.file.mimetype};base64,${b64}`;
+      const b64 = Buffer.from(primaryFile.buffer).toString('base64');
+      imageUrl = `data:${primaryFile.mimetype};base64,${b64}`;
+    }
+
+    // Process additional images
+    const additionalFiles = req.files && req.files['additionalImages'] ? req.files['additionalImages'] : [];
+    const additionalImages = [];
+
+    for (const file of additionalFiles) {
+      let addUrl = '';
+      if (isCloudinaryConfigured) {
+        const { Readable } = require('stream');
+        const uploadPromise = (f) => new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'brahmani_jewellers',
+              resource_type: 'image'
+            },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result.secure_url);
+            }
+          );
+          Readable.from(f.buffer).pipe(uploadStream);
+        });
+        addUrl = await uploadPromise(file);
+      } else {
+        const b64 = Buffer.from(file.buffer).toString('base64');
+        addUrl = `data:${file.mimetype};base64,${b64}`;
+      }
+      additionalImages.push(addUrl);
     }
 
     const newItem = new Gallery({
@@ -1502,7 +1535,8 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
       price: price ? Number(price) : undefined,
       makingCharges: parseFloat(makingCharges) || 0,
       otherCharges: parseFloat(otherCharges) || 0,
-      isFeatured: isFeatured === 'true' || isFeatured === true
+      isFeatured: isFeatured === 'true' || isFeatured === true,
+      additionalImages
     });
 
     await newItem.save();
@@ -1515,7 +1549,7 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
 
 // Edit Image/Details (Admin only)
 router.put('/gallery/:id', auth, isAdmin, async (req, res) => {
-  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges, isFeatured } = req.body;
+  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges, isFeatured, additionalImages } = req.body;
   try {
     const item = await Gallery.findById(req.params.id);
     if (!item) return res.status(404).json({ message: 'Item not found' });
@@ -1531,6 +1565,7 @@ router.put('/gallery/:id', auth, isAdmin, async (req, res) => {
     if (makingCharges !== undefined) item.makingCharges = parseFloat(makingCharges) || 0;
     if (otherCharges !== undefined) item.otherCharges = parseFloat(otherCharges) || 0;
     if (isFeatured !== undefined) item.isFeatured = isFeatured === 'true' || isFeatured === true;
+    if (additionalImages !== undefined) item.additionalImages = additionalImages;
 
     await item.save();
     res.json(item);

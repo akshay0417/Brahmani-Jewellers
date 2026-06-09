@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBag, Heart, ShieldCheck, Truck, MessageCircle } from 'lucide-react';
+import { X, ShoppingBag, Heart, ShieldCheck, Truck, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 const Shop = () => {
@@ -12,6 +12,7 @@ const Shop = () => {
   const [subFilter, setSubFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Local Wishlist State (persisted in localStorage)
   const [wishlist, setWishlist] = useState(() => {
@@ -128,7 +129,7 @@ const Shop = () => {
         exit={{ opacity: 0, scale: 0.9 }}
         whileHover={{ y: -8 }}
         className="royal-card rounded-xl overflow-hidden group cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-300 border border-ochre/10"
-        onClick={() => setSelectedProduct(item)}
+        onClick={() => { setSelectedProduct(item); setCurrentImageIndex(0); }}
       >
         <div className="aspect-[3/4] overflow-hidden relative bg-cream-alt">
           <img 
@@ -250,7 +251,62 @@ const Shop = () => {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-coffee/95 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setSelectedProduct(null)}>
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="bg-cream max-w-5xl w-full max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl relative flex flex-col md:flex-row scrollbar-hide" onClick={e => e.stopPropagation()}>
               <button onClick={() => setSelectedProduct(null)} className="absolute top-6 right-6 z-10 p-2 bg-coffee/10 hover:bg-ochre hover:text-cream rounded-full transition-all"><X size={24} /></button>
-              <div className="w-full md:w-1/2 bg-cream-alt"><img src={selectedProduct.imageUrl} alt="Product" className="w-full h-full object-contain" /></div>
+              {(() => {
+                const allImages = [selectedProduct.imageUrl, ...(selectedProduct.additionalImages || [])];
+                return (
+                  <div className="w-full md:w-1/2 bg-cream-alt flex flex-col items-center justify-center p-4 min-h-[40vh] relative">
+                    <div className="w-full h-full flex items-center justify-center relative">
+                      <img 
+                        src={allImages[currentImageIndex]} 
+                        alt="Product" 
+                        className="max-w-full max-h-[50vh] object-contain" 
+                      />
+
+                      {/* Left/Right Carousel Controls */}
+                      {allImages.length > 1 && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentImageIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
+                            }}
+                            className="absolute left-2 p-1.5 rounded-full bg-coffee/80 text-cream border border-ochre/20 hover:bg-ochre hover:text-coffee transition-all"
+                          >
+                            <ChevronLeft size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
+                            }}
+                            className="absolute right-2 p-1.5 rounded-full bg-coffee/80 text-cream border border-ochre/20 hover:bg-ochre hover:text-coffee transition-all"
+                          >
+                            <ChevronRight size={16} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Thumbnails below the image */}
+                    {allImages.length > 1 && (
+                      <div className="flex gap-2 mt-4 select-none flex-wrap justify-center">
+                        {allImages.map((img, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setCurrentImageIndex(idx)}
+                            className={`w-10 h-10 rounded border overflow-hidden transition-all ${currentImageIndex === idx ? 'border-ochre ring-1 ring-ochre font-bold' : 'border-coffee/10 opacity-60 hover:opacity-100'}`}
+                          >
+                            <img src={img} alt="thumb" className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
               <div className="w-full md:w-1/2 p-10 flex flex-col justify-center">
                 <span className="text-ochre tracking-[0.3em] uppercase text-xs font-bold mb-2 block">{selectedProduct.category} Collection</span>
                 <h2 className="text-4xl font-serif font-bold text-coffee mb-4">{selectedProduct.name || 'Royal Heritage Ornament'}</h2>
