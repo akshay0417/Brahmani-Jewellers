@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFF6E6', // cream
+    backgroundColor: '#FFFFFF', // clean white
   },
   topBar: { 
     paddingHorizontal: 20, 
@@ -157,27 +157,39 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     marginBottom: 40,
     alignItems: 'center',
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontStyle: 'italic',
+    textTransform: 'uppercase',
     color: '#3D2B1F', // coffee
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#EBA938', // ochre
+    fontSize: 12,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    color: 'rgba(61, 43, 31, 0.7)', // coffee/70
   },
   form: {
-    backgroundColor: '#FCF0DA', // cream-alt
+    backgroundColor: '#FFFFFF', // White form background
     padding: 24,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(235, 169, 56, 0.2)',
+    borderColor: '#E5E5EA', // Light border
+    shadowColor: '#3D2B1F',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
   inputContainer: {
     marginBottom: 20,
@@ -191,9 +203,9 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   input: {
-    backgroundColor: '#FFF6E6',
+    backgroundColor: '#FAF9F6',
     borderWidth: 1,
-    borderColor: 'rgba(61, 43, 31, 0.2)',
+    borderColor: 'rgba(61, 43, 31, 0.15)',
     borderRadius: 8,
     padding: 16,
     fontSize: 16,
@@ -202,9 +214,9 @@ const styles = StyleSheet.create({
   passwordInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF6E6',
+    backgroundColor: '#FAF9F6',
     borderWidth: 1,
-    borderColor: 'rgba(61, 43, 31, 0.2)',
+    borderColor: 'rgba(61, 43, 31, 0.15)',
     borderRadius: 8,
   },
   passwordInput: {
@@ -220,7 +232,7 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 10,
-    backgroundColor: '#3D2B1F', // coffee
+    backgroundColor: '#EBA938', // ochre
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -229,7 +241,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   buttonText: {
-    color: '#FFF6E6', // cream
+    color: '#FFFFFF', // white
     fontWeight: 'bold',
     fontSize: 16,
     letterSpacing: 1,

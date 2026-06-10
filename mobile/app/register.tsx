@@ -369,23 +369,48 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFF6E6' },
+  safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
   topBar: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
   backArrow: { padding: 4, width: 40 },
-  container: { flexGrow: 1, padding: 24, justifyContent: 'center', paddingVertical: 20 },
+  container: { flexGrow: 1, padding: 24, justifyContent: 'center', paddingVertical: 20, backgroundColor: '#FFFFFF' },
   header: { marginBottom: 30, alignItems: 'center' },
-  title: { fontSize: 32, fontWeight: 'bold', color: '#3D2B1F', marginBottom: 8 },
-  subtitle: { fontSize: 16, color: '#EBA938' },
-  form: { backgroundColor: '#FCF0DA', padding: 24, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(235, 169, 56, 0.2)' },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontStyle: 'italic',
+    textTransform: 'uppercase',
+    color: '#3D2B1F', // coffee
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    color: 'rgba(61, 43, 31, 0.7)', // coffee/70
+  },
+  form: {
+    backgroundColor: '#FFFFFF', // White form background
+    padding: 24,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E5EA', // Light border
+    shadowColor: '#3D2B1F',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+  },
   inputContainer: { marginBottom: 16 },
   label: { fontSize: 14, fontWeight: '600', color: '#3D2B1F', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
-  input: { backgroundColor: '#FFF6E6', borderWidth: 1, borderColor: 'rgba(61, 43, 31, 0.2)', borderRadius: 8, padding: 14, color: '#3D2B1F', justifyContent: 'center' },
+  input: { backgroundColor: '#FAF9F6', borderWidth: 1, borderColor: 'rgba(61, 43, 31, 0.15)', borderRadius: 8, padding: 14, color: '#3D2B1F', justifyContent: 'center' },
   passwordInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF6E6',
+    backgroundColor: '#FAF9F6',
     borderWidth: 1,
-    borderColor: 'rgba(61, 43, 31, 0.2)',
+    borderColor: 'rgba(61, 43, 31, 0.15)',
     borderRadius: 8,
   },
   passwordInput: {
@@ -399,9 +424,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  button: { marginTop: 10, backgroundColor: '#3D2B1F', paddingVertical: 16, borderRadius: 8, alignItems: 'center' },
+  button: { marginTop: 10, backgroundColor: '#EBA938', paddingVertical: 16, borderRadius: 8, alignItems: 'center' },
   buttonDisabled: { opacity: 0.7 },
-  buttonText: { color: '#FFF6E6', fontWeight: 'bold', fontSize: 16, letterSpacing: 1 },
+  buttonText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16, letterSpacing: 1 },
   backButton: { marginTop: 16, alignItems: 'center', padding: 12 },
   backButtonText: { color: '#3D2B1F', fontWeight: '500', fontSize: 16 },
   
