@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Animated, Text, View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Tabs } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function TabBarButton({ iconName, isFocused, onPress }) {
   const animatedValue = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
@@ -83,10 +84,17 @@ function TabBarButton({ iconName, isFocused, onPress }) {
 }
 
 function CustomTabBar({ state, descriptors, navigation }) {
+  const insets = useSafeAreaInsets();
   const allowedRoutes = ['index', 'collections', 'invest', 'coins', 'profile'];
 
   return (
-    <View style={styles.tabBarContainer}>
+    <View style={[
+      styles.tabBarContainer,
+      {
+        height: 60 + Math.max(insets.bottom, 12),
+        paddingBottom: Math.max(insets.bottom, 12),
+      }
+    ]}>
       {state.routes.map((route, index) => {
         // Explicitly only show the allowed 5 tabs
         if (!allowedRoutes.includes(route.name)) return null;
