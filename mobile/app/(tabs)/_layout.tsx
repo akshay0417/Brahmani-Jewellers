@@ -42,16 +42,6 @@ function TabBarButton({ iconName, isFocused, onPress }) {
 
   return (
     <View style={styles.tabItemContainer}>
-      {/* Smoothly animated white notch background */}
-      <Animated.View
-        style={[
-          styles.notchCutout,
-          {
-            transform: [{ translateY: notchTranslateY }, { scale: notchScale }],
-            opacity: animatedValue,
-          },
-        ]}
-      />
       {/* Animated button container */}
       <Animated.View
         style={[
