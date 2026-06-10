@@ -478,6 +478,23 @@ router.post('/auth/register', async (req, res) => {
       }
     }
 
+    // Send email alert to offline admin
+    const adminEmailHtml = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; padding: 20px; border: 1px solid #EBA938; border-radius: 8px;">
+        <h2 style="color: #3D2B1F;">New User Registered! 🔔</h2>
+        <p>A new user has registered on Brahmani Jewellers.</p>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email || 'N/A'}</p>
+        <p><strong>Mobile:</strong> ${mobile || 'N/A'}</p>
+        <p><strong>State:</strong> ${state || 'N/A'}, <strong>City:</strong> ${city || 'N/A'}</p>
+        <br/>
+        <p>Please log in to the admin panel to review and approve their account access.</p>
+      </div>
+    `;
+    sendEmail('info.brahmanijewellers@gmail.com', 'New User Registered - Action Required 🔔', adminEmailHtml).catch((err) => {
+      console.error('Error sending registration alert to admin:', err.message);
+    });
+
     res.status(201).json({ message: `User registered successfully. A verification email has been sent.`, identifier: mobile || email });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -764,6 +781,29 @@ router.put('/auth/change-password', auth, async (req, res) => {
     await user.save();
 
     res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Submit User KYC (PAN & Aadhaar only)
+router.put('/auth/kyc', auth, async (req, res) => {
+  const { kycName, panCard, aadhaarCard } = req.body;
+  try {
+    if (!kycName || !panCard || !aadhaarCard) {
+      return res.status(400).json({ message: 'Name on document, PAN Card, and Aadhaar Card are required.' });
+    }
+
+    const user = await User.findById(req.user);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.kycName = kycName;
+    user.panCard = panCard.toUpperCase();
+    user.aadhaarCard = aadhaarCard;
+    user.kycStatus = 'pending';
+
+    await user.save();
+    res.json({ message: 'KYC submitted successfully and is pending verification', user: { id: user._id, kycStatus: user.kycStatus } });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -2121,6 +2161,31 @@ router.put('/admin/orders/:id', auth, isAdmin, async (req, res) => {
   }
 });
 
+// Update User KYC Status (Admin only)
+router.put('/admin/users/:id/kyc-status', auth, isAdmin, async (req, res) => {
+  const { kycStatus, kycRejectionReason } = req.body;
+  try {
+    if (!['approved', 'rejected'].includes(kycStatus)) {
+      return res.status(400).json({ message: 'Invalid KYC status' });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.kycStatus = kycStatus;
+    if (kycStatus === 'rejected' && kycRejectionReason) {
+      user.kycRejectionReason = kycRejectionReason;
+    } else {
+      user.kycRejectionReason = undefined;
+    }
+
+    await user.save();
+    res.json({ message: `User KYC status updated to ${kycStatus}`, user: { id: user._id, kycStatus: user.kycStatus } });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // --- INVESTMENT ROUTES ---
 
 // Get User vault balance and transactions
@@ -2131,7 +2196,14 @@ router.get('/investments/balance', auth, async (req, res) => {
       inv = new Investment({ user: req.user, goldGrams: 0, silverGrams: 0, transactions: [] });
       await inv.save();
     }
-    res.json(inv);
+    const user = await User.findById(req.user).select('kycStatus kycRejectionReason');
+    res.json({
+      goldGrams: inv.goldGrams,
+      silverGrams: inv.silverGrams,
+      transactions: inv.transactions,
+      kycStatus: user ? user.kycStatus : 'not_submitted',
+      kycRejectionReason: user ? user.kycRejectionReason : ''
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -2141,6 +2213,11 @@ router.get('/investments/balance', auth, async (req, res) => {
 router.post('/investments/buy', auth, async (req, res) => {
   const { metal, amount, ratePerGram, paymentMethod, paymentReference } = req.body;
   try {
+    const userObj = await User.findById(req.user);
+    if (!userObj || userObj.kycStatus !== 'approved') {
+      return res.status(403).json({ message: 'KYC approval is required to buy digital gold or silver.' });
+    }
+
     if (!metal || !amount || amount <= 0 || !ratePerGram || ratePerGram <= 0) {
       return res.status(400).json({ message: 'Invalid metal, amount, or rate' });
     }
@@ -2245,6 +2322,11 @@ router.post('/investments/buy', auth, async (req, res) => {
 router.post('/investments/redeem', auth, async (req, res) => {
   const { metal, grams, ratePerGram, deliveryMode, shippingAddress } = req.body;
   try {
+    const userObj = await User.findById(req.user);
+    if (!userObj || userObj.kycStatus !== 'approved') {
+      return res.status(403).json({ message: 'KYC approval is required to redeem digital gold or silver.' });
+    }
+
     if (!metal || !grams || grams <= 0 || !ratePerGram || ratePerGram <= 0) {
       return res.status(400).json({ message: 'Invalid redemption parameters' });
     }

@@ -18,7 +18,12 @@ const UserSchema = new mongoose.Schema({
   verificationToken: { type: String },
   verificationTokenExpiry: { type: Date },
   lastLogin: { type: Date },
-  termsAccepted: { type: Boolean, default: false }
+  termsAccepted: { type: Boolean, default: false },
+  kycStatus: { type: String, enum: ['not_submitted', 'pending', 'approved', 'rejected'], default: 'not_submitted' },
+  kycName: { type: String },
+  panCard: { type: String },
+  aadhaarCard: { type: String },
+  kycRejectionReason: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

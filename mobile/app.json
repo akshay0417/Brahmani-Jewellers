@@ -51,6 +51,12 @@
         "projectId": "8db0aa8f-3776-4261-aafd-f2ce918ed32a"
       }
     },
-    "owner": "akshay0417"
+    "owner": "akshay0417",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/8db0aa8f-3776-4261-aafd-f2ce918ed32a"
+    }
   }
 }

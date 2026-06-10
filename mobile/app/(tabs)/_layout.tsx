@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Animated, Text, View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { Animated, Text, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Tabs } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -227,12 +227,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     height: '100%',
     position: 'relative',
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
   },
   btnContainer: {
     alignItems: 'center',

@@ -2,9 +2,10 @@ import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, Image, Platform, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Animated, Image, Platform, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { AuthProvider } from '../context/AuthContext';
 import { Feather } from '@expo/vector-icons';
+import * as Updates from 'expo-updates';
 
 export default function RootLayout() {
   const [showSplash, setShowSplash] = useState(true);
@@ -37,6 +38,31 @@ export default function RootLayout() {
     setIsOffline(!online);
   };
 
+  const checkUpdates = async () => {
+    if (__DEV__) return; // Skip update check in development
+    try {
+      const update = await Updates.checkForUpdateAsync();
+      if (update.isAvailable) {
+        await Updates.fetchUpdateAsync();
+        Alert.alert(
+          "New Update Available! 🚀",
+          "An updated version of the app has been downloaded. The application will restart now to apply the updates.",
+          [
+            {
+              text: "Restart Now",
+              onPress: async () => {
+                await Updates.reloadAsync();
+              }
+            }
+          ],
+          { cancelable: false }
+        );
+      }
+    } catch (err) {
+      console.log("Error checking for EAS updates:", err);
+    }
+  };
+
   useEffect(() => {
     // Show splash screen for 2.5 seconds, then fade out
     const splashTimeout = setTimeout(() => {
@@ -51,6 +77,9 @@ export default function RootLayout() {
 
     // Initial network check
     verifyNetwork();
+
+    // Check for OTA Updates
+    checkUpdates();
 
     // Periodically verify network connection every 7 seconds
     const interval = setInterval(() => {
