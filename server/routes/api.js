@@ -2256,8 +2256,7 @@ router.post('/investments/buy', auth, async (req, res) => {
 
     await inv.save();
 
-    // Send email to user
-    const userObj = await User.findById(req.user);
+    // Send email to user (using already loaded userObj)
     if (userObj && userObj.email) {
       const emailHtml = `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eeba30; border-radius: 10px; background-color: #ffffff;">
