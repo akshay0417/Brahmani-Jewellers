@@ -41,6 +41,10 @@ export default function ProfileScreen() {
   const [updatingRates, setUpdatingRates] = useState(false);
   const [visitorCount, setVisitorCount] = useState(0);
 
+  // Push Notification States
+  const [notiTitle, setNotiTitle] = useState('');
+  const [notiBody, setNotiBody] = useState('');
+  const [sendingNoti, setSendingNoti] = useState(false);
 
   // Admin Bank inputs
   const [bankNameInput, setBankNameInput] = useState('');
@@ -168,6 +172,30 @@ export default function ProfileScreen() {
       Alert.alert("Error", "Failed to update rates/bank details.");
     } finally {
       setUpdatingRates(false);
+    }
+  };
+
+  const handleSendNotification = async () => {
+    if (!notiTitle.trim() || !notiBody.trim()) {
+      Alert.alert("Error", "Please fill in both title and message body.");
+      return;
+    }
+    setSendingNoti(true);
+    try {
+      await axios.post(`${API_URL}/notifications/send`, {
+        title: notiTitle.trim(),
+        body: notiBody.trim()
+      }, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      Alert.alert("Success 🎉", "Push notification broadcasted successfully to all devices!");
+      setNotiTitle('');
+      setNotiBody('');
+    } catch (error: any) {
+      console.error('Error sending push notification:', error);
+      Alert.alert("Error", error.response?.data?.message || "Failed to send notification.");
+    } finally {
+      setSendingNoti(false);
     }
   };
 
@@ -393,6 +421,44 @@ export default function ProfileScreen() {
                   {/* Divider */}
                   <View style={styles.adminDivider} />
 
+                  {/* SEND PUSH NOTIFICATION */}
+                  <Text style={styles.adminSectionTitle}>Send Push Notification Broadcast</Text>
+                  
+                  <View style={{ marginBottom: 12 }}>
+                    <Text style={styles.adminInputLabel}>Notification Title</Text>
+                    <TextInput 
+                      style={styles.adminTextInput}
+                      value={notiTitle}
+                      onChangeText={setNotiTitle}
+                      placeholder="Enter title (e.g. Special Offer! 🌟)"
+                      placeholderTextColor="rgba(61,43,31,0.3)"
+                    />
+                  </View>
+
+                  <View style={{ marginBottom: 12 }}>
+                    <Text style={styles.adminInputLabel}>Notification Message / Body</Text>
+                    <TextInput 
+                      style={[styles.adminTextInput, { height: 80, textAlignVertical: 'top' }]}
+                      value={notiBody}
+                      onChangeText={setNotiBody}
+                      multiline={true}
+                      numberOfLines={3}
+                      placeholder="Enter notification message details..."
+                      placeholderTextColor="rgba(61,43,31,0.3)"
+                    />
+                  </View>
+
+                  <TouchableOpacity 
+                    style={[styles.adminBtn, { backgroundColor: '#EBA938' }, sendingNoti && { opacity: 0.7 }]}
+                    onPress={handleSendNotification}
+                    disabled={sendingNoti}
+                  >
+                    <Text style={styles.adminBtnText}>{sendingNoti ? 'SENDING...' : 'BROADCAST NOTIFICATION'}</Text>
+                  </TouchableOpacity>
+
+                  {/* Divider */}
+                  <View style={styles.adminDivider} />
+
                   {/* 2. CUSTOMER ORDERS */}
                   <Text style={styles.adminSectionTitle}>Customer Orders ({adminOrders.length})</Text>
                   
@@ -611,13 +677,21 @@ export default function ProfileScreen() {
             <Text style={styles.modalTitle}>Terms & Conditions</Text>
             <ScrollView style={{ maxHeight: 300, marginVertical: 10 }}>
               <Text style={styles.legalBodyText}>
-                1. All jewellery products purchased are subject to actual store policies.
+                <Text style={{ fontWeight: 'bold' }}>1. Physical Jewellery</Text>
+                {"\n"}
+                All physical jewellery products purchased are subject to actual store policies and +/- 5% weight variance upon final billing.
                 {"\n\n"}
-                2. Live market rates listed are indicators. Final invoice rates are locked during order confirmation.
+                <Text style={{ fontWeight: 'bold' }}>2. Digital Gold Investment</Text>
+                {"\n"}
+                Digital gold purchased will be held securely in your gold vault. Prices include live market gold rates plus 3% GST. Confirmed digital transactions are final and cannot be cancelled or refunded online.
                 {"\n\n"}
-                3. Delivery charges are calculated based on distance from store location.
+                <Text style={{ fontWeight: 'bold' }}>3. Identity Verification (KYC)</Text>
+                {"\n"}
+                Submission of a valid PAN and Aadhaar number is mandatory for compliance with government jewelry and anti-money laundering (AML) regulations before making vault purchases or requesting coin redemptions.
                 {"\n\n"}
-                4. Order verification via OTP/Signature is required upon delivery for safety.
+                <Text style={{ fontWeight: 'bold' }}>4. Physical Redemption & Delivery</Text>
+                {"\n"}
+                Redeeming vault balance as physical coins is subject to KYC approval. Delivery charges are calculated based on store distance, and identity verification is required at delivery.
               </Text>
             </ScrollView>
             <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowTerms(false)}>
@@ -634,11 +708,17 @@ export default function ProfileScreen() {
             <Text style={styles.modalTitle}>Privacy Policy</Text>
             <ScrollView style={{ maxHeight: 300, marginVertical: 10 }}>
               <Text style={styles.legalBodyText}>
-                1. We collect minimal personal data (Name, Email, Mobile) required to process orders and customize app experience.
+                <Text style={{ fontWeight: 'bold' }}>1. Personal Information</Text>
+                {"\n"}
+                We collect minimal details (Name, Email, Mobile) required to process orders, verify accounts, and customize your app experience.
                 {"\n\n"}
-                2. User credentials and verification data are stored securely and never shared with third-party networks.
+                <Text style={{ fontWeight: 'bold' }}>2. Document & KYC Security</Text>
+                {"\n"}
+                Your document details (PAN Card and Aadhaar numbers) provided for KYC verification are encrypted, stored securely, and used solely for regulatory compliance. They will never be shared with third parties except as required by law.
                 {"\n\n"}
-                3. Live rates and search tracking cookies are purely used for optimization.
+                <Text style={{ fontWeight: 'bold' }}>3. Secure Payments</Text>
+                {"\n"}
+                We do not store credit card or net banking details on our servers. All transactions are processed through highly secure payment systems.
               </Text>
             </ScrollView>
             <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowPrivacy(false)}>
@@ -653,77 +733,77 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFF6E6' },
-  header: { padding: 20, backgroundColor: '#3D2B1F', alignItems: 'center', paddingTop: 40 },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#EBA938', letterSpacing: 1, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
-  container: { padding: 20, paddingBottom: 50 },
-  guestContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30, backgroundColor: '#FFF6E6' },
-  guestTitle: { fontSize: 22, fontWeight: 'bold', color: '#3D2B1F', marginVertical: 12, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
-  guestDesc: { fontSize: 14, color: 'rgba(61, 43, 31, 0.6)', textAlign: 'center', lineHeight: 20, marginBottom: 30 },
-  loginBtn: { backgroundColor: '#3D2B1F', paddingVertical: 16, width: '100%', borderRadius: 8, alignItems: 'center' },
-  loginBtnText: { color: '#FFF6E6', fontWeight: 'bold', fontSize: 16, letterSpacing: 1 },
+  safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
+  header: { padding: 16, backgroundColor: '#FAF9F6', alignItems: 'center', paddingTop: 24, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
+  title: { fontSize: 22, fontWeight: 'bold', color: '#1C1C1E', letterSpacing: 0.5, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  container: { padding: 20, paddingBottom: 100 },
+  guestContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30, backgroundColor: '#FFFFFF' },
+  guestTitle: { fontSize: 22, fontWeight: 'bold', color: '#1C1C1E', marginVertical: 12, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  guestDesc: { fontSize: 14, color: '#8E8E93', textAlign: 'center', lineHeight: 20, marginBottom: 30 },
+  loginBtn: { backgroundColor: '#1C1C1E', paddingVertical: 16, width: '100%', borderRadius: 8, alignItems: 'center' },
+  loginBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16, letterSpacing: 1 },
   
-  userCard: { flexDirection: 'row', backgroundColor: '#FCF0DA', borderRadius: 16, padding: 18, alignItems: 'center', marginBottom: 24, borderWidth: 1, borderColor: 'rgba(235, 169, 56, 0.2)' },
-  avatarBg: { backgroundColor: '#EBA938', width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
-  avatarText: { color: '#FFF6E6', fontSize: 24, fontWeight: 'bold' },
+  userCard: { flexDirection: 'row', backgroundColor: '#FAF9F6', borderRadius: 16, padding: 18, alignItems: 'center', marginBottom: 24, borderWidth: 1, borderColor: '#E5E5EA' },
+  avatarBg: { backgroundColor: '#D4AF37', width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
+  avatarText: { color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' },
   userInfo: { marginLeft: 16 },
-  userName: { fontSize: 20, fontWeight: 'bold', color: '#3D2B1F', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
-  userEmail: { fontSize: 14, color: 'rgba(61, 43, 31, 0.6)' },
+  userName: { fontSize: 20, fontWeight: 'bold', color: '#1C1C1E', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  userEmail: { fontSize: 14, color: '#8E8E93' },
   
-  menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(61, 43, 31, 0.08)' },
-  menuRowText: { flex: 1, marginLeft: 16, fontSize: 16, color: '#3D2B1F', fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
-  expandedContent: { backgroundColor: '#FCF0DA', padding: 16, borderRadius: 12, marginTop: 4, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(235, 169, 56, 0.1)' },
+  menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
+  menuRowText: { flex: 1, marginLeft: 16, fontSize: 16, color: '#1C1C1E', fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  expandedContent: { backgroundColor: '#FAF9F6', padding: 16, borderRadius: 12, marginTop: 4, marginBottom: 8, borderWidth: 1, borderColor: '#E5E5EA' },
   
-  infoLabel: { fontSize: 11, fontWeight: 'bold', color: 'rgba(61, 43, 31, 0.5)', textTransform: 'uppercase', marginTop: 8 },
-  infoValue: { fontSize: 15, color: '#3D2B1F', fontWeight: '600', marginBottom: 4, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  infoLabel: { fontSize: 11, fontWeight: 'bold', color: '#8E8E93', textTransform: 'uppercase', marginTop: 8 },
+  infoValue: { fontSize: 15, color: '#1C1C1E', fontWeight: '600', marginBottom: 4, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   
-  noOrdersText: { fontSize: 13, color: 'rgba(61, 43, 31, 0.5)', fontStyle: 'italic', paddingVertical: 10, textAlign: 'center' },
-  orderItem: { borderBottomWidth: 1, borderBottomColor: 'rgba(61, 43, 31, 0.05)', paddingVertical: 10 },
+  noOrdersText: { fontSize: 13, color: '#8E8E93', fontStyle: 'italic', paddingVertical: 10, textAlign: 'center' },
+  orderItem: { borderBottomWidth: 1, borderBottomColor: '#E5E5EA', paddingVertical: 10 },
   orderItemTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  orderId: { fontSize: 13, fontWeight: 'bold', color: '#3D2B1F' },
-  orderDate: { fontSize: 12, color: 'rgba(61, 43, 31, 0.4)' },
+  orderId: { fontSize: 13, fontWeight: 'bold', color: '#1C1C1E' },
+  orderDate: { fontSize: 12, color: '#8E8E93' },
   orderItemBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   orderStatus: { fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase' },
-  orderTotal: { fontSize: 13, fontWeight: 'bold', color: '#3D2B1F' },
+  orderTotal: { fontSize: 13, fontWeight: 'bold', color: '#1C1C1E' },
   
-  aboutTitle: { fontSize: 16, fontWeight: 'bold', color: '#3D2B1F', marginBottom: 8 },
-  aboutText: { fontSize: 14, color: 'rgba(61, 43, 31, 0.8)', lineHeight: 20, marginBottom: 12 },
-  aboutContactTitle: { fontSize: 13, fontWeight: 'bold', color: '#3D2B1F', marginTop: 10, marginBottom: 6 },
-  aboutContactText: { fontSize: 13, color: 'rgba(61, 43, 31, 0.7)', marginBottom: 4 },
+  aboutTitle: { fontSize: 16, fontWeight: 'bold', color: '#1C1C1E', marginBottom: 8 },
+  aboutText: { fontSize: 14, color: '#8E8E93', lineHeight: 20, marginBottom: 12 },
+  aboutContactTitle: { fontSize: 13, fontWeight: 'bold', color: '#1C1C1E', marginTop: 10, marginBottom: 6 },
+  aboutContactText: { fontSize: 13, color: '#8E8E93', marginBottom: 4 },
   
-  divider: { height: 1, backgroundColor: 'rgba(61, 43, 31, 0.1)', marginVertical: 20 },
+  divider: { height: 1, backgroundColor: '#E5E5EA', marginVertical: 20 },
   legalRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 20 },
-  legalLink: { fontSize: 12, color: 'rgba(61, 43, 31, 0.5)', fontWeight: 'bold', textDecorationLine: 'underline' },
-  legalSeparator: { fontSize: 12, color: 'rgba(61, 43, 31, 0.3)' },
+  legalLink: { fontSize: 12, color: '#8E8E93', fontWeight: 'bold', textDecorationLine: 'underline' },
+  legalSeparator: { fontSize: 12, color: '#E5E5EA' },
 
   // Modal styles
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  modalBody: { backgroundColor: '#FFF6E6', width: '90%', borderRadius: 16, padding: 20, elevation: 8 },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#3D2B1F', borderBottomWidth: 1, borderBottomColor: 'rgba(61, 43, 31, 0.1)', paddingBottom: 10, marginBottom: 14, textAlign: 'center' },
-  bankDetailContainer: { backgroundColor: '#FCF0DA', padding: 14, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(235, 169, 56, 0.2)' },
-  bankLabel: { fontSize: 11, color: 'rgba(61, 43, 31, 0.5)', fontWeight: 'bold', textTransform: 'uppercase', marginTop: 6 },
-  bankValue: { fontSize: 14, color: '#3D2B1F', fontWeight: 'bold', marginBottom: 4 },
-  modalCloseBtn: { backgroundColor: '#3D2B1F', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginTop: 16 },
-  modalCloseBtnText: { color: '#FFF6E6', fontWeight: 'bold', fontSize: 14, textTransform: 'uppercase' },
-  notiBox: { flexDirection: 'row', gap: 10, backgroundColor: '#FCF0DA', padding: 12, borderRadius: 8, marginBottom: 8, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(235, 169, 56, 0.1)' },
-  notiText: { fontSize: 13, color: '#3D2B1F', flex: 1, lineHeight: 18 },
-  legalBodyText: { fontSize: 13, color: '#3D2B1F', lineHeight: 20 },
-  adminSectionTitle: { fontSize: 15, fontWeight: 'bold', color: '#3D2B1F', marginTop: 12, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  modalBody: { backgroundColor: '#FFFFFF', width: '90%', borderRadius: 16, padding: 20, elevation: 8 },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#1C1C1E', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', paddingBottom: 10, marginBottom: 14, textAlign: 'center' },
+  bankDetailContainer: { backgroundColor: '#FAF9F6', padding: 14, borderRadius: 10, borderWidth: 1, borderColor: '#E5E5EA' },
+  bankLabel: { fontSize: 11, color: '#8E8E93', fontWeight: 'bold', textTransform: 'uppercase', marginTop: 6 },
+  bankValue: { fontSize: 14, color: '#1C1C1E', fontWeight: 'bold', marginBottom: 4 },
+  modalCloseBtn: { backgroundColor: '#1C1C1E', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginTop: 16 },
+  modalCloseBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 14, textTransform: 'uppercase' },
+  notiBox: { flexDirection: 'row', gap: 10, backgroundColor: '#FAF9F6', padding: 12, borderRadius: 8, marginBottom: 8, alignItems: 'center', borderWidth: 1, borderColor: '#E5E5EA' },
+  notiText: { fontSize: 13, color: '#1C1C1E', flex: 1, lineHeight: 18 },
+  legalBodyText: { fontSize: 13, color: '#1C1C1E', lineHeight: 20 },
+  adminSectionTitle: { fontSize: 15, fontWeight: 'bold', color: '#1C1C1E', marginTop: 12, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
   adminInputRow: { flexDirection: 'row', gap: 12, marginBottom: 8 },
   adminInputCol: { flex: 1 },
-  adminInputLabel: { fontSize: 11, color: 'rgba(61, 43, 31, 0.6)', fontWeight: 'bold', marginBottom: 4 },
-  adminTextInput: { backgroundColor: '#FFF6E6', borderWidth: 1, borderColor: 'rgba(61, 43, 31, 0.2)', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: '#3D2B1F', fontWeight: 'bold' },
-  adminBtn: { backgroundColor: '#EBA938', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginTop: 10 },
-  adminBtnText: { color: '#3D2B1F', fontWeight: 'bold', fontSize: 13, letterSpacing: 1 },
-  adminDivider: { height: 1, backgroundColor: 'rgba(61, 43, 31, 0.1)', marginVertical: 16 },
-  adminOrderItem: { backgroundColor: '#FFF6E6', padding: 12, borderRadius: 10, marginBottom: 8, borderLeftWidth: 4, borderLeftColor: '#EBA938' },
+  adminInputLabel: { fontSize: 11, color: '#8E8E93', fontWeight: 'bold', marginBottom: 4 },
+  adminTextInput: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: '#1C1C1E', fontWeight: 'bold' },
+  adminBtn: { backgroundColor: '#1C1C1E', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginTop: 10 },
+  adminBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 13, letterSpacing: 1 },
+  adminDivider: { height: 1, backgroundColor: '#E5E5EA', marginVertical: 16 },
+  adminOrderItem: { backgroundColor: '#FAF9F6', padding: 12, borderRadius: 10, marginBottom: 8, borderLeftWidth: 4, borderLeftColor: '#D4AF37' },
   adminOrderHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  adminOrderId: { fontSize: 13, fontWeight: 'bold', color: '#3D2B1F' },
-  adminOrderDate: { fontSize: 11, color: 'rgba(61, 43, 31, 0.5)' },
-  adminOrderUser: { fontSize: 13, color: '#3D2B1F', fontWeight: '500' },
-  adminOrderPhone: { fontSize: 12, color: 'rgba(61, 43, 31, 0.7)', marginVertical: 2 },
-  adminOrderFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, borderTopWidth: 1, borderTopColor: 'rgba(61, 43, 31, 0.05)', paddingTop: 8 },
-  adminStatusBadge: { backgroundColor: '#3D2B1F', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
-  adminStatusText: { color: '#FFF6E6', fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase' },
-  adminOrderTotal: { fontSize: 14, fontWeight: 'bold', color: '#3D2B1F' }
+  adminOrderId: { fontSize: 13, fontWeight: 'bold', color: '#1C1C1E' },
+  adminOrderDate: { fontSize: 11, color: '#8E8E93' },
+  adminOrderUser: { fontSize: 13, color: '#1C1C1E', fontWeight: '500' },
+  adminOrderPhone: { fontSize: 12, color: '#8E8E93', marginVertical: 2 },
+  adminOrderFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, borderTopWidth: 1, borderTopColor: '#E5E5EA', paddingTop: 8 },
+  adminStatusBadge: { backgroundColor: '#1C1C1E', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
+  adminStatusText: { color: '#FFFFFF', fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase' },
+  adminOrderTotal: { fontSize: 14, fontWeight: 'bold', color: '#1C1C1E' }
 });

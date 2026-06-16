@@ -88,6 +88,7 @@ const Subscriber = require('../models/Subscriber');
 const Review = require('../models/Review');
 const InstagramPost = require('../models/InstagramPost');
 const Analytics = require('../models/Analytics');
+const NotificationToken = require('../models/NotificationToken');
 const Investment = require('../models/Investment');
 
 // --- ANALYTICS ROUTES ---
@@ -1182,6 +1183,12 @@ router.post('/rates', auth, isAdmin, async (req, res) => {
     rate.lastUpdated = Date.now();
     await rate.save();
     
+    // Trigger automated push notification to all devices (non-blocking)
+    sendPushNotification(
+      'Live Rates Updated! 📈',
+      `Gold 24K: ₹${rate.gold24K.toLocaleString('en-IN')} (10g) | Silver: ₹${rate.silver90.toLocaleString('en-IN')} (1kg)`
+    ).catch(err => console.error('[Rates Notification Error]:', err.message));
+    
     res.json(rate);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -1580,6 +1587,13 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
     });
 
     await newItem.save();
+    
+    // Trigger automated push notification to all devices (non-blocking)
+    sendPushNotification(
+      'New Design Added! ✨',
+      `Explore our brand new ${newItem.name || `${newItem.category} design`} (${newItem.weight}g, ${newItem.purity}). Tap to view!`
+    ).catch(err => console.error('[Gallery Notification Error]:', err.message));
+    
     res.json(newItem);
   } catch (err) {
     console.error('Upload Error:', err);
@@ -2467,6 +2481,94 @@ router.get('/admin/investments', auth, isAdmin, async (req, res) => {
   try {
     const investments = await Investment.find().populate('user', 'name email mobile');
     res.json(investments);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// --- PUSH NOTIFICATION ROUTES ---
+
+// Reusable helper to send push notifications to all registered tokens
+const sendPushNotification = async (title, body, data = {}) => {
+  try {
+    const tokens = await NotificationToken.find();
+    if (tokens.length === 0) {
+      console.log('[Push Notification] No registered tokens found.');
+      return;
+    }
+
+    const expoPushTokens = tokens.map(t => t.token).filter(t => t && t.startsWith('ExponentPushToken'));
+    if (expoPushTokens.length === 0) {
+      console.log('[Push Notification] No valid Expo push tokens found.');
+      return;
+    }
+
+    const messages = expoPushTokens.map(token => ({
+      to: token,
+      sound: 'default',
+      title,
+      body,
+      data
+    }));
+
+    const chunks = [];
+    const chunkSize = 100;
+    for (let i = 0; i < messages.length; i += chunkSize) {
+      chunks.push(messages.slice(i, i + chunkSize));
+    }
+
+    const sendPromises = chunks.map(chunk => {
+      return axios.post('https://exp.host/--/api/v2/push/send', chunk, {
+        headers: {
+          'Accept': 'application/json',
+          'Accept-encoding': 'gzip, deflate',
+          'Content-Type': 'application/json'
+        }
+      });
+    });
+
+    await Promise.all(sendPromises);
+    console.log(`[Push Notification] Successfully sent to ${expoPushTokens.length} devices.`);
+  } catch (err) {
+    console.error('[Push Notification Error]:', err.message);
+  }
+};
+
+// Register Expo Push Token
+router.post('/notifications/register', async (req, res) => {
+  const { token, deviceType, userId } = req.body;
+  if (!token) return res.status(400).json({ message: 'Token is required' });
+
+  try {
+    let tokenDoc = await NotificationToken.findOne({ token });
+    if (tokenDoc) {
+      if (userId) tokenDoc.user = userId;
+      if (deviceType) tokenDoc.deviceType = deviceType;
+      await tokenDoc.save();
+    } else {
+      tokenDoc = new NotificationToken({
+        token,
+        user: userId || null,
+        deviceType: deviceType || 'unknown'
+      });
+      await tokenDoc.save();
+    }
+    res.json({ message: 'Token registered successfully', tokenDoc });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Broadcast Push Notification (Admin only)
+router.post('/notifications/send', auth, isAdmin, async (req, res) => {
+  const { title, body, data } = req.body;
+  if (!title || !body) {
+    return res.status(400).json({ message: 'Title and body are required.' });
+  }
+
+  try {
+    await sendPushNotification(title, body, data || {});
+    res.json({ message: 'Push notification broadcasted successfully!' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

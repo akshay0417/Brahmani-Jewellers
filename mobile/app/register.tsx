@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
   topBar: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
   backArrow: { padding: 4, width: 40 },
-  container: { flexGrow: 1, padding: 24, justifyContent: 'center', paddingVertical: 20, backgroundColor: '#FFFFFF' },
+  container: { flexGrow: 1, padding: 24, justifyContent: 'center', paddingVertical: 20, paddingBottom: 60, backgroundColor: '#FFFFFF' },
   header: { marginBottom: 30, alignItems: 'center' },
   title: {
     fontSize: 28,

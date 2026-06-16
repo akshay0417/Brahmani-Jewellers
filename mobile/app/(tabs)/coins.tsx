@@ -9,9 +9,13 @@ const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
 
 export default function CoinsScreen() {
   const { user } = useAuth();
-  const [coins, setCoins] = useState([]);
-  const [rates, setRates] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [coins, setCoins] = useState([
+    { _id: 'c1', name: '24K Gold Coin (1 Gram)', category: 'gold', weight: '1', purity: '24K', imageUrl: 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80' },
+    { _id: 'c2', name: '24K Gold Coin (5 Gram)', category: 'gold', weight: '5', purity: '24K', imageUrl: 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80' },
+    { _id: 'c3', name: '999 Silver Coin (10 Gram)', category: 'silver', weight: '10', purity: '999', imageUrl: 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80' }
+  ]);
+  const [rates, setRates] = useState<any>({ gold22K: 66000, gold24K: 72000, gold18K: 54000, silver: 85000 });
+  const [loading, setLoading] = useState(false);
   const [metalFilter, setMetalFilter] = useState('all'); // 'all' | 'gold' | 'silver'
 
   useEffect(() => {

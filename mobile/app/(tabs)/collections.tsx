@@ -12,9 +12,13 @@ const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
 export default function CollectionsScreen() {
   const { user } = useAuth() as any;
   const params = useLocalSearchParams();
-  const [items, setItems] = useState<any[]>([]);
-  const [rates, setRates] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<any[]>([
+    { _id: 'i1', name: 'Royal Gold Necklace', category: 'gold', subCategory: 'Necklace', weight: '22.5', purity: '22K', imageUrl: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80', description: 'Exquisite royal design handcrafted gold necklace.' },
+    { _id: 'i2', name: 'Classic Gold Ring', category: 'gold', subCategory: 'Ring', weight: '5.2', purity: '22K', imageUrl: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=800&q=80', description: 'Timeless classic gold ring for daily wear.' },
+    { _id: 'i3', name: 'Premium Silver Payal', category: 'silver', subCategory: 'Payal', weight: '45', purity: '90', imageUrl: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=800&q=80', description: 'Traditional silver anklet with delicate design.' }
+  ]);
+  const [rates, setRates] = useState<any>({ gold22K: 66000, gold24K: 72000, gold18K: 54000, silver: 85000 });
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('shop'); // 'shop' | 'collection'
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -158,14 +162,14 @@ export default function CollectionsScreen() {
             onPress={() => setActiveTab('shop')}
           >
             <Ionicons name="cart" size={18} color={activeTab === 'shop' ? '#FFFFFF' : '#8E8E93'} />
-            <Text style={[styles.tabButtonText, activeTab === 'shop' && styles.activeTabButtonText]}>Showroom</Text>
+            <Text style={[styles.tabButtonText, activeTab === 'shop' && styles.activeTabButtonText]}>Shop</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.tabButton, activeTab === 'collection' && styles.activeTabButton]}
             onPress={() => setActiveTab('collection')}
           >
             <Ionicons name="diamond" size={16} color={activeTab === 'collection' ? '#FFFFFF' : '#8E8E93'} />
-            <Text style={[styles.tabButtonText, activeTab === 'collection' && styles.activeTabButtonText]}>Lookbook</Text>
+            <Text style={[styles.tabButtonText, activeTab === 'collection' && styles.activeTabButtonText]}>Collection</Text>
           </TouchableOpacity>
         </View>
       </View>

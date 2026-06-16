@@ -6,6 +6,17 @@ import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
 import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence } from 'react-native-reanimated';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import Constants from 'expo-constants';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
 
@@ -93,9 +104,9 @@ const CATEGORIES = [
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [rates, setRates] = useState(null);
+  const [rates, setRates] = useState({ gold22K: 66000, gold24K: 72000, gold18K: 54000, silver: 85000, lastUpdated: new Date() });
   const [orders, setOrders] = useState([]);
-  const [loadingRates, setLoadingRates] = useState(true);
+  const [loadingRates, setLoadingRates] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
   
   // Drawer & Modals State
@@ -119,7 +130,36 @@ export default function HomeScreen() {
     }).start();
   }, []);
 
+  const registerForNotifications = async () => {
+    try {
+      if (Platform.OS === 'web') return;
+      if (!Device.isDevice) return;
+
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== 'granted') return;
+
+      const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+      const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+      
+      if (token) {
+        await axios.post(`${API_URL}/notifications/register`, {
+          token,
+          deviceType: Platform.OS,
+          userId: user ? (user.id || user._id) : null
+        });
+      }
+    } catch (e) {
+      console.log('Error registering push token:', e);
+    }
+  };
+
   useEffect(() => {
+    registerForNotifications();
     if (user && user.token) {
       fetchOrders();
     } else {
@@ -533,11 +573,11 @@ export default function HomeScreen() {
 
                 {/* SHORT LEGAL LINKS */}
                 <View style={styles.legalLinksRow}>
-                  <TouchableOpacity onPress={() => setShowTerms(true)}>
+                  <TouchableOpacity onPress={() => { setIsDrawerOpen(false); setShowTerms(true); }}>
                     <Text style={styles.legalLinkText}>Terms & Conditions</Text>
                   </TouchableOpacity>
                   <Text style={styles.legalLinkSeparator}>|</Text>
-                  <TouchableOpacity onPress={() => setShowPrivacy(true)}>
+                  <TouchableOpacity onPress={() => { setIsDrawerOpen(false); setShowPrivacy(true); }}>
                     <Text style={styles.legalLinkText}>Privacy Policy</Text>
                   </TouchableOpacity>
                 </View>
@@ -1109,7 +1149,7 @@ const styles = StyleSheet.create({
   },
   legalLinkText: {
     fontSize: 11,
-    color: 'rgba(28, 28, 30, 0.5)',
+    color: '#D4AF37',
     fontWeight: 'bold',
     textDecorationLine: 'underline',
   },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Alert, Platform, KeyboardAvoidingView } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -178,16 +178,20 @@ export default function CheckoutScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Checkout Details</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
+          </TouchableOpacity>
+          <Text style={styles.title}>Checkout Details</Text>
+          <View style={{ width: 24 }} />
+        </View>
 
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         
         {/* Toggle mode */}
         <View style={styles.toggleContainer}>
@@ -336,6 +340,7 @@ export default function CheckoutScreen() {
         </TouchableOpacity>
 
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -346,7 +351,7 @@ const styles = StyleSheet.create({
   backBtn: { padding: 4 },
   title: { fontSize: 18, fontWeight: 'bold', color: '#1C1C1E', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
 
-  container: { padding: 16 },
+  container: { padding: 16, paddingBottom: 80 },
   toggleContainer: { flexDirection: 'row', backgroundColor: '#E5E5EA', borderRadius: 8, padding: 2, marginBottom: 16 },
   toggleBtn: { flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 8, borderRadius: 6, gap: 6 },
   activeToggleBtn: { backgroundColor: '#1C1C1E' },
