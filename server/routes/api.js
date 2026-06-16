@@ -2242,7 +2242,137 @@ router.get('/investments/balance', auth, async (req, res) => {
   }
 });
 
-// Buy digital gold/silver
+// Create a Razorpay Order for Vault Investments
+router.post('/investments/razorpay-order', auth, async (req, res) => {
+  const { amount } = req.body;
+  try {
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ message: 'Invalid investment amount' });
+    }
+
+    if (razorpayInstance) {
+      const options = {
+        amount: Math.round(amount * 100), // amount in paisa
+        currency: 'INR',
+        receipt: 'receipt_inv_' + Date.now()
+      };
+      const order = await razorpayInstance.orders.create(options);
+      res.json({
+        id: order.id,
+        amount: order.amount,
+        currency: order.currency
+      });
+    } else {
+      // Mock Mode
+      const mockOrderId = 'order_mock_inv_' + Math.random().toString(36).substring(2, 15);
+      res.json({
+        id: mockOrderId,
+        amount: Math.round(amount * 100),
+        currency: 'INR',
+        isMock: true
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Verify Razorpay Payment and Credit Vault Balance (Auto-approves vault gold)
+router.post('/investments/verify-payment', auth, async (req, res) => {
+  const { amount, ratePerGram, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+  try {
+    const userObj = await User.findById(req.user);
+    if (!userObj || userObj.kycStatus !== 'approved') {
+      return res.status(403).json({ message: 'KYC approval is required to buy digital gold.' });
+    }
+
+    let isVerified = false;
+
+    // Verify payment signature
+    if (razorpayInstance) {
+      if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+        return res.status(400).json({ message: 'Missing Razorpay parameters' });
+      }
+      const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
+      hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+      const generated_signature = hmac.digest('hex');
+
+      if (generated_signature === razorpay_signature) {
+        isVerified = true;
+      } else {
+        return res.status(400).json({ message: 'Payment verification failed: Signature mismatch' });
+      }
+    } else {
+      // Mock Mode: automatically verify
+      isVerified = true;
+    }
+
+    if (isVerified) {
+      const baseAmount = amount / 1.03;
+      const gstAmount = amount - baseAmount;
+      const grams = baseAmount / ratePerGram;
+
+      let inv = await Investment.findOne({ user: req.user });
+      if (!inv) {
+        inv = new Investment({ user: req.user, goldGrams: 0, silverGrams: 0, transactions: [] });
+      }
+
+      // Add gold grams immediately since payment is verified
+      inv.goldGrams += grams;
+
+      inv.transactions.push({
+        type: 'BUY',
+        metal: 'GOLD',
+        grams,
+        amount,
+        ratePerGram,
+        gstAmount,
+        paymentMethod: 'Razorpay',
+        paymentReference: razorpay_payment_id || ('pay_mock_' + Math.random().toString(36).substring(2, 15)),
+        status: 'Completed'
+      });
+
+      await inv.save();
+
+      // Send email notification to user
+      if (userObj && userObj.email) {
+        const emailHtml = `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eeba30; border-radius: 10px; background-color: #ffffff;">
+            <div style="text-align: center; border-bottom: 2px solid #eeba30; padding-bottom: 20px; margin-bottom: 20px;">
+              <h2 style="color: #3D2B1F; margin: 0;">Brahmani Jewellers</h2>
+              <p style="color: #EBA938; margin: 5px 0 0 0; font-weight: bold; letter-spacing: 2px; font-size: 12px; text-transform: uppercase;">Digital Vault Settlement</p>
+            </div>
+            <h3>Investment Order Confirmed</h3>
+            <p>Hello ${userObj.name},</p>
+            <p>Your payment has been successfully verified, and <strong>${grams.toFixed(4)} grams</strong> of gold have been added to your vault balance.</p>
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+              <tr><td style="padding: 8px; font-weight: bold;">Amount Paid:</td><td style="padding: 8px; text-align: right;">₹${amount.toLocaleString('en-IN')}</td></tr>
+              <tr><td style="padding: 8px; font-weight: bold;">Gold Added:</td><td style="padding: 8px; text-align: right; color: #D4AF37;">${grams.toFixed(4)}g</td></tr>
+              <tr><td style="padding: 8px; font-weight: bold;">Reference ID:</td><td style="padding: 8px; text-align: right; font-family: monospace;">${razorpay_payment_id || 'N/A'}</td></tr>
+            </table>
+            <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #8e8e93;">
+              <p>Brahmani Jewellers, Ahmedabad</p>
+            </div>
+          </div>
+        `;
+        try {
+          const { sendEmail } = require('../services/email');
+          if (sendEmail) {
+            sendEmail(userObj.email, `Digital Vault Purchase Confirmed - Brahmani Jewellers`, emailHtml);
+          }
+        } catch (emailErr) {
+          console.error('[Vault Auto-Approve email error]:', emailErr.message);
+        }
+      }
+
+      res.status(200).json({ message: 'Payment verified and gold credited to vault!', balance: inv });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Buy digital gold/silver (Manual verification flow - keeping as manual UPI/Bank transfer route option)
 router.post('/investments/buy', auth, async (req, res) => {
   const { metal, amount, ratePerGram, paymentMethod, paymentReference } = req.body;
   try {

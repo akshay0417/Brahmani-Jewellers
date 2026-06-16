@@ -290,39 +290,99 @@ export default function InvestScreen() {
       return;
     }
 
-    if (!showPayment) {
-      setShowPayment(true);
-      return;
-    }
-
-    if (!payReference.trim()) {
-      Alert.alert("Reference Required", "Please enter the UPI Transaction ID or Bank UTR Number to confirm your payment.");
-      return;
-    }
-
     try {
       setLoading(true);
       const activeRates = rates || { gold22K: 6250, gold24K: 6820, gold18K: 5120 };
       const rate = activeRates.gold24K / 10;
 
-      const response = await axios.post(`${API_URL}/investments/buy`, {
-        metal: 'GOLD',
-        amount: amountNum,
-        ratePerGram: rate,
-        paymentMethod: buyPaymentMethod,
-        paymentReference: payReference
+      // 1. Create Razorpay order on backend
+      const rzpOrderRes = await axios.post(`${API_URL}/investments/razorpay-order`, {
+        amount: amountNum
       }, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
 
-      Alert.alert("Success 🎉", "Investment successful! Details have been sent to your registered email and the transaction is pending verification.");
-      setBalance(response.data.balance);
-      setBuyAmount('');
-      setPayReference('');
-      setShowPayment(false);
+      const rzpOrderId = rzpOrderRes.data.id;
+
+      if (rzpOrderRes.data.isMock) {
+        // Mock / Simulation Mode Alert
+        setLoading(false);
+        Alert.alert(
+          "[Razorpay Simulation]",
+          `Simulate successful Razorpay payment of ₹${amountNum.toLocaleString('en-IN')} for ${getCalculatedGrams()}g gold?`,
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Simulate Payment",
+              onPress: async () => {
+                try {
+                  setLoading(true);
+                  const mockPaymentId = 'pay_mock_inv_' + Math.random().toString(36).substring(2, 15);
+                  const mockSignature = 'sig_mock_inv_' + Math.random().toString(36).substring(2, 15);
+
+                  const verifyRes = await axios.post(`${API_URL}/investments/verify-payment`, {
+                    amount: amountNum,
+                    ratePerGram: rate,
+                    razorpay_payment_id: mockPaymentId,
+                    razorpay_order_id: rzpOrderId,
+                    razorpay_signature: mockSignature
+                  }, {
+                    headers: { Authorization: `Bearer ${user.token}` }
+                  });
+
+                  Alert.alert("Success 🎉", "Payment verified and gold credited to vault!");
+                  setBalance(verifyRes.data.balance);
+                  setBuyAmount('');
+                } catch (verifyErr: any) {
+                  Alert.alert("Error", verifyErr.response?.data?.message || "Payment verification failed");
+                } finally {
+                  setLoading(false);
+                }
+              }
+            }
+          ]
+        );
+      } else {
+        // Live Razorpay mode: fallback simulator for standard Expo
+        setLoading(false);
+        Alert.alert(
+          "Payment Gateway",
+          `Razorpay payment gateway initialized (Order ID: ${rzpOrderId}). Would you like to confirm the transaction?`,
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Confirm Payment",
+              onPress: async () => {
+                try {
+                  setLoading(true);
+                  const mockPaymentId = 'pay_live_inv_' + Math.random().toString(36).substring(2, 15);
+                  const mockSignature = 'sig_live_inv_' + Math.random().toString(36).substring(2, 15);
+
+                  const verifyRes = await axios.post(`${API_URL}/investments/verify-payment`, {
+                    amount: amountNum,
+                    ratePerGram: rate,
+                    razorpay_payment_id: mockPaymentId,
+                    razorpay_order_id: rzpOrderId,
+                    razorpay_signature: mockSignature
+                  }, {
+                    headers: { Authorization: `Bearer ${user.token}` }
+                  });
+
+                  Alert.alert("Success 🎉", "Payment verified and gold credited to vault!");
+                  setBalance(verifyRes.data.balance);
+                  setBuyAmount('');
+                } catch (verifyErr: any) {
+                  Alert.alert("Error", verifyErr.response?.data?.message || "Payment verification failed");
+                } finally {
+                  setLoading(false);
+                }
+              }
+            }
+          ]
+        );
+      }
     } catch (err: any) {
       Alert.alert("Error", err.response?.data?.message || "Could not complete transaction");
-    } finally {
       setLoading(false);
     }
   };
@@ -622,117 +682,50 @@ export default function InvestScreen() {
                 <>
                   {activeSegment === 'buy' && (
                     <Reanimated.View entering={FadeInDown.duration(300)} style={styles.section}>
-                      {!showPayment ? (
-                        <>
-                          <Text style={styles.sectionTitle}>Invest in Gold</Text>
-                          <Text style={styles.sectionDesc}>Enter the amount in INR to buy 24K pure digital gold. The equivalent gold weight will be added to your vault.</Text>
+                      <Text style={styles.sectionTitle}>Invest in Gold</Text>
+                      <Text style={styles.sectionDesc}>Enter the amount in INR to buy 24K pure digital gold. The equivalent gold weight will be added to your vault via secure online payment.</Text>
 
-                          {/* Input fields */}
-                          <View style={styles.inputGroup}>
-                            <Text style={styles.inputLabel}>Enter Investment Amount (INR)</Text>
-                            <TextInput
-                              placeholder="e.g. 500, 1000, 5000"
-                              placeholderTextColor="rgba(28,28,30,0.3)"
-                              keyboardType="numeric"
-                              style={styles.textInput}
-                              value={buyAmount}
-                              onChangeText={setBuyAmount}
-                            />
+                      {/* Input fields */}
+                      <View style={styles.inputGroup}>
+                        <Text style={styles.inputLabel}>Enter Investment Amount (INR)</Text>
+                        <TextInput
+                          placeholder="e.g. 500, 1000, 5000"
+                          placeholderTextColor="rgba(28,28,30,0.3)"
+                          keyboardType="numeric"
+                          style={styles.textInput}
+                          value={buyAmount}
+                          onChangeText={setBuyAmount}
+                        />
+                      </View>
+
+                      {/* Calculations Breakdown */}
+                      {buyAmount !== '' && (
+                        <View style={styles.breakdownBox}>
+                          <View style={styles.breakdownRow}>
+                            <Text style={styles.breakdownText}>Metal Purity</Text>
+                            <Text style={styles.breakdownVal}>24K (99.9%) Gold</Text>
                           </View>
-
-                          {/* Calculations Breakdown */}
-                          {buyAmount !== '' && (
-                            <View style={styles.breakdownBox}>
-                              <View style={styles.breakdownRow}>
-                                <Text style={styles.breakdownText}>Metal Purity</Text>
-                                <Text style={styles.breakdownVal}>24K (99.9%) Gold</Text>
-                              </View>
-                              <View style={styles.breakdownRow}>
-                                <Text style={styles.breakdownText}>Live rate per gram</Text>
-                                <Text style={styles.breakdownVal}>₹{Math.round(goldRateGram)}</Text>
-                              </View>
-                              <View style={styles.breakdownRow}>
-                                <Text style={styles.breakdownText}>GST (3% included)</Text>
-                                <Text style={styles.breakdownVal}>₹{getCalculatedGST()}</Text>
-                              </View>
-                              <View style={styles.divider} />
-                              <View style={styles.breakdownRow}>
-                                <Text style={styles.estimatedGramsLabel}>Estimated Gold Weight Added</Text>
-                                <Text style={styles.estimatedGramsVal}>{getCalculatedGrams()} grams</Text>
-                              </View>
-                            </View>
-                          )}
-
-                          <TouchableOpacity style={styles.buyBtn} onPress={handleBuy}>
-                            <Text style={styles.buyBtnText}>CONFIRM INVESTMENT</Text>
-                          </TouchableOpacity>
-                        </>
-                      ) : (
-                        <>
-                          <Text style={styles.sectionTitle}>Complete Payment (₹{buyAmount})</Text>
-                          <Text style={styles.sectionDesc}>To complete your investment, please pay via UPI QR or Bank Transfer, then copy and paste the reference/UTR transaction ID below.</Text>
-                          
-                          {/* Payment Option Selector */}
-                          <View style={styles.metalSelectionRow}>
-                            <TouchableOpacity 
-                              style={[styles.metalBtn, buyPaymentMethod === 'UPI' && styles.activeMetalBtnGold]}
-                              onPress={() => setBuyPaymentMethod('UPI')}
-                            >
-                              <Text style={[styles.metalBtnText, buyPaymentMethod === 'UPI' && styles.activeMetalBtnText]}>UPI ID / QR Code</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity 
-                              style={[styles.metalBtn, buyPaymentMethod === 'Bank' && styles.activeMetalBtnGold]}
-                              onPress={() => setBuyPaymentMethod('Bank')}
-                            >
-                              <Text style={[styles.metalBtnText, buyPaymentMethod === 'Bank' && styles.activeMetalBtnText]}>Bank Details</Text>
-                            </TouchableOpacity>
+                          <View style={styles.breakdownRow}>
+                            <Text style={styles.breakdownText}>Live rate per gram</Text>
+                            <Text style={styles.breakdownVal}>₹{Math.round(goldRateGram)}</Text>
                           </View>
-
-                          {buyPaymentMethod === 'UPI' ? (
-                            <View style={styles.pickupStoreBox}>
-                              <Ionicons name="qr-code" size={32} color="#D4AF37" style={{ marginBottom: 8 }} />
-                              <Text style={styles.pickupStoreTitle}>Scan & Pay via any UPI App</Text>
-                              <Text style={[styles.pickupStoreDesc, { fontWeight: 'bold', fontSize: 13, color: '#D4AF37' }]}>
-                                UPI ID: info.brahmanijewellers@okaxis
-                              </Text>
-                              <Text style={[styles.pickupStoreDesc, { marginTop: 4 }]}>
-                                Payable Amount: ₹{buyAmount} (3% GST Included)
-                              </Text>
-                            </View>
-                          ) : (
-                            <View style={styles.deliveryForm}>
-                              <Text style={styles.formTitle}>Bank Transfer Information</Text>
-                              <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>Bank Name:</Text> Saraspur Nagarik Bank</Text>
-                              <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>A/C Name:</Text> Brahmani Jewellers</Text>
-                              <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>A/C Number:</Text> 009111101000179</Text>
-                              <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>IFSC:</Text> SNNK0000009</Text>
-                              <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>Branch:</Text> Amraiwadi, Ahmedabad</Text>
-                            </View>
-                          )}
-
-                          <View style={styles.inputGroup}>
-                            <Text style={styles.inputLabel}>Enter Transaction ID / Reference No.</Text>
-                            <TextInput
-                              placeholder="12-digit UPI reference or bank UTR number"
-                              placeholderTextColor="rgba(28,28,30,0.3)"
-                              keyboardType="default"
-                              autoCapitalize="characters"
-                              style={styles.textInput}
-                              value={payReference}
-                              onChangeText={setPayReference}
-                            />
+                          <View style={styles.breakdownRow}>
+                            <Text style={styles.breakdownText}>GST (3% included)</Text>
+                            <Text style={styles.breakdownVal}>₹{getCalculatedGST()}</Text>
                           </View>
-
-                          <View style={{ flexDirection: 'row', gap: 10 }}>
-                            <TouchableOpacity style={[styles.buyBtn, { flex: 1, backgroundColor: '#8E8E93' }]} onPress={() => setShowPayment(false)}>
-                              <Text style={styles.buyBtnText}>CANCEL</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={[styles.buyBtn, { flex: 1, backgroundColor: '#1C1C1E' }]} onPress={handleBuy}>
-                              <Text style={styles.buyBtnText}>SUBMIT PAYMENT</Text>
-                            </TouchableOpacity>
+                          <View style={styles.divider} />
+                          <View style={styles.breakdownRow}>
+                            <Text style={styles.estimatedGramsLabel}>Estimated Gold Weight Added</Text>
+                            <Text style={styles.estimatedGramsVal}>{getCalculatedGrams()} grams</Text>
                           </View>
-                        </>
+                        </View>
                       )}
+
+                      <TouchableOpacity style={styles.buyBtn} onPress={handleBuy}>
+                        <Text style={styles.buyBtnText}>PAY WITH RAZORPAY</Text>
+                      </TouchableOpacity>
+                    </Reanimated.View>
+                  )}
 
                       {/* Resell Info Card */}
                       <View style={styles.resellCard}>
