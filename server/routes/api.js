@@ -2213,6 +2213,38 @@ router.put('/admin/users/:id/kyc-status', auth, isAdmin, async (req, res) => {
     }
 
     await user.save();
+
+    // Send KYC email notification
+    if (user.email) {
+      const emailHtml = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eeba30; border-radius: 10px; background-color: #ffffff;">
+          <div style="text-align: center; border-bottom: 2px solid #eeba30; padding-bottom: 20px; margin-bottom: 20px;">
+            <h2 style="color: #3D2B1F; margin: 0;">Brahmani Jewellers</h2>
+            <p style="color: #EBA938; margin: 5px 0 0 0; font-weight: bold; letter-spacing: 2px; font-size: 12px; text-transform: uppercase;">Identity Verification</p>
+          </div>
+          <h3>KYC Verification Status: ${kycStatus.toUpperCase()}</h3>
+          <p>Hello ${user.name},</p>
+          ${kycStatus === 'approved' 
+            ? `<p>Congratulations! Your KYC verification has been <strong>Approved</strong>. You can now invest in digital gold, request physical coin redemptions, and explore all digital vault features.</p>`
+            : `<p>Unfortunately, your KYC verification request was <strong>Rejected</strong>.</p>
+               <p><strong>Reason for Rejection:</strong> ${kycRejectionReason || 'Invalid document details or mismatch.'}</p>
+               <p>Please log in to the application and resubmit correct documents.</p>`
+          }
+          <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #f2f2f7; text-align: center; font-size: 12px; color: #8e8e93;">
+            <p>Brahmani Jewellers, Amraiwadi, Ahmedabad</p>
+          </div>
+        </div>
+      `;
+      try {
+        const { sendEmail } = require('../services/email');
+        if (sendEmail) {
+          sendEmail(user.email, `KYC Verification ${kycStatus === 'approved' ? 'Approved 🎉' : 'Rejected ❌'} - Brahmani Jewellers`, emailHtml);
+        }
+      } catch (emailErr) {
+        console.error('[KYC Email Error]:', emailErr.message);
+      }
+    }
+
     res.json({ message: `User KYC status updated to ${kycStatus}`, user: { id: user._id, kycStatus: user.kycStatus } });
   } catch (err) {
     res.status(500).json({ message: err.message });

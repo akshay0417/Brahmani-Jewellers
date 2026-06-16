@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform, KeyboardAvoidingView } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform, KeyboardAvoidingView, RefreshControl } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import axios from 'axios';
 import Reanimated, { FadeInDown } from 'react-native-reanimated';
+import { useFocusEffect } from 'expo-router';
 
 const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
 
@@ -78,9 +79,19 @@ export default function InvestScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [user]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData();
+    }, [user])
+  );
 
   const fetchData = async () => {
     try {
@@ -514,7 +525,14 @@ export default function InvestScreen() {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView 
+          contentContainerStyle={styles.container} 
+          showsVerticalScrollIndicator={false} 
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#D4AF37"]} />
+          }
+        >
           
           {activeSegment === 'calc' ? (
             <Reanimated.View entering={FadeInDown.duration(300)} style={styles.section}>
