@@ -357,6 +357,28 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleKycStatus = async (id, kycStatus) => {
+    let kycRejectionReason = '';
+    if (kycStatus === 'rejected') {
+      kycRejectionReason = window.prompt('Enter reason for KYC rejection:');
+      if (kycRejectionReason === null) return; // user cancelled
+      if (!kycRejectionReason.trim()) {
+        alert('Rejection reason is required.');
+        return;
+      }
+    }
+    
+    try {
+      const res = await api.put(`/admin/users/${id}/kyc-status`, { kycStatus, kycRejectionReason }, config);
+      setUsers(users.map((u) => u._id === id ? { ...u, kycStatus, kycRejectionReason } : u));
+      setStatus({ type: 'success', message: res.data.message });
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    } catch (err) {
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Error updating KYC status' });
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    }
+  };
+
   const handleDeleteSubscriber = async (id) => {
     if (!window.confirm('Are you sure you want to remove this subscriber from the newsletter?')) return;
     try {
@@ -1370,6 +1392,55 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 
+                {/* PENDING KYC VERIFICATIONS */}
+                {users.filter(u => u.kycStatus === 'pending').length > 0 && (
+                  <div className="mb-10 bg-cream p-6 border-2 border-ochre/30 rounded-lg shadow-sm">
+                    <h3 className="text-lg font-serif font-bold text-coffee mb-4 border-b border-ochre/15 pb-2 flex items-center gap-2">
+                      <span className="text-ochre">⏳</span> Pending KYC Verifications ({users.filter(u => u.kycStatus === 'pending').length})
+                    </h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-ochre/20 text-coffee/70 text-xs uppercase tracking-wider">
+                            <th className="py-3 px-4">User Details</th>
+                            <th className="py-3 px-4">Name on Document</th>
+                            <th className="py-3 px-4">PAN Number</th>
+                            <th className="py-3 px-4">Aadhaar Number</th>
+                            <th className="py-3 px-4 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {users.filter(u => u.kycStatus === 'pending').map((u) => (
+                            <tr key={u._id} className="border-b border-ochre/10 hover:bg-ochre/5 transition-colors">
+                              <td className="py-3 px-4">
+                                <span className="font-semibold text-coffee">{u.name}</span><br />
+                                <span className="text-xs text-coffee/50 font-mono">{u.mobile || u.email}</span>
+                              </td>
+                              <td className="py-3 px-4 text-coffee font-medium">{u.kycName || u.name}</td>
+                              <td className="py-3 px-4 font-mono font-bold text-coffee/80">{u.panCard}</td>
+                              <td className="py-3 px-4 font-mono font-bold text-coffee/80">{u.aadhaarCard}</td>
+                              <td className="py-3 px-4 text-right space-x-2">
+                                <button
+                                  onClick={() => handleKycStatus(u._id, 'approved')}
+                                  className="px-3 py-1.5 bg-green-600 text-cream text-xs font-bold uppercase tracking-wider rounded-sm hover:bg-green-700 transition-all shadow-sm"
+                                >
+                                  Approve ✓
+                                </button>
+                                <button
+                                  onClick={() => handleKycStatus(u._id, 'rejected')}
+                                  className="px-3 py-1.5 bg-red-600 text-cream text-xs font-bold uppercase tracking-wider rounded-sm hover:bg-red-700 transition-all shadow-sm"
+                                >
+                                  Reject ✗
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
@@ -1379,6 +1450,7 @@ const AdminDashboard = () => {
                         <th className="py-4 px-4">Mobile</th>
                         <th className="py-4 px-4">Role</th>
                         <th className="py-4 px-4">Approval</th>
+                        <th className="py-4 px-4">KYC Status</th>
                         <th className="py-4 px-4">T&C Accept</th>
                         <th className="py-4 px-4">Joined Date</th>
                         <th className="py-4 px-4">Last Login</th>
@@ -1388,7 +1460,7 @@ const AdminDashboard = () => {
                     <tbody>
                       {users.length === 0 ? (
                         <tr>
-                          <td colSpan="9" className="text-center py-8 text-coffee/50">No users found.</td>
+                          <td colSpan="10" className="text-center py-8 text-coffee/50">No users found.</td>
                         </tr>
                       ) : (
                         users.map((u, i) => (
@@ -1416,6 +1488,16 @@ const AdminDashboard = () => {
                                   {u.isApproved ? 'Approved ✓' : 'Pending ⏳'}
                                 </button>
                               )}
+                            </td>
+                            <td className="py-4 px-4">
+                              <span className={`px-2 py-1 text-xs font-bold uppercase rounded-sm border ${
+                                u.kycStatus === 'approved' ? 'bg-green-500/10 text-green-700 border-green-500/20' :
+                                u.kycStatus === 'pending' ? 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20 animate-pulse' :
+                                u.kycStatus === 'rejected' ? 'bg-red-500/10 text-red-600 border-red-500/20' :
+                                'bg-gray-500/10 text-gray-500 border-gray-500/10'
+                              }`}>
+                                {u.kycStatus || 'not_submitted'}
+                              </span>
                             </td>
                             <td className="py-4 px-4">
                               <span className={`px-2 py-0.5 rounded text-xs font-bold ${u.termsAccepted ? 'bg-green-500/10 text-green-600 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
