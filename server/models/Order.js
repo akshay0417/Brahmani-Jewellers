@@ -37,7 +37,8 @@ const OrderSchema = new mongoose.Schema({
   deliveryPartner: { type: String, default: 'Delhivery' },
   razorpayOrderId: { type: String },
   razorpayPaymentId: { type: String },
-  razorpaySignature: { type: String }
+  razorpaySignature: { type: String },
+  paymentReference: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', OrderSchema);

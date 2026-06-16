@@ -15,7 +15,7 @@ const Checkout = () => {
     city: '',
     state: '',
     pincode: '',
-    paymentMethod: 'COD'
+    paymentMethod: 'Card'
   });
   const [loading, setLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
@@ -266,11 +266,7 @@ const Checkout = () => {
               <h3 className="text-xl font-serif text-coffee mt-12 mb-6 flex items-center gap-3">
                 <CreditCard className="text-ochre" /> Payment Method
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <label className={`flex items-center justify-center gap-2 p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'COD' ? 'border-ochre bg-ochre/10' : 'border-ochre/30 bg-cream hover:bg-ochre/5'}`}>
-                  <input type="radio" name="paymentMethod" value="COD" checked={formData.paymentMethod === 'COD'} onChange={handleChange} className="accent-ochre" />
-                  <span className="text-coffee font-medium text-sm">Cash on Delivery</span>
-                </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label className={`flex items-center justify-center gap-2 p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'Card' ? 'border-ochre bg-ochre/10' : 'border-ochre/30 bg-cream hover:bg-ochre/5'}`}>
                   <input type="radio" name="paymentMethod" value="Card" checked={formData.paymentMethod === 'Card'} onChange={handleChange} className="accent-ochre" />
                   <span className="text-coffee font-medium text-sm">Credit/Debit Card</span>

@@ -1958,7 +1958,7 @@ router.delete('/cart/remove/:productId', auth, async (req, res) => {
 
 // Place a new order (COD flow)
 router.post('/orders', auth, async (req, res) => {
-  const { items, totalAmount, shippingAddress, paymentMethod, shippingCharge, distanceKm } = req.body;
+  const { items, totalAmount, shippingAddress, paymentMethod, shippingCharge, distanceKm, paymentReference } = req.body;
   try {
     if (!items || items.length === 0) return res.status(400).json({ message: 'No items in order' });
 
@@ -1969,21 +1969,24 @@ router.post('/orders', auth, async (req, res) => {
       shippingAddress,
       paymentMethod,
       shippingCharge: shippingCharge || 0,
-      distanceKm: distanceKm || 0
+      distanceKm: distanceKm || 0,
+      paymentReference
     });
 
     await newOrder.save();
 
-    // Auto-trigger Delhivery shipment
-    try {
-      const shipRes = await createShipment(newOrder);
-      if (shipRes.success) {
-        newOrder.trackingId = shipRes.trackingId;
-        newOrder.status = 'Processing';
-        await newOrder.save();
+    // Auto-trigger Delhivery shipment only if order is Paid
+    if (newOrder.paymentStatus === 'Paid') {
+      try {
+        const shipRes = await createShipment(newOrder);
+        if (shipRes.success) {
+          newOrder.trackingId = shipRes.trackingId;
+          newOrder.status = 'Processing';
+          await newOrder.save();
+        }
+      } catch (shipErr) {
+        console.error('[Delhivery Auto Shipment Error]:', shipErr.message);
       }
-    } catch (shipErr) {
-      console.error('[Delhivery Auto Shipment Error]:', shipErr.message);
     }
 
     // Clear the cart after placing order
@@ -2165,10 +2168,26 @@ router.put('/admin/orders/:id', auth, isAdmin, async (req, res) => {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
+    const wasPaidAlready = order.paymentStatus === 'Paid';
     if (status) order.status = status;
     if (paymentStatus) order.paymentStatus = paymentStatus;
 
     await order.save();
+
+    // Trigger Delhivery auto-shipping if marked as Paid and tracking ID is not set
+    if (!wasPaidAlready && order.paymentStatus === 'Paid' && !order.trackingId) {
+      try {
+        const shipRes = await createShipment(order);
+        if (shipRes.success) {
+          order.trackingId = shipRes.trackingId;
+          order.status = 'Processing';
+          await order.save();
+        }
+      } catch (shipErr) {
+        console.error('[Delhivery Auto Shipment Error from Admin update]:', shipErr.message);
+      }
+    }
+
     res.json(order);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -2248,12 +2267,6 @@ router.post('/investments/buy', auth, async (req, res) => {
     let inv = await Investment.findOne({ user: req.user });
     if (!inv) {
       inv = new Investment({ user: req.user, goldGrams: 0, silverGrams: 0, transactions: [] });
-    }
-
-    if (m === 'GOLD') {
-      inv.goldGrams += grams;
-    } else {
-      inv.silverGrams += grams;
     }
 
     inv.transactions.push({
@@ -2481,6 +2494,71 @@ router.get('/admin/investments', auth, isAdmin, async (req, res) => {
   try {
     const investments = await Investment.find().populate('user', 'name email mobile');
     res.json(investments);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Admin endpoint to approve or reject a pending transaction
+router.put('/admin/investments/transactions/:txId', auth, isAdmin, async (req, res) => {
+  const { status } = req.body; // 'Completed' or 'Failed'
+  const { txId } = req.params;
+
+  try {
+    if (!['Completed', 'Failed'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status. Must be Completed or Failed.' });
+    }
+
+    const inv = await Investment.findOne({ 'transactions._id': txId }).populate('user', 'name email mobile');
+    if (!inv) return res.status(404).json({ message: 'Transaction not found' });
+
+    const tx = inv.transactions.id(txId);
+    if (!tx) return res.status(404).json({ message: 'Transaction subdocument not found' });
+
+    if (tx.status !== 'Pending') {
+      return res.status(400).json({ message: `Transaction has already been processed: status is ${tx.status}` });
+    }
+
+    tx.status = status;
+
+    if (status === 'Completed') {
+      if (tx.type === 'BUY') {
+        if (tx.metal === 'GOLD') inv.goldGrams += tx.grams;
+        else inv.silverGrams += tx.grams;
+      }
+    }
+
+    await inv.save();
+    
+    // Send email notification
+    if (inv.user && inv.user.email) {
+      const emailHtml = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eeba30; border-radius: 10px; background-color: #ffffff;">
+          <div style="text-align: center; border-bottom: 2px solid #eeba30; padding-bottom: 20px; margin-bottom: 20px;">
+            <h2 style="color: #3D2B1F; margin: 0;">Brahmani Jewellers</h2>
+            <p style="color: #EBA938; margin: 5px 0 0 0; font-weight: bold; letter-spacing: 2px; font-size: 12px; text-transform: uppercase;">Digital Vault Status</p>
+          </div>
+          <h3>Vault Transaction ${status}</h3>
+          <p>Hello ${inv.user.name},</p>
+          <p>Your digital vault transaction (Type: ${tx.type}, Amount: ₹${tx.amount.toLocaleString('en-IN')}) has been marked as <strong>${status}</strong> by our admin desk.</p>
+          <p>If Completed, the metals have been officially settled in your vault balance.</p>
+          <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #f2f2f7; text-align: center; font-size: 12px; color: #8e8e93;">
+            <p>Brahmani Jewellers, Amraiwadi, Ahmedabad</p>
+          </div>
+        </div>
+      `;
+      // Use existing sendEmail utility if it is defined in scope
+      try {
+        const { sendEmail } = require('../services/email'); // or use the global in api.js if it exists
+        if (sendEmail) {
+          sendEmail(inv.user.email, `Digital Vault Transaction ${status} - Brahmani Jewellers`, emailHtml);
+        }
+      } catch (emailErr) {
+        console.error('[Admin Tx status email error]:', emailErr.message);
+      }
+    }
+
+    res.json({ message: `Transaction status updated to ${status}`, balance: inv });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

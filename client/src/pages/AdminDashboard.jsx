@@ -432,6 +432,24 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleApproveTransaction = async (txId, isApprove) => {
+    const action = isApprove ? 'approve' : 'reject';
+    if (!window.confirm(`Are you sure you want to ${action} this pending digital vault transaction?`)) return;
+    setLoading(true);
+    try {
+      await api.put(`/admin/investments/transactions/${txId}`, {
+        status: isApprove ? 'Completed' : 'Failed'
+      }, config);
+      setStatus({ type: 'success', message: `Transaction ${isApprove ? 'approved' : 'rejected'} successfully!` });
+      fetchData(); // reload dashboard data
+    } catch (err) {
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Failed to update transaction status.' });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setStatus({ type: '', message: '' }), 4000);
+    }
+  };
+
   const logout = () => {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('user');
@@ -1250,134 +1268,208 @@ const AdminDashboard = () => {
               </section>
             )}
 
-            {activeTab === 'investments' && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                {/* Adjustments Form */}
-                <section className="bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm lg:col-span-1">
-                  <h3 className="text-lg font-serif font-bold text-coffee mb-4 border-b border-ochre/10 pb-2">Vault Adjustments</h3>
-                  <form onSubmit={handleInvestmentAdjust} className="space-y-4">
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Select VIP Customer</label>
-                      <select
-                        value={selectedInvestUser}
-                        onChange={(e) => setSelectedInvestUser(e.target.value)}
-                        className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm focus:outline-none focus:border-ochre text-coffee"
-                        required
-                      >
-                        <option value="">-- Choose User --</option>
-                        {users.map(u => (
-                          <option key={u._id} value={u._id}>{u.name} ({u.mobile || u.email})</option>
-                        ))}
-                      </select>
-                    </div>
+            {activeTab === 'investments' && (() => {
+              const pendingTransactions = [];
+              investments.forEach(inv => {
+                if (inv.transactions) {
+                  inv.transactions.forEach(tx => {
+                    if (tx.status === 'Pending') {
+                      pendingTransactions.push({
+                        ...tx,
+                        userId: inv.user?._id,
+                        userName: inv.user?.name || 'Unknown',
+                        userMobile: inv.user?.mobile || inv.user?.email || 'N/A'
+                      });
+                    }
+                  });
+                }
+              });
 
-                    <div className="grid grid-cols-2 gap-3">
+              return (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                  {/* Adjustments Form */}
+                  <section className="bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm lg:col-span-1">
+                    <h3 className="text-lg font-serif font-bold text-coffee mb-4 border-b border-ochre/10 pb-2">Vault Adjustments</h3>
+                    <form onSubmit={handleInvestmentAdjust} className="space-y-4">
                       <div>
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Vault Metal</label>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Select VIP Customer</label>
                         <select
-                          value={adjustMetal}
-                          onChange={(e) => setAdjustMetal(e.target.value)}
+                          value={selectedInvestUser}
+                          onChange={(e) => setSelectedInvestUser(e.target.value)}
                           className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm focus:outline-none focus:border-ochre text-coffee"
+                          required
                         >
-                          <option value="GOLD">Gold (24K)</option>
-                          <option value="SILVER">Silver</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Action Type</label>
-                        <select
-                          value={adjustType}
-                          onChange={(e) => setAdjustType(e.target.value)}
-                          className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm focus:outline-none focus:border-ochre text-coffee"
-                        >
-                          <option value="SELL">Offline Resell (Deduct)</option>
-                          <option value="BUY">Offline Purchase (Add)</option>
-                          <option value="REDEEM">Coin Handover (Deduct)</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Weight (Grams)</label>
-                      <input
-                        type="number"
-                        step="0.0001"
-                        value={adjustGrams}
-                        onChange={(e) => setAdjustGrams(e.target.value)}
-                        className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm text-coffee focus:border-ochre outline-none"
-                        placeholder="e.g. 0.5230"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Rate per Gram (₹ - Optional)</label>
-                      <input
-                        type="number"
-                        value={adjustRate}
-                        onChange={(e) => setAdjustRate(e.target.value)}
-                        className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm text-coffee focus:border-ochre outline-none"
-                        placeholder="e.g. 6820"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Settlement Amount (₹ - Optional)</label>
-                      <input
-                        type="number"
-                        value={adjustAmount}
-                        onChange={(e) => setAdjustAmount(e.target.value)}
-                        className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm text-coffee focus:border-ochre outline-none"
-                        placeholder="e.g. 3500"
-                      />
-                    </div>
-
-                    <button disabled={loading} className="w-full py-3 bg-ochre text-cream text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-ochre/90 transition-all shadow-md">
-                      {loading ? 'Adjusting...' : 'Save Vault Adjustment'}
-                    </button>
-                  </form>
-                </section>
-
-                {/* Vault Portfolio View */}
-                <section className="bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm lg:col-span-2">
-                  <h3 className="text-lg font-serif font-bold text-coffee mb-4 border-b border-ochre/10 pb-2">Customer Portfolios</h3>
-                  
-                  {investments.length === 0 ? (
-                    <p className="text-coffee/50 text-center py-8">No investment vaults found.</p>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse text-sm">
-                        <thead>
-                          <tr className="border-b border-ochre/25 text-[10px] font-bold uppercase text-coffee/60">
-                            <th className="py-3">Customer</th>
-                            <th className="py-3">Gold Balance</th>
-                            <th className="py-3">Silver Balance</th>
-                            <th className="py-3">Transactions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-ochre/10">
-                          {investments.map(inv => (
-                            <tr key={inv._id} className="text-coffee">
-                              <td className="py-3 font-semibold">
-                                {inv.user?.name || 'N/A'}<br />
-                                <span className="text-[10px] text-coffee/50 font-mono font-medium">{inv.user?.mobile || inv.user?.email || 'Guest'}</span>
-                              </td>
-                              <td className="py-3 font-bold text-ochre">{(inv.goldGrams || 0).toFixed(4)} g</td>
-                              <td className="py-3 font-bold text-coffee/70">{(inv.silverGrams || 0).toFixed(4)} g</td>
-                              <td className="py-3">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-coffee/5 text-coffee border border-coffee/20">
-                                  {inv.transactions?.length || 0} logs
-                                </span>
-                              </td>
-                            </tr>
+                          <option value="">-- Choose User --</option>
+                          {users.map(u => (
+                            <option key={u._id} value={u._id}>{u.name} ({u.mobile || u.email})</option>
                           ))}
-                        </tbody>
-                      </table>
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Vault Metal</label>
+                          <select
+                            value={adjustMetal}
+                            onChange={(e) => setAdjustMetal(e.target.value)}
+                            className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm focus:outline-none focus:border-ochre text-coffee"
+                          >
+                            <option value="GOLD">Gold (24K)</option>
+                            <option value="SILVER">Silver</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Action Type</label>
+                          <select
+                            value={adjustType}
+                            onChange={(e) => setAdjustType(e.target.value)}
+                            className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm focus:outline-none focus:border-ochre text-coffee"
+                          >
+                            <option value="SELL">Offline Resell (Deduct)</option>
+                            <option value="BUY">Offline Purchase (Add)</option>
+                            <option value="REDEEM">Coin Handover (Deduct)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Weight (Grams)</label>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={adjustGrams}
+                          onChange={(e) => setAdjustGrams(e.target.value)}
+                          className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm text-coffee focus:border-ochre outline-none"
+                          placeholder="e.g. 0.5230"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Rate per Gram (₹ - Optional)</label>
+                        <input
+                          type="number"
+                          value={adjustRate}
+                          onChange={(e) => setAdjustRate(e.target.value)}
+                          className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm text-coffee focus:border-ochre outline-none"
+                          placeholder="e.g. 6820"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-coffee/70">Settlement Amount (₹ - Optional)</label>
+                        <input
+                          type="number"
+                          value={adjustAmount}
+                          onChange={(e) => setAdjustAmount(e.target.value)}
+                          className="w-full bg-cream border border-ochre/25 p-2 rounded-sm text-sm text-coffee focus:border-ochre outline-none"
+                          placeholder="e.g. 3500"
+                        />
+                      </div>
+
+                      <button disabled={loading} className="w-full py-3 bg-ochre text-cream text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-ochre/90 transition-all shadow-md">
+                        {loading ? 'Adjusting...' : 'Save Vault Adjustment'}
+                      </button>
+                    </form>
+                  </section>
+
+                  {/* Vault Portfolio View & Pending Approvals */}
+                  <section className="bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm lg:col-span-2 space-y-8">
+                    {/* Pending Vault Approvals */}
+                    {pendingTransactions.length > 0 && (
+                      <div className="bg-cream p-5 border-2 border-ochre/30 rounded-lg shadow-sm">
+                        <h3 className="text-sm font-serif font-bold text-coffee mb-4 border-b border-ochre/15 pb-2 flex items-center gap-2">
+                          <span className="text-ochre">⏳</span> Pending Vault Payments ({pendingTransactions.length})
+                        </h3>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse text-xs">
+                            <thead>
+                              <tr className="border-b border-ochre/25 pb-2 font-bold uppercase text-coffee/60">
+                                <th className="py-2">User</th>
+                                <th className="py-2">Type</th>
+                                <th className="py-2">Weight</th>
+                                <th className="py-2">Amount</th>
+                                <th className="py-2">Ref ID</th>
+                                <th className="py-2 text-right">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-ochre/10">
+                              {pendingTransactions.map(tx => (
+                                <tr key={tx._id} className="text-coffee">
+                                  <td className="py-2.5">
+                                    <span className="font-semibold">{tx.userName}</span><br />
+                                    <span className="text-[10px] text-coffee/50 font-mono">{tx.userMobile}</span>
+                                  </td>
+                                  <td className="py-2.5">
+                                    <span className="px-1.5 py-0.5 rounded font-bold bg-ochre/20 text-coffee text-[9px] uppercase border border-ochre/30">
+                                      {tx.type} ({tx.metal})
+                                    </span>
+                                  </td>
+                                  <td className="py-2.5 font-semibold">{(tx.grams || 0).toFixed(4)}g</td>
+                                  <td className="py-2.5 font-bold">₹{tx.amount?.toLocaleString('en-IN')}</td>
+                                  <td className="py-2.5 font-mono text-coffee/70">{tx.paymentReference || 'N/A'}</td>
+                                  <td className="py-2.5 text-right flex justify-end gap-1.5">
+                                    <button
+                                      onClick={() => handleApproveTransaction(tx._id, true)}
+                                      className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white font-bold rounded text-[9px] uppercase tracking-wider transition-colors"
+                                    >
+                                      Approve
+                                    </button>
+                                    <button
+                                      onClick={() => handleApproveTransaction(tx._id, false)}
+                                      className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded text-[9px] uppercase tracking-wider transition-colors"
+                                    >
+                                      Reject
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <h3 className="text-lg font-serif font-bold text-coffee mb-4 border-b border-ochre/10 pb-2">Customer Portfolios</h3>
+                      {investments.length === 0 ? (
+                        <p className="text-coffee/50 text-center py-8">No investment vaults found.</p>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse text-sm">
+                            <thead>
+                              <tr className="border-b border-ochre/25 text-[10px] font-bold uppercase text-coffee/60">
+                                <th className="py-3">Customer</th>
+                                <th className="py-3">Gold Balance</th>
+                                <th className="py-3">Silver Balance</th>
+                                <th className="py-3">Transactions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-ochre/10">
+                              {investments.map(inv => (
+                                <tr key={inv._id} className="text-coffee">
+                                  <td className="py-3 font-semibold">
+                                    {inv.user?.name || 'N/A'}<br />
+                                    <span className="text-[10px] text-coffee/50 font-mono font-medium">{inv.user?.mobile || inv.user?.email || 'Guest'}</span>
+                                  </td>
+                                  <td className="py-3 font-bold text-ochre">{(inv.goldGrams || 0).toFixed(4)} g</td>
+                                  <td className="py-3 font-bold text-coffee/70">{(inv.silverGrams || 0).toFixed(4)} g</td>
+                                  <td className="py-3">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-coffee/5 text-coffee border border-coffee/20">
+                                      {inv.transactions?.length || 0} logs
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </section>
-              </div>
-            )}
+                  </section>
+                </div>
+              );
+            })()}
 
             {activeTab === 'users' && (
               <section className="bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">

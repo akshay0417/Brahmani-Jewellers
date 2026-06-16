@@ -17,7 +17,8 @@ export default function CheckoutScreen() {
 
   // Checkout Form State
   const [deliveryMode, setDeliveryMode] = useState('Delivery'); // 'Delivery' | 'Pickup'
-  const [paymentMethod, setPaymentMethod] = useState('COD'); // 'COD' | 'Bank Transfer'
+  const [paymentMethod, setPaymentMethod] = useState('UPI'); // 'UPI' | 'Bank'
+  const [payReference, setPayReference] = useState('');
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [address, setAddress] = useState('');
@@ -83,6 +84,11 @@ export default function CheckoutScreen() {
       }
     }
 
+    if (!payReference.trim()) {
+      Alert.alert("Payment Verification Required", "Please transfer the grand total using UPI or Bank Transfer and enter the Transaction ID / Ref Number below.");
+      return;
+    }
+
     try {
       setPlacingOrder(true);
       
@@ -114,7 +120,8 @@ export default function CheckoutScreen() {
         items: orderItems,
         totalAmount: getGrandTotal(),
         shippingAddress,
-        paymentMethod: paymentMethod === 'COD' ? 'COD' : 'Bank Transfer',
+        paymentMethod: paymentMethod === 'Bank' ? 'Bank Transfer' : 'UPI',
+        paymentReference: payReference.trim(),
         deliveryMode,
         pickupCode: deliveryMode === 'Pickup' ? randomPickupCode : undefined,
         shippingCharge: getShippingCharge(),
@@ -282,10 +289,10 @@ export default function CheckoutScreen() {
           <Text style={styles.sectionTitle}>Payment Method</Text>
           <View style={styles.toggleContainer}>
             <TouchableOpacity 
-              style={[styles.toggleBtn, paymentMethod === 'COD' && styles.activeToggleBtn]}
-              onPress={() => setPaymentMethod('COD')}
+              style={[styles.toggleBtn, paymentMethod === 'UPI' && styles.activeToggleBtn]}
+              onPress={() => setPaymentMethod('UPI')}
             >
-              <Text style={[styles.toggleBtnText, paymentMethod === 'COD' && styles.activeToggleBtnText]}>COD / Cash on Pickup</Text>
+              <Text style={[styles.toggleBtnText, paymentMethod === 'UPI' && styles.activeToggleBtnText]}>UPI / QR</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.toggleBtn, paymentMethod === 'Bank' && styles.activeToggleBtn]}
@@ -294,14 +301,30 @@ export default function CheckoutScreen() {
               <Text style={[styles.toggleBtnText, paymentMethod === 'Bank' && styles.activeToggleBtnText]}>Bank Transfer</Text>
             </TouchableOpacity>
           </View>
-          {paymentMethod === 'Bank' && (
+          
+          {paymentMethod === 'Bank' ? (
             <View style={styles.bankBox}>
               <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>Bank Name:</Text> HDFC Bank</Text>
               <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>A/C Name:</Text> Brahmani Jewellers</Text>
               <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>A/C Number:</Text> 50200081273891</Text>
               <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>IFSC:</Text> HDFC0001203</Text>
             </View>
+          ) : (
+            <View style={styles.bankBox}>
+              <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>GPay / PhonePe / Paytm:</Text></Text>
+              <Text style={[styles.bankText, { fontSize: 14, fontWeight: 'bold', color: '#D4AF37', marginVertical: 4 }]}>+91 99258 11771</Text>
+              <Text style={styles.bankText}>Pay to: Akshay Patel / Brahmani Jewellers</Text>
+            </View>
           )}
+
+          <Text style={[styles.sectionTitle, { marginTop: 14, marginBottom: 8 }]}>Enter Payment Reference ID</Text>
+          <TextInput
+            placeholder="UPI Transaction Ref ID or Bank UTR Number"
+            placeholderTextColor="rgba(28,28,30,0.3)"
+            style={styles.textInput}
+            value={payReference}
+            onChangeText={setPayReference}
+          />
         </View>
 
         {/* Pricing Summary */}
