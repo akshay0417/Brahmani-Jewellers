@@ -53,6 +53,17 @@ export default function ProfileScreen() {
   const [bankIfscInput, setBankIfscInput] = useState('');
   const [bankBranchInput, setBankBranchInput] = useState('');
 
+  const handleLogoutPress = () => {
+    Alert.alert(
+      "Confirm Logout",
+      "Are you sure you want to log out of your account?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Logout", style: "destructive", onPress: logout }
+      ]
+    );
+  };
+
   const fetchRatesAndBankDetails = async () => {
     try {
       const response = await axios.get(`${API_URL}/rates`);
@@ -599,7 +610,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         {/* LOGOUT */}
-        <TouchableOpacity style={[styles.menuRow, { borderBottomWidth: 0 }]} onPress={logout}>
+        <TouchableOpacity style={[styles.menuRow, { borderBottomWidth: 0 }]} onPress={handleLogoutPress}>
           <Ionicons name="log-out-outline" size={24} color="#FF6B6B" />
           <Text style={[styles.menuRowText, { color: '#FF6B6B' }]}>Logout</Text>
           <Ionicons name="chevron-forward" size={18} color="#FF6B6B" />
