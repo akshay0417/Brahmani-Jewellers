@@ -451,7 +451,8 @@ const AdminDashboard = () => {
 
       {/* Slide-out Sidebar Drawer */}
       <div 
-        className={`fixed top-0 left-0 h-screen w-80 bg-cream-alt border-r border-ochre/25 z-50 shadow-2xl p-6 pb-20 transform transition-transform duration-300 ease-in-out overflow-y-auto ${isDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed top-0 bottom-0 left-0 w-80 bg-cream-alt border-r border-ochre/25 z-50 shadow-2xl p-6 pb-24 overscroll-y-contain transform transition-transform duration-300 ease-in-out overflow-y-auto ${isDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div className="flex justify-between items-center mb-8 border-b border-ochre/10 pb-4">
           <div>
