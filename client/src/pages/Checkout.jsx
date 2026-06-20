@@ -15,7 +15,7 @@ const Checkout = () => {
     city: '',
     state: '',
     pincode: '',
-    paymentMethod: 'UPI_Manual'
+    paymentMethod: 'Card'
   });
   const [payReference, setPayReference] = useState('');
   const [loading, setLoading] = useState(false);
@@ -127,25 +127,13 @@ const Checkout = () => {
         state: formData.state,
         pincode: formData.pincode
       },
-      paymentMethod: formData.paymentMethod === 'Card' ? 'Razorpay' : (formData.paymentMethod === 'UPI_Manual' ? 'UPI' : 'Bank Transfer'),
-      paymentReference: formData.paymentMethod !== 'Card' ? payReference.trim() : undefined,
+      paymentMethod: 'Razorpay',
       shippingCharge: deliveryCharge,
       distanceKm: distance
     };
 
-    if (formData.paymentMethod !== 'Card' && !payReference.trim()) {
-      alert('Please enter your payment Transaction ID / Reference ID.');
-      setLoading(false);
-      return;
-    }
-
     try {
-      if (formData.paymentMethod !== 'Card') {
-        // Direct manual checkout (placed as Unpaid/Pending)
-        await api.post('/orders', orderData, config);
-        setOrderSuccess(true);
-        setTimeout(() => navigate('/dashboard'), 3000);
-      } else {
+      if (true) {
         // Razorpay flow: first create a Razorpay Order in backend
         const rzpOrderRes = await api.post('/orders/razorpay-order', { totalAmount: grandTotal }, config);
         const rzpOrderId = rzpOrderRes.data.id;
@@ -274,65 +262,15 @@ const Checkout = () => {
               <h3 className="text-xl font-serif text-coffee mt-12 mb-6 flex items-center gap-3">
                 <CreditCard className="text-ochre" /> Payment Method
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <label className={`flex items-center justify-center gap-2 p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'UPI_Manual' ? 'border-ochre bg-ochre/10' : 'border-ochre/30 bg-cream hover:bg-ochre/5'}`}>
-                  <input type="radio" name="paymentMethod" value="UPI_Manual" checked={formData.paymentMethod === 'UPI_Manual'} onChange={handleChange} className="accent-ochre" />
-                  <span className="text-coffee font-medium text-sm">Manual UPI</span>
-                </label>
-                <label className={`flex items-center justify-center gap-2 p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'Bank_Manual' ? 'border-ochre bg-ochre/10' : 'border-ochre/30 bg-cream hover:bg-ochre/5'}`}>
-                  <input type="radio" name="paymentMethod" value="Bank_Manual" checked={formData.paymentMethod === 'Bank_Manual'} onChange={handleChange} className="accent-ochre" />
-                  <span className="text-coffee font-medium text-sm">Bank Transfer</span>
-                </label>
-                <label className={`flex items-center justify-center gap-2 p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'Card' ? 'border-ochre bg-ochre/10' : 'border-ochre/30 bg-cream hover:bg-ochre/5'}`}>
-                  <input type="radio" name="paymentMethod" value="Card" checked={formData.paymentMethod === 'Card'} onChange={handleChange} className="accent-ochre" />
-                  <span className="text-coffee font-medium text-sm">Online (Razorpay)</span>
-                </label>
+              <div className="p-6 bg-cream border border-ochre/25 rounded-lg space-y-2 shadow-inner">
+                <div className="flex items-center gap-2 text-ochre">
+                  <CreditCard size={18} />
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-coffee/80">Secure Checkout via Razorpay</h4>
+                </div>
+                <p className="text-xs text-coffee/60 leading-relaxed">
+                  You will be redirected to Razorpay to complete your payment securely using UPI, Cards, Netbanking, or Wallet.
+                </p>
               </div>
-
-              {/* Conditional Payment Forms / Info */}
-              {formData.paymentMethod === 'Card' ? (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-cream border border-ochre/25 rounded-lg space-y-2 mt-4 shadow-inner">
-                  <div className="flex items-center gap-2 text-ochre">
-                    <CreditCard size={18} />
-                    <h4 className="text-sm font-bold uppercase tracking-wider text-coffee/80">Secure Checkout via Razorpay</h4>
-                  </div>
-                  <p className="text-xs text-coffee/60">
-                    You will be redirected to Razorpay to complete your payment securely using UPI, Cards, Netbanking, or Wallet.
-                  </p>
-                </motion.div>
-              ) : (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-cream border border-ochre/25 rounded-lg space-y-3 mt-4 shadow-inner">
-                  {formData.paymentMethod === 'UPI_Manual' ? (
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-coffee/70">Pay using UPI (PhonePe / GPay / Paytm)</h4>
-                      <p className="text-sm font-bold text-ochre mt-1">+91 99258 11771</p>
-                      <p className="text-[10px] text-coffee/50">Pay to: Akshay Patel / Brahmani Jewellers</p>
-                    </div>
-                  ) : (
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-coffee/70">Pay using Bank Transfer (IMPS/NEFT)</h4>
-                      <p className="text-xs text-coffee/70 mt-1">
-                        <strong>Bank:</strong> HDFC Bank<br />
-                        <strong>A/C Name:</strong> Brahmani Jewellers<br />
-                        <strong>A/C Number:</strong> 50200081273891<br />
-                        <strong>IFSC:</strong> HDFC0001203
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="space-y-1">
-                    <label className="block text-[10px] uppercase tracking-widest text-coffee/60 font-bold">Transaction Reference / UTR Number</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Enter the 12-digit transaction ID"
-                      value={payReference}
-                      onChange={(e) => setPayReference(e.target.value)}
-                      className="w-full bg-cream border border-ochre/20 p-2.5 rounded text-sm text-coffee focus:outline-none focus:border-ochre"
-                    />
-                  </div>
-                </motion.div>
-              )}
 
               <button type="submit" disabled={loading} className="w-full bg-coffee text-cream py-4 rounded-lg font-bold uppercase tracking-[0.2em] hover:bg-coffee/90 transition-all mt-8 shadow-xl disabled:opacity-50">
                 {loading ? 'Processing Order...' : `Confirm Order (₹${grandTotal.toLocaleString('en-IN')})`}
