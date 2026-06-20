@@ -744,12 +744,8 @@ router.post('/auth/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    if (source !== 'app' && !user.isVerified) {
-      return res.status(403).json({ message: 'Your account is not verified yet. Please click the verification link sent to your email or verify via OTP.', unverified: true });
-    }
-
-    if (source === 'app' && !user.isApproved && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Your account is pending approval from the administrator to access the mobile application. You will receive an email once approved.', unapproved: true });
+    if (user.role !== 'admin' && !user.isVerified && !user.isApproved) {
+      return res.status(403).json({ message: 'Your account is not active yet. Please verify your email/OTP or wait for administrator approval.', unverified: true, unapproved: true });
     }
 
     user.lastLogin = new Date();
@@ -830,13 +826,8 @@ router.post('/auth/request-otp', async (req, res) => {
     const user = await User.findOne({ $or: query });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Enforce email verification link first
-    if (!user.isVerified) {
-      return res.status(403).json({ message: 'Your account is not verified yet. Please check your email for the verification link.', unverified: true });
-    }
-
-    if (source === 'app' && !user.isApproved && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Your account is pending approval from the administrator to access the mobile application. You will receive an email once approved.', unapproved: true });
+    if (user.role !== 'admin' && !user.isVerified && !user.isApproved) {
+      return res.status(403).json({ message: 'Your account is not active yet. Please verify your email/OTP or wait for administrator approval.', unverified: true, unapproved: true });
     }
 
     // Generate 6-digit OTP
@@ -1008,8 +999,8 @@ router.post('/auth/verify-otp', async (req, res) => {
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
 
-    if (source === 'app' && !user.isApproved && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Your account is pending approval from the administrator to access the mobile application. You will receive an email once approved.', unapproved: true });
+    if (user.role !== 'admin' && !user.isVerified && !user.isApproved) {
+      return res.status(403).json({ message: 'Your account is not active yet. Please verify your email/OTP or wait for administrator approval.', unverified: true, unapproved: true });
     }
 
     // Clear OTP
