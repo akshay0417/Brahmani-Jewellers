@@ -48,7 +48,7 @@ const Footer = () => {
               </div>
             </Link>
             <p className="text-coffee/80 text-sm leading-relaxed mb-6 italic transition-colors duration-300">
-              "Elegance that defines you" - Celebrating over 25 years of excellence in jewellery design and trust.
+              "Elegance that defines you" - Celebrating over 35 years of excellence in jewellery design and trust.
             </p>
             <div className="flex gap-4">
               <a href="https://www.instagram.com/brahmanijewellers___?igsh=MTBpaW9kbWx2cTI0dg%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="p-2 bg-cream-alt text-ochre rounded-full hover:bg-ochre hover:text-cream transition-all">
