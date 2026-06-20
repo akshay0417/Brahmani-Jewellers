@@ -60,13 +60,13 @@ const Navbar = () => {
             
             {/* Left Section: Brand Logo (aligned to left) */}
             <div className="flex-shrink-0 flex justify-start items-center">
-              <Link to="/" className="flex items-center gap-2 sm:gap-3 group">
+              <Link to="/" className={`flex items-center transition-all duration-300 group ${scrolled ? 'gap-0' : 'gap-2 sm:gap-3'}`}>
                 <img 
                   src="/logo.png" 
                   alt="Brahmani Jewellers Logo" 
                   className="h-10 w-10 sm:h-16 sm:w-16 object-contain transition-transform duration-300 hover:scale-105" 
                 />
-                <div className="flex flex-col">
+                <div className={`flex flex-col transition-all duration-300 origin-left ${scrolled ? 'w-0 opacity-0 scale-0 overflow-hidden pointer-events-none' : 'w-auto opacity-100 scale-100'}`}>
                   <span className="text-[17px] sm:text-2xl md:text-3xl font-serif font-bold tracking-[0.05em] sm:tracking-[0.1em] text-coffee uppercase leading-none group-hover:text-ochre transition-colors duration-300 whitespace-nowrap">
                     Brahmani
                   </span>
