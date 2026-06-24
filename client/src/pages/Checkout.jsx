@@ -15,13 +15,20 @@ const Checkout = () => {
     city: '',
     state: '',
     pincode: '',
-    paymentMethod: 'Card'
+    paymentMethod: 'UPI_Manual'
   });
   const [payReference, setPayReference] = useState('');
   const [loading, setLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
-  const [deliveryRates, setDeliveryRates] = useState({ freeDeliveryKmLimit: 10, deliveryChargePerKm: 15 });
+  const [deliveryRates, setDeliveryRates] = useState({ freeDeliveryKmLimit: 10, deliveryChargePerKm: 15, codEnabled: true });
   const [user, setUser] = useState(null);
+
+  // Coupon Code States
+  const [couponInput, setCouponInput] = useState('');
+  const [couponCode, setCouponCode] = useState('');
+  const [discountPercent, setDiscountPercent] = useState(0);
+  const [couponError, setCouponError] = useState('');
+  const [couponSuccess, setCouponSuccess] = useState('');
 
   useEffect(() => {
     const fetchDeliveryRates = async () => {
@@ -30,7 +37,8 @@ const Checkout = () => {
         if (res.data) {
           setDeliveryRates({
             freeDeliveryKmLimit: res.data.freeDeliveryKmLimit ?? 10,
-            deliveryChargePerKm: res.data.deliveryChargePerKm ?? 15
+            deliveryChargePerKm: res.data.deliveryChargePerKm ?? 15,
+            codEnabled: res.data.codEnabled ?? true
           });
         }
       } catch (err) {
@@ -70,14 +78,17 @@ const Checkout = () => {
     
     // If it's the shop's pincode (Amraiwadi)
     if (pin === 380026) return 1;
+
+    // Specifically handle Vastral (382418)
+    if (pin === 382418) return 5;
     
-    // If it's in Ahmedabad (starts with 380...)
-    if (pincode.startsWith('380')) {
+    // If it's in Ahmedabad/Gandhinagar region (starts with 380... or 382...)
+    if (pincode.startsWith('380') || pincode.startsWith('382')) {
       const lastThree = pin % 1000;
-      return 2 + (lastThree % 23);
+      return 3 + (lastThree % 15);
     }
     
-    // If it's in Gujarat but outside Ahmedabad (starts with 37... or 38... or 39...)
+    // If it's in Gujarat but outside Ahmedabad/Gandhinagar
     if (pincode.startsWith('37') || pincode.startsWith('38') || pincode.startsWith('39')) {
       const lastThree = pin % 1000;
       return 30 + (lastThree % 170);
@@ -99,10 +110,32 @@ const Checkout = () => {
     }
   }
   
-  const grandTotal = cartTotal + deliveryCharge;
+  const discountAmount = Math.round((cartTotal * discountPercent) / 100);
+  const grandTotal = cartTotal + deliveryCharge - discountAmount;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleApplyCoupon = async () => {
+    setCouponError('');
+    setCouponSuccess('');
+    if (!couponInput.trim()) return;
+
+    try {
+      const token = sessionStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const res = await api.post('/coupons/validate', { code: couponInput.trim() }, config);
+      if (res.data.valid) {
+        setDiscountPercent(res.data.discountPercent);
+        setCouponCode(res.data.code);
+        setCouponSuccess(`Coupon "${res.data.code}" applied! ${res.data.discountPercent}% Discount.`);
+      }
+    } catch (err) {
+      setDiscountPercent(0);
+      setCouponCode('');
+      setCouponError(err.response?.data?.message || 'Invalid coupon code');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -127,13 +160,27 @@ const Checkout = () => {
         state: formData.state,
         pincode: formData.pincode
       },
-      paymentMethod: 'Razorpay',
+      paymentMethod: formData.paymentMethod === 'Card' ? 'Razorpay' : (formData.paymentMethod === 'COD' ? 'COD' : (formData.paymentMethod === 'UPI_Manual' ? 'UPI' : 'Bank Transfer')),
+      paymentReference: (formData.paymentMethod !== 'Card' && formData.paymentMethod !== 'COD') ? payReference.trim() : undefined,
       shippingCharge: deliveryCharge,
-      distanceKm: distance
+      distanceKm: distance,
+      couponCode: couponCode || undefined,
+      discountAmount: discountAmount || 0
     };
 
+    if (formData.paymentMethod !== 'Card' && formData.paymentMethod !== 'COD' && !payReference.trim()) {
+      alert('Please enter your payment Transaction ID / Reference ID.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      if (true) {
+      if (formData.paymentMethod !== 'Card') {
+        // Direct manual checkout (placed as Unpaid/Pending)
+        await api.post('/orders', orderData, config);
+        setOrderSuccess(true);
+        setTimeout(() => navigate('/dashboard'), 3000);
+      } else {
         // Razorpay flow: first create a Razorpay Order in backend
         const rzpOrderRes = await api.post('/orders/razorpay-order', { totalAmount: grandTotal }, config);
         const rzpOrderId = rzpOrderRes.data.id;
@@ -160,7 +207,7 @@ const Checkout = () => {
         } else {
           // Live Razorpay Mode
           const options = {
-            key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_mockKeyId123',
+            key: rzpOrderRes.data.key || import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_mockKeyId123',
             amount: rzpOrderRes.data.amount,
             currency: rzpOrderRes.data.currency,
             name: "Brahmani Jewellers",
@@ -191,6 +238,12 @@ const Checkout = () => {
             },
             theme: {
               color: "#b08968"
+            },
+            modal: {
+              ondismiss: function () {
+                setLoading(false);
+                alert("Payment cancelled. You can try checkout again.");
+              }
             }
           };
 
@@ -262,15 +315,81 @@ const Checkout = () => {
               <h3 className="text-xl font-serif text-coffee mt-12 mb-6 flex items-center gap-3">
                 <CreditCard className="text-ochre" /> Payment Method
               </h3>
-              <div className="p-6 bg-cream border border-ochre/25 rounded-lg space-y-2 shadow-inner">
-                <div className="flex items-center gap-2 text-ochre">
-                  <CreditCard size={18} />
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-coffee/80">Secure Checkout via Razorpay</h4>
-                </div>
-                <p className="text-xs text-coffee/60 leading-relaxed">
-                  You will be redirected to Razorpay to complete your payment securely using UPI, Cards, Netbanking, or Wallet.
-                </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label className={`flex items-center justify-center gap-2 p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'UPI_Manual' ? 'border-ochre bg-ochre/10' : 'border-ochre/30 bg-cream hover:bg-ochre/5'}`}>
+                  <input type="radio" name="paymentMethod" value="UPI_Manual" checked={formData.paymentMethod === 'UPI_Manual'} onChange={handleChange} className="accent-ochre" />
+                  <span className="text-coffee font-medium text-sm">Manual UPI</span>
+                </label>
+                <label className={`flex items-center justify-center gap-2 p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'Bank_Manual' ? 'border-ochre bg-ochre/10' : 'border-ochre/30 bg-cream hover:bg-ochre/5'}`}>
+                  <input type="radio" name="paymentMethod" value="Bank_Manual" checked={formData.paymentMethod === 'Bank_Manual'} onChange={handleChange} className="accent-ochre" />
+                  <span className="text-coffee font-medium text-sm">Bank Transfer</span>
+                </label>
+                {deliveryRates.codEnabled && (
+                  <label className={`flex items-center justify-center gap-2 p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'COD' ? 'border-ochre bg-ochre/10' : 'border-ochre/30 bg-cream hover:bg-ochre/5'}`}>
+                    <input type="radio" name="paymentMethod" value="COD" checked={formData.paymentMethod === 'COD'} onChange={handleChange} className="accent-ochre" />
+                    <span className="text-coffee font-medium text-sm">Cash on Delivery (COD)</span>
+                  </label>
+                )}
+                <label className={`flex items-center justify-center gap-2 p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'Card' ? 'border-ochre bg-ochre/10' : 'border-ochre/30 bg-cream hover:bg-ochre/5'}`}>
+                  <input type="radio" name="paymentMethod" value="Card" checked={formData.paymentMethod === 'Card'} onChange={handleChange} className="accent-ochre" />
+                  <span className="text-coffee font-medium text-sm">Online (Razorpay)</span>
+                </label>
               </div>
+
+              {/* Conditional Payment Forms / Info */}
+              {formData.paymentMethod === 'Card' ? (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-cream border border-ochre/25 rounded-lg space-y-2 mt-4 shadow-inner">
+                  <div className="flex items-center gap-2 text-ochre">
+                    <CreditCard size={18} />
+                    <h4 className="text-sm font-bold uppercase tracking-wider text-coffee/80">Secure Checkout via Razorpay</h4>
+                  </div>
+                  <p className="text-xs text-coffee/60">
+                    You will be redirected to Razorpay to complete your payment securely using UPI, Cards, Netbanking, or Wallet.
+                  </p>
+                </motion.div>
+              ) : formData.paymentMethod === 'COD' ? (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-cream border border-ochre/25 rounded-lg space-y-2 mt-4 shadow-inner">
+                  <div className="flex items-center gap-2 text-green-600">
+                    <CheckCircle size={18} />
+                    <h4 className="text-sm font-bold uppercase tracking-wider text-coffee/80">Cash on Delivery (COD)</h4>
+                  </div>
+                  <p className="text-xs text-coffee/60">
+                    No advance payment required. You will pay the amount in cash to our delivery executive upon receipt of your jewellery.
+                  </p>
+                </motion.div>
+              ) : (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-cream border border-ochre/25 rounded-lg space-y-3 mt-4 shadow-inner">
+                  {formData.paymentMethod === 'UPI_Manual' ? (
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-coffee/70">Pay using UPI (PhonePe / GPay / Paytm)</h4>
+                      <p className="text-sm font-bold text-ochre mt-1">+91 99258 11771</p>
+                      <p className="text-[10px] text-coffee/50">Pay to: Akshay Patel / Brahmani Jewellers</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-coffee/70">Pay using Bank Transfer (IMPS/NEFT)</h4>
+                      <p className="text-xs text-coffee/70 mt-1">
+                        <strong>Bank:</strong> HDFC Bank<br />
+                        <strong>A/C Name:</strong> Brahmani Jewellers<br />
+                        <strong>A/C Number:</strong> 50200081273891<br />
+                        <strong>IFSC:</strong> HDFC0001203
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-widest text-coffee/60 font-bold">Transaction Reference / UTR Number</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Enter the 12-digit transaction ID"
+                      value={payReference}
+                      onChange={(e) => setPayReference(e.target.value)}
+                      className="w-full bg-cream border border-ochre/20 p-2.5 rounded text-sm text-coffee focus:outline-none focus:border-ochre"
+                    />
+                  </div>
+                </motion.div>
+              )}
 
               <button type="submit" disabled={loading} className="w-full bg-coffee text-cream py-4 rounded-lg font-bold uppercase tracking-[0.2em] hover:bg-coffee/90 transition-all mt-8 shadow-xl disabled:opacity-50">
                 {loading ? 'Processing Order...' : `Confirm Order (₹${grandTotal.toLocaleString('en-IN')})`}
@@ -290,11 +409,57 @@ const Checkout = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Coupon Code Section */}
+              <div className="pt-6 border-t border-ochre/20 mb-6">
+                <label className="block text-xs uppercase tracking-widest text-coffee/60 mb-2">Have a Coupon?</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                    className="flex-1 bg-cream border border-ochre/20 p-2.5 rounded text-sm text-coffee focus:outline-none focus:border-ochre font-mono uppercase"
+                    placeholder="Enter Coupon Code"
+                    disabled={couponCode}
+                  />
+                  {couponCode ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCouponCode('');
+                        setDiscountPercent(0);
+                        setCouponInput('');
+                        setCouponSuccess('');
+                      }}
+                      className="px-4 py-2.5 bg-red-600/10 text-red-600 border border-red-600/20 text-xs font-bold uppercase tracking-wider hover:bg-red-600 hover:text-white transition-all rounded"
+                    >
+                      Remove
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      className="px-6 py-2.5 bg-ochre text-coffee text-xs font-bold uppercase tracking-wider hover:bg-ochre/90 transition-all rounded"
+                    >
+                      Apply
+                    </button>
+                  )}
+                </div>
+                {couponError && <p className="text-xs text-red-600 mt-1.5 font-semibold">{couponError}</p>}
+                {couponSuccess && <p className="text-xs text-green-600 mt-1.5 font-semibold">{couponSuccess}</p>}
+              </div>
+
               <div className="pt-6 border-t border-ochre/20">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-coffee/60">Subtotal</span>
                   <span className="font-medium text-coffee">₹{cartTotal.toLocaleString('en-IN')}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between items-center mb-2 text-xs text-green-600 font-bold">
+                    <span>Discount ({discountPercent}%)</span>
+                    <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
                 {distance > 0 && (
                   <div className="flex justify-between items-center mb-2 text-xs text-coffee/70">
                     <span>Estimated Distance</span>

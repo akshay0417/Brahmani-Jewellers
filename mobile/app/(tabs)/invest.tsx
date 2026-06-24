@@ -745,6 +745,8 @@ export default function InvestScreen() {
                     </Reanimated.View>
                   )}
 
+                  {activeSegment === 'sell' && (
+                    <Reanimated.View entering={FadeInDown.duration(300)} style={styles.section}>
                       {/* Resell Info Card */}
                       <View style={styles.resellCard}>
                         <View style={styles.resellCardHeader}>

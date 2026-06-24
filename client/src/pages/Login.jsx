@@ -80,15 +80,23 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccessMsg('');
     try {
-      const res = await api.post('/auth/login', { identifier, password });
+      const res = await api.post('/auth/login', { identifier: identifier.trim(), password });
       sessionStorage.setItem('token', res.data.token);
       sessionStorage.setItem('user', JSON.stringify(res.data.user));
       const dashboardPath = res.data.user.role === 'admin' ? '/admin/dashboard' : '/dashboard';
       navigate(dashboardPath);
     } catch (err) {
       if (err.response?.status === 403 && err.response?.data?.unverified) {
-        setError(err.response.data.message || 'Your account is not verified yet. Please check your email for the verification link.');
+        setSuccessMsg('Your account is not verified yet. We have sent a verification OTP to your email/mobile. Please enter it below.');
+        try {
+          await api.post('/auth/request-otp', { identifier });
+        } catch (otpErr) {
+          console.error(otpErr);
+        }
+        setStep(2);
+        setOtpTimer(120);
       } else {
         setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
       }
@@ -103,10 +111,10 @@ const Login = () => {
     setError('');
     setSuccessMsg('');
     try {
-      const res = await api.post('/auth/request-otp', { identifier });
+      const res = await api.post('/auth/request-otp', { identifier: identifier.trim() });
       setSuccessMsg(res.data.message);
       setStep(2);
-      setOtpTimer(600); // 10 minutes validity
+      setOtpTimer(120); // 2 minutes validity
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send OTP. User may not exist.');
     } finally {
@@ -119,7 +127,7 @@ const Login = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await api.post('/auth/verify-otp', { identifier, otp });
+      const res = await api.post('/auth/verify-otp', { identifier: identifier.trim(), otp: otp.trim() });
       sessionStorage.setItem('token', res.data.token);
       sessionStorage.setItem('user', JSON.stringify(res.data.user));
       const dashboardPath = res.data.user.role === 'admin' ? '/admin/dashboard' : '/dashboard';

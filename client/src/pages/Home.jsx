@@ -101,8 +101,12 @@ const Categories = () => {
   
   useEffect(() => {
     api.get('/gallery').then(res => {
-      // slice top 8 for the home page showcase to fill a 4-col grid nicely
-      const showcased = res.data.slice(0, 8);
+      // Filter for items that are marked as featured by the admin
+      let showcased = res.data.filter(item => item.isFeatured === true);
+      // Fallback to top 8 items if no items are featured yet
+      if (showcased.length === 0) {
+        showcased = res.data.slice(0, 8);
+      }
       setItems(showcased);
     }).catch(err => console.log("Error fetching gallery", err));
   }, []);

@@ -2,10 +2,10 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext<any>(null);
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+export const AuthProvider = ({ children }: any) => {
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     const loadPersistedUser = async () => {
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
     loadPersistedUser();
   }, []);
 
-  const login = async (userData, rememberMe = true) => {
+  const login = async (userData: any, rememberMe = true) => {
     setUser(userData);
     try {
       if (rememberMe) {

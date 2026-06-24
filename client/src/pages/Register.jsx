@@ -11,6 +11,9 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [step, setStep] = useState(1); // 1 = register form, 2 = OTP verification
+  const [otp, setOtp] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -52,17 +55,54 @@ const Register = () => {
 
     setLoading(true);
     setError('');
+    setSuccess('');
     try {
       const { confirmPassword, ...registerData } = formData;
-      const res = await api.post('/auth/register', registerData);
-      setSuccess('Registration successful! Please check your email for the verification link.');
-      setTimeout(() => {
-        navigate('/login', { state: { identifier: res.data.identifier || formData.email || formData.mobile, step: 1, successMsg: res.data.message } });
-      }, 3000);
+      await api.post('/auth/register', registerData);
+      setSuccess('Registration successful! Please enter the OTP code sent to your email/mobile.');
+      setStep(2);
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (!otp) {
+      setError('Please enter the OTP');
+      return;
+    }
+    setOtpLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      const identifier = formData.email || formData.mobile;
+      const res = await api.post('/auth/verify-otp', { identifier, otp });
+      sessionStorage.setItem('token', res.data.token);
+      sessionStorage.setItem('user', JSON.stringify(res.data.user));
+      setSuccess('Login Successful!');
+      setTimeout(() => {
+        const dashboardPath = res.data.user.role === 'admin' ? '/admin/dashboard' : '/dashboard';
+        navigate(dashboardPath);
+      }, 1500);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Verification failed. Please try again.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setError('');
+    setSuccess('');
+    try {
+      const identifier = formData.email || formData.mobile;
+      await api.post('/auth/request-otp', { identifier });
+      setSuccess('OTP resent successfully. Please check your inbox.');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to resend OTP.');
     }
   };
 
@@ -98,106 +138,149 @@ const Register = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/50" size={20} />
-            <input
-              type="text"
-              name="name"
-              placeholder="Full Name"
-              required
-              className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-4 text-coffee focus:outline-none focus:border-ochre transition-colors"
-              onChange={handleChange}
-            />
-          </div>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/50" size={20} />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              required
-              className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-4 text-coffee focus:outline-none focus:border-ochre transition-colors"
-              onChange={handleChange}
-            />
-          </div>
-          <div className="relative">
-            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/50" size={20} />
-            <input
-              type="tel"
-              name="mobile"
-              placeholder="10-digit Mobile Number"
-              required
-              className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-4 text-coffee focus:outline-none focus:border-ochre transition-colors"
-              onChange={handleChange}
-            />
-          </div>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/50" size={20} />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              placeholder="Password"
-              required
-              className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-12 text-coffee focus:outline-none focus:border-ochre transition-colors"
-              onChange={handleChange}
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-ochre/50 hover:text-ochre focus:outline-none"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/50" size={20} />
-            <input
-              type={showConfirmPassword ? 'text' : 'password'}
-              name="confirmPassword"
-              placeholder="Confirm Password"
-              required
-              className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-12 text-coffee focus:outline-none focus:border-ochre transition-colors"
-              onChange={handleChange}
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-ochre/50 hover:text-ochre focus:outline-none"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
+        {step === 1 ? (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/50" size={20} />
+              <input
+                type="text"
+                name="name"
+                placeholder="Full Name"
+                required
+                className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-4 text-coffee focus:outline-none focus:border-ochre transition-colors"
+                onChange={handleChange}
+              />
+            </div>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/50" size={20} />
+              <input
+                type="email"
+                name="email"
+                placeholder="Email Address"
+                required
+                className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-4 text-coffee focus:outline-none focus:border-ochre transition-colors"
+                onChange={handleChange}
+              />
+            </div>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/50" size={20} />
+              <input
+                type="tel"
+                name="mobile"
+                placeholder="10-digit Mobile Number"
+                required
+                className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-4 text-coffee focus:outline-none focus:border-ochre transition-colors"
+                onChange={handleChange}
+              />
+            </div>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/50" size={20} />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                placeholder="Password"
+                required
+                className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-12 text-coffee focus:outline-none focus:border-ochre transition-colors"
+                onChange={handleChange}
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-ochre/50 hover:text-ochre focus:outline-none"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/50" size={20} />
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                required
+                className="w-full bg-cream border border-ochre/20 rounded-sm py-3 pl-12 pr-12 text-coffee focus:outline-none focus:border-ochre transition-colors"
+                onChange={handleChange}
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-ochre/50 hover:text-ochre focus:outline-none"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
 
-          <div className="flex items-center space-x-2 py-1">
-            <input
-              type="checkbox"
-              id="termsAccepted"
-              name="termsAccepted"
-              checked={formData.termsAccepted}
-              onChange={(e) => setFormData({ ...formData, termsAccepted: e.target.checked })}
-              className="w-4 h-4 rounded text-ochre focus:ring-ochre border-ochre/20 cursor-pointer"
-            />
-            <label htmlFor="termsAccepted" className="text-xs text-coffee/80 cursor-pointer">
-              I agree to the{' '}
-              <Link to="/terms-conditions" className="text-ochre hover:underline font-bold" target="_blank">
-                Terms & Conditions
-              </Link>{' '}
-              and{' '}
-              <Link to="/privacy-policy" className="text-ochre hover:underline font-bold" target="_blank">
-                Privacy Policy
-              </Link>
-            </label>
-          </div>
+            <div className="flex items-center space-x-2 py-1">
+              <input
+                type="checkbox"
+                id="termsAccepted"
+                name="termsAccepted"
+                checked={formData.termsAccepted}
+                onChange={(e) => setFormData({ ...formData, termsAccepted: e.target.checked })}
+                className="w-4 h-4 rounded text-ochre focus:ring-ochre border-ochre/20 cursor-pointer"
+              />
+              <label htmlFor="termsAccepted" className="text-xs text-coffee/80 cursor-pointer">
+                I agree to the{' '}
+                <Link to="/terms-conditions" className="text-ochre hover:underline font-bold" target="_blank">
+                  Terms & Conditions
+                </Link>{' '}
+                and{' '}
+                <Link to="/privacy-policy" className="text-ochre hover:underline font-bold" target="_blank">
+                  Privacy Policy
+                </Link>
+              </label>
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-ochre text-cream font-bold py-3 uppercase tracking-[0.2em] hover:bg-ochre/90 transition-all disabled:opacity-50"
-          >
-            {loading ? 'Creating Account...' : 'Sign Up'}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-ochre text-cream font-bold py-3 uppercase tracking-[0.2em] hover:bg-ochre/90 transition-all disabled:opacity-50"
+            >
+              {loading ? 'Creating Account...' : 'Sign Up'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOtp} className="space-y-6">
+            <div className="text-center mb-4">
+              <p className="text-sm text-coffee/80 leading-relaxed">
+                Please enter the 6-digit OTP code sent to your email/mobile.
+              </p>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Enter 6-digit OTP"
+                required
+                value={otp}
+                className="w-full bg-cream border border-ochre/20 rounded-sm py-3 px-4 text-coffee focus:outline-none focus:border-ochre transition-colors tracking-[0.3em] text-center text-lg font-bold"
+                onChange={(e) => setOtp(e.target.value)}
+              />
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <button 
+                type="button" 
+                onClick={() => { setStep(1); setError(''); setSuccess(''); }} 
+                className="text-coffee/70 hover:text-ochre transition-colors"
+              >
+                Back to Signup
+              </button>
+              <button 
+                type="button" 
+                onClick={handleResendOtp} 
+                className="text-ochre hover:underline font-bold"
+              >
+                Resend OTP
+              </button>
+            </div>
+            <button
+              type="submit"
+              disabled={otpLoading}
+              className="w-full bg-ochre text-cream font-bold py-3 uppercase tracking-[0.2em] hover:bg-ochre/90 transition-all disabled:opacity-50"
+            >
+              {otpLoading ? 'Verifying...' : 'Verify & Sign In'}
+            </button>
+          </form>
+        )}
 
         <p className="mt-6 text-center text-coffee/70 text-sm transition-colors duration-300">
           Already have an account?{' '}

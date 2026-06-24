@@ -235,6 +235,81 @@ const UserDashboard = () => {
                       </div>
                     </div>
 
+                    {/* Status Stepper (Amazon/Flipkart Style) */}
+                    {order.status !== 'Cancelled' ? (
+                      <div className="py-4 px-3 bg-cream-alt/40 rounded-lg border border-ochre/15 my-4 select-none">
+                        <div className="flex justify-between items-center relative max-w-md mx-auto py-2">
+                          {/* Stepper Progress Line */}
+                          <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-coffee/10 z-0">
+                            <div 
+                              className="h-full bg-ochre transition-all duration-500" 
+                              style={{ 
+                                width: `${
+                                  order.status === 'Pending' ? '0%' :
+                                  order.status === 'Processing' ? '33.33%' :
+                                  order.status === 'Shipped' ? '66.66%' :
+                                  order.status === 'Delivered' ? '100%' : '0%'
+                                }` 
+                              }}
+                            />
+                          </div>
+
+                          {/* Steps */}
+                          {[
+                            { label: 'Ordered', statusKey: 'Pending', stepIndex: 0 },
+                            { label: 'Packed', statusKey: 'Processing', stepIndex: 1 },
+                            { label: 'Shipped', statusKey: 'Shipped', stepIndex: 2 },
+                            { label: 'Delivered', statusKey: 'Delivered', stepIndex: 3 }
+                          ].map((step, idx) => {
+                            const statusOrder = ['Pending', 'Processing', 'Shipped', 'Delivered'];
+                            const orderIndex = statusOrder.indexOf(order.status);
+                            const isCompleted = orderIndex >= step.stepIndex;
+                            const isActive = orderIndex === step.stepIndex;
+
+                            return (
+                              <div key={idx} className="flex flex-col items-center z-10 relative">
+                                <div 
+                                  className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold border transition-all ${
+                                    isCompleted 
+                                      ? 'bg-ochre text-coffee border-ochre scale-110 shadow-md shadow-ochre/20' 
+                                      : 'bg-cream text-coffee/30 border-coffee/10'
+                                  } ${isActive ? 'ring-2 ring-ochre ring-offset-2 ring-offset-cream' : ''}`}
+                                >
+                                  {isCompleted ? '✓' : idx + 1}
+                                </div>
+                                <span className={`text-[9px] mt-2 font-bold uppercase tracking-wider ${
+                                  isCompleted ? 'text-coffee' : 'text-coffee/40'
+                                }`}>
+                                  {step.label}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Expected Delivery or Pickup */}
+                        {(order.expectedDelivery || order.deliveryMode === 'Pickup') && (
+                          <div className="mt-3 pt-2.5 border-t border-ochre/10 text-center text-xs text-coffee/80 font-medium">
+                            {order.deliveryMode === 'Pickup' ? (
+                              <p>
+                                🏪 Ready for In-Store Pickup. Secure Code: <span className="text-ochre font-bold font-mono">{order.pickupCode || 'N/A'}</span>
+                              </p>
+                            ) : (
+                              order.expectedDelivery && (
+                                <p>
+                                  📅 Expected Delivery: <span className="text-ochre font-bold">{order.expectedDelivery}</span>
+                                </p>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-600 text-center font-bold text-[10px] uppercase tracking-wider rounded-lg my-4">
+                        ❌ This Order Has Been Cancelled
+                      </div>
+                    )}
+
                     {/* Order Items */}
                     <div className="space-y-2">
                       {order.items?.map((item, idx) => (
@@ -265,18 +340,29 @@ const UserDashboard = () => {
                         {order.trackingId && (
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] uppercase font-bold text-coffee/50">Tracking:</span>
-                            <a
-                              href={`https://www.delhivery.com/track/package/${order.trackingId}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-[10px] text-ochre font-bold hover:underline"
-                            >
-                              {order.trackingId} <ExternalLink size={10} />
-                            </a>
+                            {order.deliveryPartner === 'Delhivery' ? (
+                              <a
+                                href={`https://www.delhivery.com/track/package/${order.trackingId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-[10px] text-ochre font-bold hover:underline"
+                              >
+                                {order.trackingId} <ExternalLink size={10} />
+                              </a>
+                            ) : (
+                              <span className="text-[10px] text-coffee font-semibold">
+                                {order.trackingId} ({order.deliveryPartner || 'Self-Delivery'})
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>
                       <div className="text-right">
+                        {order.couponCode && (
+                          <p className="text-xs text-green-600 font-bold mb-0.5">
+                            Coupon Applied ({order.couponCode}): -₹{(order.discountAmount || 0).toLocaleString('en-IN')}
+                          </p>
+                        )}
                         <p className="text-xs text-coffee/60">
                           Shipping: {order.shippingCharge > 0 ? `₹${order.shippingCharge.toLocaleString('en-IN')}` : 'Free'}
                         </p>

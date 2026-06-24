@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import api from '../api';
 
 const CartContext = createContext();
@@ -8,13 +9,27 @@ export const CartProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const token = sessionStorage.getItem('token');
-  const config = token ? { headers: { Authorization: `Bearer ${token}` } } : null;
+  const [token, setToken] = useState(sessionStorage.getItem('token'));
+  const location = useLocation();
 
-  const fetchCart = async () => {
-    if (!token) return;
+  // Sync token state synchronously during render if changed in sessionStorage
+  const currentToken = sessionStorage.getItem('token');
+  if (currentToken !== token) {
+    setToken(currentToken);
+  }
+
+  useEffect(() => {
+    const freshToken = sessionStorage.getItem('token');
+    if (freshToken !== token) {
+      setToken(freshToken);
+    }
+  }, [location, token]);
+
+  const fetchCart = async (activeToken) => {
+    const t = activeToken || token;
+    if (!t) return;
     try {
-      const res = await api.get('/cart', config);
+      const res = await api.get('/cart', { headers: { Authorization: `Bearer ${t}` } });
       setCart(res.data);
     } catch (err) {
       console.error("Error fetching cart", err);
@@ -22,17 +37,22 @@ export const CartProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (token) fetchCart();
+    if (token) {
+      fetchCart(token);
+    } else {
+      setCart({ items: [] });
+    }
   }, [token]);
 
   const addToCart = async (productId, quantity = 1) => {
-    if (!token) {
+    const activeToken = sessionStorage.getItem('token') || token;
+    if (!activeToken) {
       alert("Please login to add items to cart");
       return;
     }
     setLoading(true);
     try {
-      const res = await api.post('/cart/add', { productId, quantity }, config);
+      const res = await api.post('/cart/add', { productId, quantity }, { headers: { Authorization: `Bearer ${activeToken}` } });
       setCart(res.data);
       setIsCartOpen(true);
     } catch (err) {
@@ -43,8 +63,10 @@ export const CartProvider = ({ children }) => {
   };
 
   const updateQuantity = async (productId, quantity) => {
+    const activeToken = sessionStorage.getItem('token') || token;
+    if (!activeToken) return;
     try {
-      const res = await api.put('/cart/update', { productId, quantity }, config);
+      const res = await api.put('/cart/update', { productId, quantity }, { headers: { Authorization: `Bearer ${activeToken}` } });
       setCart(res.data);
     } catch (err) {
       console.error("Error updating quantity", err);
@@ -52,8 +74,10 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeFromCart = async (productId) => {
+    const activeToken = sessionStorage.getItem('token') || token;
+    if (!activeToken) return;
     try {
-      const res = await api.delete(`/cart/remove/${productId}`, config);
+      const res = await api.delete(`/cart/remove/${productId}`, { headers: { Authorization: `Bearer ${activeToken}` } });
       setCart(res.data);
     } catch (err) {
       console.error("Error removing from cart", err);

@@ -351,6 +351,24 @@ const upload = multer({
 
 // --- AUTHENTICATION ROUTES ---
 
+// Helper function to sanitize user identifier (email or mobile)
+const sanitizeIdentifier = (id) => {
+  if (!id || typeof id !== 'string') return { email: null, mobile: null };
+  const trimmed = id.trim();
+  if (trimmed.includes('@')) {
+    return { email: trimmed.toLowerCase(), mobile: null };
+  } else {
+    const digits = trimmed.replace(/\D/g, '');
+    if (digits.length === 12 && digits.startsWith('91')) {
+      return { email: null, mobile: digits.slice(2) };
+    }
+    if (digits.length === 10) {
+      return { email: null, mobile: digits };
+    }
+    return { email: null, mobile: digits }; // fallback
+  }
+};
+
 // User Registration
 router.post('/auth/register', async (req, res) => {
   const { name, email, mobile, password, country, state, city, termsAccepted } = req.body;
@@ -359,9 +377,20 @@ router.post('/auth/register', async (req, res) => {
       return res.status(400).json({ message: 'You must accept the Terms & Conditions and Privacy Policy.' });
     }
 
+    const sanitizedEmail = email ? email.trim().toLowerCase() : undefined;
+    let sanitizedMobile = mobile ? mobile.trim() : undefined;
+    if (sanitizedMobile) {
+      const digits = sanitizedMobile.replace(/\D/g, '');
+      if (digits.length === 12 && digits.startsWith('91')) {
+        sanitizedMobile = digits.slice(2);
+      } else {
+        sanitizedMobile = digits;
+      }
+    }
+
     const query = [];
-    if (email) query.push({ email: email.toLowerCase() });
-    if (mobile) query.push({ mobile });
+    if (sanitizedEmail) query.push({ email: sanitizedEmail });
+    if (sanitizedMobile) query.push({ mobile: sanitizedMobile });
 
     const existingUser = await User.findOne({ $or: query });
     if (existingUser) return res.status(400).json({ message: 'User already exists with this email or mobile number' });
@@ -371,20 +400,21 @@ router.post('/auth/register', async (req, res) => {
 
     const newUser = new User({ 
       name, 
-      email: email ? email.toLowerCase() : undefined, 
-      mobile, 
+      email: sanitizedEmail, 
+      mobile: sanitizedMobile, 
       password: hashedPassword, 
       country, 
       state, 
       city, 
-      isApproved: false,
+      isVerified: false,
+      isApproved: true,
       termsAccepted: true
     });
     
     // Generate OTP for mobile/fallback verification
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     newUser.otp = otp;
-    newUser.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    newUser.otpExpiry = new Date(Date.now() + 2 * 60 * 1000); // 2 mins
 
     // Generate secure crypto verification token for email link
     const crypto = require('crypto');
@@ -394,9 +424,9 @@ router.post('/auth/register', async (req, res) => {
 
     await newUser.save();
 
-    console.log(`[MOCK OTP] Your OTP for ${mobile} / ${email} is ${otp}`);
+    console.log(`[MOCK OTP] Your OTP for ${sanitizedMobile} / ${sanitizedEmail} is ${otp}`);
 
-    if (email) {
+    if (sanitizedEmail) {
       try {
         const backendUrl = `${req.protocol}://${req.get('host')}`;
         const verifyUrl = `${backendUrl}/api/auth/verify-email?token=${verificationToken}`;
@@ -415,7 +445,7 @@ router.post('/auth/register', async (req, res) => {
             <div style="background-color: #FCF0DA; padding: 20px; text-align: center; border-radius: 8px; margin: 25px 0; border: 1px solid #EBA938;">
               <p style="margin: 0 0 10px 0; color: #3D2B1F; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Your OTP Verification Code</p>
               <h1 style="letter-spacing: 5px; color: #3D2B1F; margin: 0; font-size: 2.2em; font-family: monospace;">${otp}</h1>
-              <p style="color: #666; font-size: 12px; margin-top: 10px; margin-bottom: 0;">This verification code is valid for 10 minutes.</p>
+              <p style="color: #666; font-size: 12px; margin-top: 10px; margin-bottom: 0;">This verification code is valid for 2 minutes.</p>
             </div>
 
             <!-- Verification Button Link -->
@@ -438,13 +468,13 @@ router.post('/auth/register', async (req, res) => {
             </div>
           </div>
         `;
-        sendEmail(email, 'Welcome to Brahmani Jewellers - Verify Your Account', welcomeHtml).catch(console.error);
+        sendEmail(sanitizedEmail, 'Welcome to Brahmani Jewellers - Verify Your Account', welcomeHtml).catch(console.error);
       } catch (err) {
         // Continue even if email fails during development
       }
     }
     
-    if (mobile) {
+    if (sanitizedMobile) {
       if (process.env.FAST2SMS_API_KEY) {
         try {
           await axios.get('https://www.fast2sms.com/dev/bulkV2', {
@@ -452,12 +482,12 @@ router.post('/auth/register', async (req, res) => {
               authorization: process.env.FAST2SMS_API_KEY,
               variables_values: otp,
               route: 'otp',
-              numbers: mobile
+              numbers: sanitizedMobile
             }
           });
-          console.log(`[Fast2SMS] OTP successfully sent to ${mobile}`);
+          console.log(`[Fast2SMS] OTP successfully sent to ${sanitizedMobile}`);
         } catch (smsErr) {
-          console.error(`[Fast2SMS ERROR] Failed to send to ${mobile}:`, smsErr.message);
+          console.error(`[Fast2SMS ERROR] Failed to send to ${sanitizedMobile}:`, smsErr.message);
         }
       } else if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_NUMBER) {
         try {
@@ -465,14 +495,14 @@ router.post('/auth/register', async (req, res) => {
           twilioClient.messages.create({
             body: `Your Brahmani Jewellers Registration OTP is: ${otp}`,
             from: process.env.TWILIO_WHATSAPP_NUMBER,
-            to: `+91${mobile}`
+            to: `+91${sanitizedMobile}`
           }).then(() => {
-            console.log(`[SMS/WA] OTP successfully sent to ${mobile}`);
+            console.log(`[SMS/WA] OTP successfully sent to ${sanitizedMobile}`);
           }).catch((smsErr) => {
-            console.error(`[SMS/WA ERROR] Failed to send to ${mobile}:`, smsErr);
+            console.error(`[SMS/WA ERROR] Failed to send to ${sanitizedMobile}:`, smsErr);
           });
         } catch (smsErr) {
-          console.error(`[SMS/WA ERROR] Failed to send to ${mobile}:`, smsErr);
+          console.error(`[SMS/WA ERROR] Failed to send to ${sanitizedMobile}:`, smsErr);
         }
       } else {
         console.log(`[SMS/WA] Twilio credentials not found in .env. Skipping SMS.`);
@@ -725,14 +755,7 @@ router.post('/auth/verify-email', async (req, res) => {
 router.post('/auth/login', async (req, res) => {
   const { identifier, password, source } = req.body;
   try {
-    let email = null;
-    let mobile = null;
-
-    if (identifier.includes('@')) {
-      email = identifier.toLowerCase();
-    } else {
-      mobile = identifier;
-    }
+    const { email, mobile } = sanitizeIdentifier(identifier);
 
     const query = [];
     if (email) query.push({ email });
@@ -744,15 +767,19 @@ router.post('/auth/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    if (user.role !== 'admin' && !user.isVerified && !user.isApproved) {
-      return res.status(403).json({ message: 'Your account is not active yet. Please verify your email/OTP or wait for administrator approval.', unverified: true, unapproved: true });
+    if (user.role !== 'admin' && !user.isApproved) {
+      return res.status(403).json({ message: 'Your account has been deactivated or is pending administrator approval.' });
+    }
+
+    if (user.role !== 'admin' && !user.isVerified) {
+      return res.status(403).json({ message: 'Your account is not verified yet. Please verify your OTP to log in.', unverified: true });
     }
 
     user.lastLogin = new Date();
     await user.save();
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    const userRole = (user.role === 'admin' && user.email === 'info.brahmanijewellers@gmail.com') ? 'admin' : 'customer';
+    const userRole = user.role === 'admin' ? 'admin' : 'customer';
     res.json({ token, user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile, role: userRole } });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -810,14 +837,7 @@ router.put('/auth/kyc', auth, async (req, res) => {
 router.post('/auth/request-otp', async (req, res) => {
   const { identifier, source } = req.body;
   try {
-    let email = null;
-    let mobile = null;
-
-    if (identifier.includes('@')) {
-      email = identifier.toLowerCase();
-    } else {
-      mobile = identifier;
-    }
+    const { email, mobile } = sanitizeIdentifier(identifier);
 
     const query = [];
     if (email) query.push({ email });
@@ -979,14 +999,7 @@ router.post('/auth/reset-password', async (req, res) => {
 router.post('/auth/verify-otp', async (req, res) => {
   const { identifier, otp, source } = req.body;
   try {
-    let email = null;
-    let mobile = null;
-
-    if (identifier.includes('@')) {
-      email = identifier.toLowerCase();
-    } else {
-      mobile = identifier;
-    }
+    const { email, mobile } = sanitizeIdentifier(identifier);
 
     const query = [];
     if (email) query.push({ email });
@@ -997,10 +1010,6 @@ router.post('/auth/verify-otp', async (req, res) => {
 
     if (user.otp !== otp || user.otpExpiry < new Date()) {
       return res.status(400).json({ message: 'Invalid or expired OTP' });
-    }
-
-    if (user.role !== 'admin' && !user.isVerified && !user.isApproved) {
-      return res.status(403).json({ message: 'Your account is not active yet. Please verify your email/OTP or wait for administrator approval.', unverified: true, unapproved: true });
     }
 
     // Clear OTP
@@ -1129,7 +1138,7 @@ router.put('/users/:id/approve', auth, isAdmin, async (req, res) => {
 router.get('/rates', async (req, res) => {
   try {
     const rate = await Rate.findOne().sort({ lastUpdated: -1 });
-    res.json(rate || { gold22K: 0, gold18K: 0, silver90: 0, isManual: true, freeDeliveryKmLimit: 10, deliveryChargePerKm: 15 });
+    res.json(rate || { gold22K: 0, gold18K: 0, silver90: 0, isManual: true, freeDeliveryKmLimit: 10, deliveryChargePerKm: 15, codEnabled: true });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -1137,7 +1146,7 @@ router.get('/rates', async (req, res) => {
 
 // Update Rates (Admin only)
 router.post('/rates', auth, isAdmin, async (req, res) => {
-  const { isManual, goldImpFine, silverFine, manualGold24K, manualGold22K, manualGold18K, manualSilver90, freeDeliveryKmLimit, deliveryChargePerKm, bankName, bankAccountName, bankAccountNumber, bankIfsc, bankBranch } = req.body;
+  const { isManual, goldImpFine, silverFine, manualGold24K, manualGold22K, manualGold18K, manualSilver90, freeDeliveryKmLimit, deliveryChargePerKm, bankName, bankAccountName, bankAccountNumber, bankIfsc, bankBranch, codEnabled } = req.body;
   try {
     let rate = await Rate.findOne();
     if (!rate) {
@@ -1147,6 +1156,7 @@ router.post('/rates', auth, isAdmin, async (req, res) => {
     rate.isManual = isManual !== undefined ? isManual : rate.isManual;
     if (freeDeliveryKmLimit !== undefined) rate.freeDeliveryKmLimit = freeDeliveryKmLimit;
     if (deliveryChargePerKm !== undefined) rate.deliveryChargePerKm = deliveryChargePerKm;
+    if (codEnabled !== undefined) rate.codEnabled = codEnabled;
     
     // Update Bank Details if provided
     if (bankName !== undefined) rate.bankName = bankName;
@@ -1949,7 +1959,7 @@ router.delete('/cart/remove/:productId', auth, async (req, res) => {
 
 // Place a new order (COD flow)
 router.post('/orders', auth, async (req, res) => {
-  const { items, totalAmount, shippingAddress, paymentMethod, shippingCharge, distanceKm, paymentReference } = req.body;
+  const { items, totalAmount, shippingAddress, paymentMethod, shippingCharge, distanceKm, paymentReference, couponCode, discountAmount } = req.body;
   try {
     if (!items || items.length === 0) return res.status(400).json({ message: 'No items in order' });
 
@@ -1961,22 +1971,20 @@ router.post('/orders', auth, async (req, res) => {
       paymentMethod,
       shippingCharge: shippingCharge || 0,
       distanceKm: distanceKm || 0,
-      paymentReference
+      paymentReference,
+      couponCode,
+      discountAmount: discountAmount || 0
     });
 
     await newOrder.save();
 
-    // Auto-trigger Delhivery shipment only if order is Paid
-    if (newOrder.paymentStatus === 'Paid') {
+    // Increment coupon usage count if applied
+    if (couponCode) {
       try {
-        const shipRes = await createShipment(newOrder);
-        if (shipRes.success) {
-          newOrder.trackingId = shipRes.trackingId;
-          newOrder.status = 'Processing';
-          await newOrder.save();
-        }
-      } catch (shipErr) {
-        console.error('[Delhivery Auto Shipment Error]:', shipErr.message);
+        const Coupon = require('../models/Coupon');
+        await Coupon.findOneAndUpdate({ code: couponCode.toUpperCase() }, { $inc: { usedCount: 1 } });
+      } catch (couponErr) {
+        console.error('[Coupon Increment Error]:', couponErr.message);
       }
     }
 
@@ -2017,7 +2025,8 @@ router.post('/orders/razorpay-order', auth, async (req, res) => {
       res.json({
         id: order.id,
         amount: order.amount,
-        currency: order.currency
+        currency: order.currency,
+        key: process.env.RAZORPAY_KEY_ID
       });
     } else {
       // Mock Mode: Generate a mock Razorpay Order ID
@@ -2073,6 +2082,8 @@ router.post('/orders/verify-payment', auth, async (req, res) => {
         paymentStatus: 'Paid',
         shippingCharge: orderData.shippingCharge || 0,
         distanceKm: orderData.distanceKm || 0,
+        couponCode: orderData.couponCode,
+        discountAmount: orderData.discountAmount || 0,
         razorpayOrderId: razorpay_order_id,
         razorpayPaymentId: razorpay_payment_id,
         razorpaySignature: razorpay_signature
@@ -2080,16 +2091,14 @@ router.post('/orders/verify-payment', auth, async (req, res) => {
 
       await newOrder.save();
 
-      // Auto-trigger Delhivery shipment
-      try {
-        const shipRes = await createShipment(newOrder);
-        if (shipRes.success) {
-          newOrder.trackingId = shipRes.trackingId;
-          newOrder.status = 'Processing';
-          await newOrder.save();
+      // Increment coupon usage count if applied
+      if (orderData.couponCode) {
+        try {
+          const Coupon = require('../models/Coupon');
+          await Coupon.findOneAndUpdate({ code: orderData.couponCode.toUpperCase() }, { $inc: { usedCount: 1 } });
+        } catch (couponErr) {
+          console.error('[Coupon Increment Error]:', couponErr.message);
         }
-      } catch (shipErr) {
-        console.error('[Delhivery Auto Shipment Error]:', shipErr.message);
       }
 
       // Clear the cart
@@ -2154,32 +2163,94 @@ router.get('/admin/orders', auth, isAdmin, async (req, res) => {
 
 // Update Order Status (Admin only)
 router.put('/admin/orders/:id', auth, isAdmin, async (req, res) => {
-  const { status, paymentStatus } = req.body;
+  const { status, paymentStatus, trackingId, deliveryPartner, expectedDelivery } = req.body;
   try {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
-    const wasPaidAlready = order.paymentStatus === 'Paid';
     if (status) order.status = status;
     if (paymentStatus) order.paymentStatus = paymentStatus;
+    if (trackingId !== undefined) order.trackingId = trackingId;
+    if (deliveryPartner !== undefined) order.deliveryPartner = deliveryPartner;
+    if (expectedDelivery !== undefined) order.expectedDelivery = expectedDelivery;
 
     await order.save();
 
-    // Trigger Delhivery auto-shipping if marked as Paid and tracking ID is not set
-    if (!wasPaidAlready && order.paymentStatus === 'Paid' && !order.trackingId) {
-      try {
-        const shipRes = await createShipment(order);
-        if (shipRes.success) {
-          order.trackingId = shipRes.trackingId;
-          order.status = 'Processing';
-          await order.save();
-        }
-      } catch (shipErr) {
-        console.error('[Delhivery Auto Shipment Error from Admin update]:', shipErr.message);
-      }
-    }
-
     res.json(order);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// --- COUPON ROUTES ---
+
+const Coupon = require('../models/Coupon');
+
+// Get All Coupons (Admin only)
+router.get('/admin/coupons', auth, isAdmin, async (req, res) => {
+  try {
+    const coupons = await Coupon.find().sort({ createdAt: -1 });
+    res.json(coupons);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Create a Coupon (Admin only)
+router.post('/admin/coupons', auth, isAdmin, async (req, res) => {
+  const { code, discountPercent, expirationDate, maxUses } = req.body;
+  try {
+    if (!code || !discountPercent || !expirationDate) {
+      return res.status(400).json({ message: 'Code, discount percent, and expiration date are required' });
+    }
+    const exists = await Coupon.findOne({ code: code.toUpperCase() });
+    if (exists) {
+      return res.status(400).json({ message: 'Coupon code already exists' });
+    }
+    const newCoupon = new Coupon({
+      code: code.toUpperCase().trim(),
+      discountPercent: Number(discountPercent),
+      expirationDate: new Date(expirationDate),
+      maxUses: maxUses ? Number(maxUses) : undefined
+    });
+    await newCoupon.save();
+    res.json(newCoupon);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Delete a Coupon (Admin only)
+router.delete('/admin/coupons/:id', auth, isAdmin, async (req, res) => {
+  try {
+    const coupon = await Coupon.findByIdAndDelete(req.params.id);
+    if (!coupon) return res.status(404).json({ message: 'Coupon not found' });
+    res.json({ message: 'Coupon deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Validate Coupon (User/Public)
+router.post('/coupons/validate', auth, async (req, res) => {
+  const { code } = req.body;
+  try {
+    if (!code) return res.status(400).json({ message: 'Coupon code is required' });
+    const coupon = await Coupon.findOne({ code: code.toUpperCase().trim(), isActive: true });
+    if (!coupon) {
+      return res.status(400).json({ message: 'Invalid or inactive coupon code' });
+    }
+    if (new Date() > new Date(coupon.expirationDate)) {
+      return res.status(400).json({ message: 'Coupon code has expired' });
+    }
+    if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
+      return res.status(400).json({ message: 'Coupon code usage limit reached' });
+    }
+    res.json({
+      valid: true,
+      code: coupon.code,
+      discountPercent: coupon.discountPercent
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -2283,7 +2354,8 @@ router.post('/investments/razorpay-order', auth, async (req, res) => {
       res.json({
         id: order.id,
         amount: order.amount,
-        currency: order.currency
+        currency: order.currency,
+        key: process.env.RAZORPAY_KEY_ID
       });
     } else {
       // Mock Mode

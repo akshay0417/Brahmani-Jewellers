@@ -2,16 +2,18 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Upload, Trash2, TrendingUp, Image as ImageIcon, CheckCircle, AlertCircle, User, MessageSquare, Lock, X, Mail, Star, Menu, ShoppingBag } from 'lucide-react';
+import { LogOut, Tag, Upload, Trash2, TrendingUp, Image as ImageIcon, CheckCircle, AlertCircle, User, MessageSquare, Lock, X, Mail, Star, Menu, ShoppingBag } from 'lucide-react';
 
 const AdminDashboard = () => {
-  const [rates, setRates] = useState({ isManual: true, goldImpFine: '', silverFine: '', manualGold24K: '', manualGold22K: '', manualGold18K: '', manualSilver90: '', freeDeliveryKmLimit: '', deliveryChargePerKm: '' });
+  const [rates, setRates] = useState({ isManual: true, goldImpFine: '', silverFine: '', manualGold24K: '', manualGold22K: '', manualGold18K: '', manualSilver90: '', freeDeliveryKmLimit: '', deliveryChargePerKm: '', codEnabled: true });
   const [gallery, setGallery] = useState([]);
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [visitorCount, setVisitorCount] = useState(0);
+  const [coupons, setCoupons] = useState([]);
+  const [couponForm, setCouponForm] = useState({ code: '', discountPercent: '', expirationDate: '', maxUses: 100 });
   
   // Investments State
   const [investments, setInvestments] = useState([]);
@@ -80,7 +82,7 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [rateRes, galleryRes, usersRes, messagesRes, subscribersRes, ordersRes, instagramRes, analyticsRes, investmentsRes] = await Promise.all([
+      const [rateRes, galleryRes, usersRes, messagesRes, subscribersRes, ordersRes, instagramRes, analyticsRes, investmentsRes, couponsRes] = await Promise.all([
         api.get('/rates'),
         api.get('/gallery'),
         api.get('/users', config),
@@ -89,7 +91,8 @@ const AdminDashboard = () => {
         api.get('/admin/orders', config),
         api.get('/instagram'),
         api.get('/analytics', config).catch(() => ({ data: { views: 0 } })),
-        api.get('/admin/investments', config).catch(() => ({ data: [] }))
+        api.get('/admin/investments', config).catch(() => ({ data: [] })),
+        api.get('/admin/coupons', config).catch(() => ({ data: [] }))
       ]);
 
       if (rateRes.data) setRates({ 
@@ -101,7 +104,8 @@ const AdminDashboard = () => {
         manualGold18K: rateRes.data.gold18K || '',
         manualSilver90: rateRes.data.silver90 || '',
         freeDeliveryKmLimit: rateRes.data.freeDeliveryKmLimit ?? 10,
-        deliveryChargePerKm: rateRes.data.deliveryChargePerKm ?? 15
+        deliveryChargePerKm: rateRes.data.deliveryChargePerKm ?? 15,
+        codEnabled: rateRes.data.codEnabled ?? true
       });
       
       if (galleryRes.data) setGallery(galleryRes.data);
@@ -112,6 +116,7 @@ const AdminDashboard = () => {
       if (instagramRes.data) setInstagramPosts(instagramRes.data);
       if (analyticsRes && analyticsRes.data) setVisitorCount(analyticsRes.data.views || 0);
       if (investmentsRes && investmentsRes.data) setInvestments(investmentsRes.data);
+      if (couponsRes && couponsRes.data) setCoupons(couponsRes.data);
     } catch (err) {
       console.error("Error loading dashboard data", err);
     }
@@ -184,6 +189,60 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error(err);
       setStatus({ type: 'error', message: err.response?.data?.message || 'Failed to create Delhivery shipment.' });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    }
+  };
+
+  const handleUpdateTrackingDetails = async (orderId, deliveryPartner, trackingId, expectedDelivery) => {
+    setLoading(true);
+    try {
+      await api.put(`/admin/orders/${orderId}`, { deliveryPartner, trackingId, expectedDelivery }, config);
+      setStatus({ type: 'success', message: 'Tracking details updated successfully!' });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Failed to update tracking details.' });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    }
+  };
+
+  const handleCreateCoupon = async (e) => {
+    e.preventDefault();
+    if (!couponForm.code || !couponForm.discountPercent || !couponForm.expirationDate) {
+      setStatus({ type: 'error', message: 'Please fill all required fields' });
+      return;
+    }
+    setLoading(true);
+    try {
+      await api.post('/admin/coupons', couponForm, config);
+      setStatus({ type: 'success', message: 'Coupon created successfully!' });
+      setCouponForm({ code: '', discountPercent: '', expirationDate: '', maxUses: 100 });
+      const res = await api.get('/admin/coupons', config);
+      setCoupons(res.data);
+    } catch (err) {
+      console.error(err);
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Failed to create coupon.' });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    }
+  };
+
+  const handleDeleteCoupon = async (couponId) => {
+    if (!window.confirm('Are you sure you want to delete this coupon?')) return;
+    setLoading(true);
+    try {
+      await api.delete(`/admin/coupons/${couponId}`, config);
+      setStatus({ type: 'success', message: 'Coupon deleted successfully!' });
+      const res = await api.get('/admin/coupons', config);
+      setCoupons(res.data);
+    } catch (err) {
+      console.error(err);
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Failed to delete coupon.' });
     } finally {
       setLoading(false);
       setTimeout(() => setStatus({ type: '', message: '' }), 3000);
@@ -492,6 +551,7 @@ const AdminDashboard = () => {
             { id: 'collection', label: 'Manage Collection', icon: ImageIcon },
             { id: 'instagram', label: 'Instagram Feed', icon: Star },
             { id: 'orders', label: 'Manage Orders', icon: ShoppingBag },
+            { id: 'coupons', label: 'Coupons Manager', icon: Tag },
             { id: 'investments', label: 'Vault Investments', icon: TrendingUp },
             { id: 'users', label: 'Registered Users', icon: User },
             { id: 'subscribers', label: 'Subscribers & Campaign', icon: Mail },
@@ -539,6 +599,7 @@ const AdminDashboard = () => {
                 {activeTab === 'collection' && 'Manage Collection'}
                 {activeTab === 'instagram' && 'Instagram Showcase'}
                 {activeTab === 'orders' && 'Manage Orders'}
+                {activeTab === 'coupons' && 'Coupons Manager'}
                 {activeTab === 'investments' && 'Digital Vault Investments'}
                 {activeTab === 'users' && 'Registered Users'}
                 {activeTab === 'subscribers' && 'VIP Subscribers & Campaign'}
@@ -696,6 +757,19 @@ const AdminDashboard = () => {
                           />
                         </div>
                       </div>
+                    </div>
+
+                    <div className="space-y-4 bg-cream p-4 rounded border border-ochre/20 flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="codEnabled"
+                        checked={rates.codEnabled ?? true}
+                        onChange={(e) => setRates({ ...rates, codEnabled: e.target.checked })}
+                        className="w-5 h-5 accent-ochre"
+                      />
+                      <label htmlFor="codEnabled" className="text-sm text-coffee font-bold cursor-pointer">
+                        Enable Cash on Delivery (COD) Payment
+                      </label>
                     </div>
 
                     <button disabled={loading} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 transition-all rounded-sm">
@@ -1178,6 +1252,9 @@ const AdminDashboard = () => {
                                   {order.deliveryPartner || 'Delhivery'}
                                 </span>
                                 <p className="text-xs font-mono text-coffee font-medium">{order.trackingId}</p>
+                                {order.expectedDelivery && (
+                                  <p className="text-[10px] text-coffee/70 font-semibold">ETA: {order.expectedDelivery}</p>
+                                )}
                               </div>
                             ) : (
                               <button
@@ -1188,6 +1265,49 @@ const AdminDashboard = () => {
                                 Ship Delhivery
                               </button>
                             )}
+
+                            {/* Manual Tracking inputs */}
+                            <div className="mt-3 pt-2 border-t border-ochre/10 space-y-1">
+                              <p className="text-[9px] text-coffee/40 uppercase font-bold">Manual / Self Tracking</p>
+                              <div className="flex flex-col gap-1.5">
+                                <div className="flex gap-1">
+                                  <input 
+                                    type="text" 
+                                    placeholder="Courier Partner" 
+                                    defaultValue={order.deliveryPartner || ''}
+                                    id={`partner-${order._id}`}
+                                    className="bg-cream border border-ochre/20 text-[10px] px-2 py-1 rounded text-coffee w-24 focus:outline-none focus:border-ochre"
+                                  />
+                                  <input 
+                                    type="text" 
+                                    placeholder="Tracking ID / Note" 
+                                    defaultValue={order.trackingId || ''}
+                                    id={`tracking-${order._id}`}
+                                    className="bg-cream border border-ochre/20 text-[10px] px-2 py-1 rounded text-coffee w-32 focus:outline-none focus:border-ochre"
+                                  />
+                                </div>
+                                <div className="flex gap-1 items-center">
+                                  <input 
+                                    type="text" 
+                                    placeholder="ETA (e.g. Today 6 PM)" 
+                                    defaultValue={order.expectedDelivery || ''}
+                                    id={`eta-${order._id}`}
+                                    className="bg-cream border border-ochre/20 text-[10px] px-2 py-1 rounded text-coffee w-36 focus:outline-none focus:border-ochre"
+                                  />
+                                  <button 
+                                    onClick={() => {
+                                      const partner = document.getElementById(`partner-${order._id}`).value;
+                                      const tracking = document.getElementById(`tracking-${order._id}`).value;
+                                      const eta = document.getElementById(`eta-${order._id}`).value;
+                                      handleUpdateTrackingDetails(order._id, partner, tracking, eta);
+                                    }}
+                                    className="px-2 py-1 bg-coffee text-cream text-[9px] uppercase tracking-wider font-bold hover:bg-ochre transition-colors rounded-sm"
+                                  >
+                                    Save
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                           <div>
                             <p className="text-xs text-coffee/50 font-bold uppercase">Status</p>
@@ -1742,6 +1862,136 @@ const AdminDashboard = () => {
                       </div>
                     ))
                   )}
+                </div>
+              </section>
+            )}
+
+            {activeTab === 'coupons' && (
+              <section className="bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
+                <div className="flex items-center gap-3 mb-6 border-b border-ochre/10 pb-3">
+                  <Tag className="text-ochre" size={28} />
+                  <h2 className="text-2xl font-serif font-bold text-coffee transition-colors duration-300">
+                    Coupons <span className="text-ochre">Manager</span>
+                  </h2>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                  {/* Create Coupon Form */}
+                  <div className="bg-cream border border-ochre/25 p-6 rounded-lg shadow-sm space-y-4 lg:col-span-1">
+                    <h3 className="text-lg font-serif font-bold text-coffee border-b border-ochre/10 pb-2 uppercase tracking-wider">
+                      Create Coupon
+                    </h3>
+                    <form onSubmit={handleCreateCoupon} className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-xs text-coffee/70 uppercase tracking-widest font-semibold">Coupon Code</label>
+                        <input
+                          type="text"
+                          required
+                          value={couponForm.code}
+                          onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
+                          className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none text-sm font-mono uppercase"
+                          placeholder="e.g. WELCOME10"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs text-coffee/70 uppercase tracking-widest font-semibold">Discount Percentage (%)</label>
+                        <input
+                          type="number"
+                          required
+                          min="1"
+                          max="100"
+                          value={couponForm.discountPercent}
+                          onChange={(e) => setCouponForm({ ...couponForm, discountPercent: e.target.value })}
+                          className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
+                          placeholder="e.g. 10"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs text-coffee/70 uppercase tracking-widest font-semibold">Expiration Date</label>
+                        <input
+                          type="date"
+                          required
+                          value={couponForm.expirationDate}
+                          onChange={(e) => setCouponForm({ ...couponForm, expirationDate: e.target.value })}
+                          className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs text-coffee/70 uppercase tracking-widest font-semibold">Max Uses (Limit)</label>
+                        <input
+                          type="number"
+                          value={couponForm.maxUses}
+                          onChange={(e) => setCouponForm({ ...couponForm, maxUses: e.target.value })}
+                          className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
+                          placeholder="e.g. 100"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 transition-all rounded-sm"
+                      >
+                        {loading ? 'Creating...' : 'Create Coupon'}
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* Coupons List Table */}
+                  <div className="bg-cream border border-ochre/25 p-6 rounded-lg shadow-sm space-y-4 lg:col-span-2 overflow-x-auto">
+                    <h3 className="text-lg font-serif font-bold text-coffee border-b border-ochre/10 pb-2 uppercase tracking-wider">
+                      Active Coupons
+                    </h3>
+                    {coupons.length === 0 ? (
+                      <p className="text-coffee/50 py-4 text-center">No coupons created yet.</p>
+                    ) : (
+                      <table className="w-full border-collapse text-left text-sm text-coffee">
+                        <thead>
+                          <tr className="border-b border-ochre/20 bg-cream-alt uppercase text-[11px] tracking-wider font-semibold text-coffee">
+                            <th className="p-3">Code</th>
+                            <th className="p-3">Discount</th>
+                            <th className="p-3">Expiry</th>
+                            <th className="p-3">Uses (Used/Max)</th>
+                            <th className="p-3">Status</th>
+                            <th className="p-3 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {coupons.map((c) => {
+                            const isExpired = new Date() > new Date(c.expirationDate);
+                            const isLimitReached = c.maxUses && c.usedCount >= c.maxUses;
+                            const isValid = c.isActive && !isExpired && !isLimitReached;
+
+                            return (
+                              <tr key={c._id} className="border-b border-ochre/10 hover:bg-ochre/5">
+                                <td className="p-3 font-mono font-bold text-ochre uppercase">{c.code}</td>
+                                <td className="p-3 font-bold">{c.discountPercent}% OFF</td>
+                                <td className="p-3 text-xs">{new Date(c.expirationDate).toLocaleDateString('en-IN')}</td>
+                                <td className="p-3 font-semibold text-xs">{c.usedCount} / {c.maxUses || '∞'}</td>
+                                <td className="p-3">
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                                    isValid 
+                                      ? 'bg-green-100 text-green-700 border border-green-200' 
+                                      : 'bg-red-100 text-red-700 border border-red-200'
+                                  }`}>
+                                    {isValid ? 'Active' : isExpired ? 'Expired' : 'Limit Reached'}
+                                  </span>
+                                </td>
+                                <td className="p-3 text-right">
+                                  <button
+                                    onClick={() => handleDeleteCoupon(c._id)}
+                                    className="text-red-500 hover:text-red-700 transition-colors p-1"
+                                    title="Delete Coupon"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
                 </div>
               </section>
             )}

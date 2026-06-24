@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Image, Platform } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Image, Platform, Linking } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -90,6 +90,64 @@ export default function OrdersScreen() {
                 </View>
               </View>
 
+              {/* Status Stepper */}
+              {order.status !== 'Cancelled' ? (
+                <View style={styles.stepperContainer}>
+                  <View style={styles.stepperLineBackground}>
+                    <View 
+                      style={[
+                        styles.stepperLineActive, 
+                        { 
+                          width: 
+                            order.status === 'Pending' ? '0%' :
+                            order.status === 'Processing' ? '33.33%' :
+                            order.status === 'Shipped' ? '66.66%' :
+                            order.status === 'Delivered' ? '100%' : '0%'
+                        }
+                      ]} 
+                    />
+                  </View>
+                  <View style={styles.stepsWrapper}>
+                    {[
+                      { label: 'Ordered', statusKey: 'Pending', stepIndex: 0 },
+                      { label: 'Packed', statusKey: 'Processing', stepIndex: 1 },
+                      { label: 'Shipped', statusKey: 'Shipped', stepIndex: 2 },
+                      { label: 'Delivered', statusKey: 'Delivered', stepIndex: 3 }
+                    ].map((step, idx) => {
+                      const statusOrder = ['Pending', 'Processing', 'Shipped', 'Delivered'];
+                      const orderIndex = statusOrder.indexOf(order.status);
+                      const isCompleted = orderIndex >= step.stepIndex;
+                      const isActive = orderIndex === step.stepIndex;
+
+                      return (
+                        <View key={idx} style={styles.stepItem}>
+                          <View 
+                            style={[
+                              styles.stepDot,
+                              isCompleted ? styles.stepDotCompleted : styles.stepDotPending,
+                              isActive && styles.stepDotActive
+                            ]}
+                          >
+                            {isCompleted ? (
+                              <Ionicons name="checkmark" size={10} color="#1C1C1E" />
+                            ) : (
+                              <Text style={styles.stepDotText}>{idx + 1}</Text>
+                            )}
+                          </View>
+                          <Text style={[styles.stepLabel, isCompleted ? styles.stepLabelCompleted : styles.stepLabelPending]}>
+                            {step.label}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.cancelledContainer}>
+                  <Text style={styles.cancelledText}>❌ Order Cancelled</Text>
+                </View>
+              )}
+
               {/* Order Items */}
               <View style={styles.itemsContainer}>
                 {order.items.map((item, idx) => (
@@ -121,25 +179,63 @@ export default function OrdersScreen() {
                   <Text style={styles.storeAddress}>Amraiwadi Showroom, Near Hatkeshwar Circle, Ahmedabad</Text>
                 </View>
               ) : (
-                order.trackingId && (
-                  <View style={styles.trackingBox}>
-                    <View style={styles.pickupBoxHeader}>
-                      <FontAwesome name="truck" size={16} color="#D4AF37" />
-                      <Text style={styles.pickupTitle}>Delhivery Shipment Tracking</Text>
+                <>
+                  {order.expectedDelivery && (
+                    <View style={styles.expectedDeliveryBox}>
+                      <Ionicons name="calendar-outline" size={14} color="#D4AF37" />
+                      <Text style={styles.expectedDeliveryText}>
+                        Expected Delivery: <Text style={{ fontWeight: 'bold', color: '#1C1C1E' }}>{order.expectedDelivery}</Text>
+                      </Text>
                     </View>
-                    <Text style={styles.trackingNumber}>AWB / Tracking ID: <Text style={{ fontWeight: 'bold', color: '#1C1C1E' }}>{order.trackingId}</Text></Text>
-                    <Text style={styles.deliveryPartner}>Partner: {order.deliveryPartner}</Text>
-                  </View>
-                )
+                  )}
+                  {order.trackingId && (
+                    <View style={styles.trackingBox}>
+                      <View style={styles.pickupBoxHeader}>
+                        <FontAwesome name="truck" size={16} color="#D4AF37" />
+                        <Text style={styles.pickupTitle}>
+                          {order.deliveryPartner === 'Delhivery' ? 'Delhivery Shipment Tracking' : 'Delivery Tracking'}
+                        </Text>
+                      </View>
+                      <Text style={styles.trackingNumber}>AWB / Tracking ID: <Text style={{ fontWeight: 'bold', color: '#1C1C1E' }}>{order.trackingId}</Text></Text>
+                      <Text style={styles.deliveryPartner}>Partner: {order.deliveryPartner || 'Self-Delivery'}</Text>
+                      {order.deliveryPartner === 'Delhivery' && (
+                        <TouchableOpacity 
+                          style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                          onPress={() => Linking.openURL(`https://www.delhivery.com/track/package/${order.trackingId}`)}
+                        >
+                          <Text style={{ fontSize: 11, color: '#D4AF37', fontWeight: 'bold', textDecorationLine: 'underline' }}>
+                            Track Package Live
+                          </Text>
+                          <Ionicons name="open-outline" size={12} color="#D4AF37" />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
+                </>
               )}
 
               {/* Order Card Footer */}
               <View style={styles.orderCardFooter}>
-                <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                  <Text style={styles.paymentMethodLabel}>Payment:</Text>
-                  <Text style={styles.paymentMethodVal}>{order.paymentMethod} ({order.paymentStatus})</Text>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                    <Text style={styles.paymentMethodLabel}>Payment:</Text>
+                    <Text style={styles.paymentMethodVal}>{order.paymentMethod} ({order.paymentStatus})</Text>
+                  </View>
+                  {order.couponCode && (
+                    <Text style={{ fontSize: 10, color: '#34C759', fontWeight: 'bold', marginTop: 2 }}>
+                      Coupon: {order.couponCode} (-₹{(order.discountAmount || 0).toLocaleString('en-IN')})
+                    </Text>
+                  )}
+                  {order.shippingCharge > 0 && (
+                    <Text style={{ fontSize: 10, color: '#8E8E93', marginTop: 1 }}>
+                      Shipping: ₹{order.shippingCharge}
+                    </Text>
+                  )}
                 </View>
-                <Text style={styles.totalLabel}>Total: <Text style={styles.totalValue}>₹{order.totalAmount?.toLocaleString('en-IN')}</Text></Text>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={styles.totalLabel}>Total</Text>
+                  <Text style={styles.totalValue}>₹{order.totalAmount?.toLocaleString('en-IN')}</Text>
+                </View>
               </View>
             </Reanimated.View>
           ))
@@ -249,6 +345,107 @@ const styles = StyleSheet.create({
   },
   paymentMethodLabel: { fontSize: 11, color: '#8E8E93' },
   paymentMethodVal: { fontSize: 11, color: '#1C1C1E', fontWeight: 'bold' },
-  totalLabel: { fontSize: 12, color: '#1C1C1E' },
-  totalValue: { fontSize: 16, fontWeight: 'bold', color: '#D4AF37' }
+  totalLabel: { fontSize: 11, color: '#8E8E93' },
+  totalValue: { fontSize: 16, fontWeight: 'bold', color: '#D4AF37' },
+
+  stepperContainer: {
+    marginVertical: 14,
+    padding: 10,
+    backgroundColor: '#FAF9F6',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    position: 'relative'
+  },
+  stepperLineBackground: {
+    position: 'absolute',
+    left: 32,
+    right: 32,
+    top: '30%',
+    height: 2,
+    backgroundColor: '#E5E5EA',
+    zIndex: 0
+  },
+  stepperLineActive: {
+    height: '100%',
+    backgroundColor: '#D4AF37'
+  },
+  stepsWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    zIndex: 1
+  },
+  stepItem: {
+    alignItems: 'center',
+    width: 60
+  },
+  stepDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1
+  },
+  stepDotCompleted: {
+    backgroundColor: '#D4AF37',
+    borderColor: '#D4AF37'
+  },
+  stepDotPending: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E5E5EA'
+  },
+  stepDotActive: {
+    borderColor: '#1C1C1E',
+    borderWidth: 2
+  },
+  stepDotText: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#8E8E93'
+  },
+  stepLabel: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    marginTop: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5
+  },
+  stepLabelCompleted: {
+    color: '#1C1C1E'
+  },
+  stepLabelPending: {
+    color: '#8E8E93'
+  },
+  cancelledContainer: {
+    padding: 8,
+    backgroundColor: '#FF3B301A',
+    borderColor: '#FF3B3033',
+    borderWidth: 1,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginVertical: 12
+  },
+  cancelledText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#FF3B30',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5
+  },
+  expectedDeliveryBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FAF9F6',
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12
+  },
+  expectedDeliveryText: {
+    fontSize: 11,
+    color: '#8E8E93'
+  }
 });

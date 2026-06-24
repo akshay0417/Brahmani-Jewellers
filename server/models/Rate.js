@@ -15,6 +15,7 @@ const RateSchema = new mongoose.Schema({
   isManual: { type: Boolean, default: true },
   freeDeliveryKmLimit: { type: Number, default: 10 },
   deliveryChargePerKm: { type: Number, default: 15 },
+  codEnabled: { type: Boolean, default: true },
   
   // Bank Details
   bankName: { type: String, default: 'HDFC Bank' },

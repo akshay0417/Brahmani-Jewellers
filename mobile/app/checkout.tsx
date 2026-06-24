@@ -17,7 +17,7 @@ export default function CheckoutScreen() {
 
   // Checkout Form State
   const [deliveryMode, setDeliveryMode] = useState('Delivery'); // 'Delivery' | 'Pickup'
-  const [paymentMethod, setPaymentMethod] = useState('UPI'); // 'UPI' | 'Bank'
+  const [paymentMethod, setPaymentMethod] = useState('UPI'); // 'UPI' | 'Bank' | 'Razorpay' | 'COD'
   const [payReference, setPayReference] = useState('');
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
@@ -26,13 +26,39 @@ export default function CheckoutScreen() {
   const [state, setState] = useState('');
   const [pincode, setPincode] = useState('');
 
+  // Delivery settings state
+  const [deliveryRates, setDeliveryRates] = useState({ freeDeliveryKmLimit: 10, deliveryChargePerKm: 15, codEnabled: true });
+
+  // Coupon states
+  const [couponInput, setCouponInput] = useState('');
+  const [couponCode, setCouponCode] = useState('');
+  const [discountPercent, setDiscountPercent] = useState(0);
+  const [couponError, setCouponError] = useState('');
+  const [couponSuccess, setCouponSuccess] = useState('');
+
   useEffect(() => {
     if (user) {
       fetchCart();
+      fetchDeliveryRates();
     } else {
       setLoading(false);
     }
   }, [user]);
+
+  const fetchDeliveryRates = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/rates`);
+      if (response.data) {
+        setDeliveryRates({
+          freeDeliveryKmLimit: response.data.freeDeliveryKmLimit ?? 10,
+          deliveryChargePerKm: response.data.deliveryChargePerKm ?? 15,
+          codEnabled: response.data.codEnabled ?? true
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching rates:", error);
+    }
+  };
 
   const fetchCart = async () => {
     try {
@@ -53,6 +79,37 @@ export default function CheckoutScreen() {
     }
   };
 
+  const calculateDistance = (pinStr: string) => {
+    const pin = parseInt(pinStr);
+    if (!pin || isNaN(pin) || pinStr.length < 6) return 0;
+    
+    // If it's the shop's pincode (Amraiwadi)
+    if (pin === 380026) return 1;
+
+    // Specifically handle Vastral (382418)
+    if (pin === 382418) return 5;
+    
+    // If it's in Ahmedabad/Gandhinagar region (starts with 380... or 382...)
+    if (pinStr.startsWith('380') || pinStr.startsWith('382')) {
+      const lastThree = pin % 1000;
+      return 3 + (lastThree % 15);
+    }
+    
+    // If it's in Gujarat but outside Ahmedabad/Gandhinagar
+    if (pinStr.startsWith('37') || pinStr.startsWith('38') || pinStr.startsWith('39')) {
+      const lastThree = pin % 1000;
+      return 30 + (lastThree % 170);
+    }
+    
+    // Outside Gujarat
+    return 500;
+  };
+
+  const getDistance = () => {
+    if (deliveryMode === 'Pickup') return 0;
+    return calculateDistance(pincode);
+  };
+
   const getSubtotal = () => {
     if (!cart || !cart.items) return 0;
     return cart.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
@@ -60,8 +117,12 @@ export default function CheckoutScreen() {
 
   const getShippingCharge = () => {
     if (deliveryMode === 'Pickup') return 0;
-    const sub = getSubtotal();
-    return sub > 5000 ? 0 : 150; // Free delivery over ₹5000
+    const dist = getDistance();
+    if (dist <= deliveryRates.freeDeliveryKmLimit) {
+      return 0;
+    } else {
+      return Math.round((dist - deliveryRates.freeDeliveryKmLimit) * deliveryRates.deliveryChargePerKm);
+    }
   };
 
   const getGST = () => {
@@ -70,8 +131,52 @@ export default function CheckoutScreen() {
     return Math.round(sub * (3 / 103));
   };
 
+  const getDiscountAmount = () => {
+    const sub = getSubtotal();
+    return Math.round((sub * discountPercent) / 100);
+  };
+
   const getGrandTotal = () => {
-    return getSubtotal() + getShippingCharge();
+    return getSubtotal() + getShippingCharge() - getDiscountAmount();
+  };
+
+  const handleApplyCoupon = async () => {
+    setCouponError('');
+    setCouponSuccess('');
+    if (!couponInput.trim()) return;
+
+    try {
+      const response = await axios.post(`${API_URL}/coupons/validate`, { code: couponInput.trim() }, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      if (response.data) {
+        setCouponCode(response.data.code);
+        setDiscountPercent(response.data.discountPercent);
+        setCouponSuccess(`Coupon "${response.data.code}" applied! ${response.data.discountPercent}% Discount.`);
+      }
+    } catch (error: any) {
+      setCouponCode('');
+      setDiscountPercent(0);
+      setCouponError(error.response?.data?.message || 'Invalid coupon code');
+    }
+  };
+
+  const showOrderSuccess = (randomPickupCode: string) => {
+    Alert.alert(
+      "Order Placed! 🎉",
+      deliveryMode === 'Pickup' 
+        ? `Your items are ready for pickup. Secure code: ${randomPickupCode}`
+        : "Your order has been placed successfully. You can track progress in the Orders tab.",
+      [
+        { 
+          text: "View Orders", 
+          onPress: () => {
+            // Direct navigation to orders tab
+            router.replace('/orders');
+          } 
+        }
+      ]
+    );
   };
 
   const handlePlaceOrder = async () => {
@@ -84,9 +189,11 @@ export default function CheckoutScreen() {
       }
     }
 
-    if (!payReference.trim()) {
-      Alert.alert("Payment Verification Required", "Please transfer the grand total using UPI or Bank Transfer and enter the Transaction ID / Ref Number below.");
-      return;
+    if (paymentMethod !== 'Razorpay' && paymentMethod !== 'COD') {
+      if (!payReference.trim()) {
+        Alert.alert("Payment Verification Required", "Please transfer the grand total using UPI or Bank Transfer and enter the Transaction ID / Ref Number below.");
+        return;
+      }
     }
 
     try {
@@ -116,42 +223,86 @@ export default function CheckoutScreen() {
         pincode
       };
 
-      const payload = {
+      const orderData = {
         items: orderItems,
         totalAmount: getGrandTotal(),
         shippingAddress,
-        paymentMethod: paymentMethod === 'Bank' ? 'Bank Transfer' : 'UPI',
-        paymentReference: payReference.trim(),
-        deliveryMode,
-        pickupCode: deliveryMode === 'Pickup' ? randomPickupCode : undefined,
         shippingCharge: getShippingCharge(),
-        distanceKm: deliveryMode === 'Pickup' ? 0 : 5 // Flat average distance for default pricing
+        distanceKm: getDistance(),
+        couponCode: couponCode || undefined,
+        discountAmount: getDiscountAmount()
       };
 
-      await axios.post(`${API_URL}/orders`, payload, {
-        headers: { Authorization: `Bearer ${user.token}` }
-      });
+      if (paymentMethod !== 'Razorpay') {
+        const payload = {
+          ...orderData,
+          paymentMethod: paymentMethod === 'Bank' ? 'Bank Transfer' : paymentMethod === 'COD' ? 'COD' : 'UPI',
+          paymentReference: paymentMethod === 'COD' ? 'COD Order' : payReference.trim(),
+          deliveryMode,
+          pickupCode: deliveryMode === 'Pickup' ? randomPickupCode : undefined,
+        };
 
-      Alert.alert(
-        "Order Placed! 🎉",
-        deliveryMode === 'Pickup' 
-          ? `Your items are ready for pickup. Secure code: ${randomPickupCode}`
-          : "Your order has been placed successfully. You can track progress in the Orders tab.",
-        [
-          { 
-            text: "View Orders", 
-            onPress: () => {
-              // Direct navigation to orders tab
-              router.replace('/orders');
-            } 
-          }
-        ]
-      );
-    } catch (error) {
+        await axios.post(`${API_URL}/orders`, payload, {
+          headers: { Authorization: `Bearer ${user.token}` }
+        });
+        showOrderSuccess(randomPickupCode);
+      } else {
+        // Razorpay checkout
+        const rzpOrderRes = await axios.post(`${API_URL}/orders/razorpay-order`, { totalAmount: getGrandTotal() }, {
+          headers: { Authorization: `Bearer ${user.token}` }
+        });
+        const rzpOrderId = rzpOrderRes.data.id;
+
+        if (rzpOrderRes.data.isMock) {
+          // Simulation mode
+          Alert.alert(
+            "[RAZORPAY SIMULATION]",
+            `Simulate payment of ₹${getGrandTotal().toLocaleString('en-IN')}?`,
+            [
+              { text: "Cancel", style: "cancel", onPress: () => setPlacingOrder(false) },
+              {
+                text: "Pay (Simulate)",
+                onPress: async () => {
+                  try {
+                    setPlacingOrder(true);
+                    const mockPaymentId = 'pay_mock_' + Math.random().toString(36).substring(2, 15);
+                    const mockSignature = 'sig_mock_' + Math.random().toString(36).substring(2, 15);
+
+                    await axios.post(`${API_URL}/orders/verify-payment`, {
+                      orderData,
+                      razorpay_payment_id: mockPaymentId,
+                      razorpay_order_id: rzpOrderId,
+                      razorpay_signature: mockSignature
+                    }, {
+                      headers: { Authorization: `Bearer ${user.token}` }
+                    });
+
+                    showOrderSuccess(randomPickupCode);
+                  } catch (verifyErr: any) {
+                    Alert.alert("Payment Error", verifyErr.response?.data?.message || "Payment verification failed");
+                  } finally {
+                    setPlacingOrder(false);
+                  }
+                }
+              }
+            ]
+          );
+        } else {
+          // Live Razorpay mode: warn the user that real payments are supported via website.
+          Alert.alert(
+            "Online Payment via App",
+            "Real-time online payment is currently supported through our website checkout. Please use UPI/Bank Transfer or checkout from your web browser to complete live card payments.",
+            [{ text: "OK" }]
+          );
+        }
+      }
+    } catch (error: any) {
       console.error(error);
       Alert.alert("Error", error.response?.data?.message || "Could not place order");
     } finally {
-      setPlacingOrder(false);
+      if (paymentMethod !== 'Razorpay') {
+        setPlacingOrder(false);
+      }
     }
   };
 
@@ -287,19 +438,33 @@ export default function CheckoutScreen() {
         {/* Payment Method Select */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Payment Method</Text>
-          <View style={styles.toggleContainer}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
             <TouchableOpacity 
-              style={[styles.toggleBtn, paymentMethod === 'UPI' && styles.activeToggleBtn]}
+              style={[styles.paymentToggleBtn, paymentMethod === 'UPI' && styles.activePaymentToggleBtn]}
               onPress={() => setPaymentMethod('UPI')}
             >
-              <Text style={[styles.toggleBtnText, paymentMethod === 'UPI' && styles.activeToggleBtnText]}>UPI / QR</Text>
+              <Text style={[styles.paymentToggleBtnText, paymentMethod === 'UPI' && styles.activePaymentToggleBtnText]}>UPI / QR</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.toggleBtn, paymentMethod === 'Bank' && styles.activeToggleBtn]}
+              style={[styles.paymentToggleBtn, paymentMethod === 'Bank' && styles.activePaymentToggleBtn]}
               onPress={() => setPaymentMethod('Bank')}
             >
-              <Text style={[styles.toggleBtnText, paymentMethod === 'Bank' && styles.activeToggleBtnText]}>Bank Transfer</Text>
+              <Text style={[styles.paymentToggleBtnText, paymentMethod === 'Bank' && styles.activePaymentToggleBtnText]}>Bank</Text>
             </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.paymentToggleBtn, paymentMethod === 'Razorpay' && styles.activePaymentToggleBtn]}
+              onPress={() => setPaymentMethod('Razorpay')}
+            >
+              <Text style={[styles.paymentToggleBtnText, paymentMethod === 'Razorpay' && styles.activePaymentToggleBtnText]}>Online</Text>
+            </TouchableOpacity>
+            {deliveryRates.codEnabled && (
+              <TouchableOpacity 
+                style={[styles.paymentToggleBtn, paymentMethod === 'COD' && styles.activePaymentToggleBtn]}
+                onPress={() => setPaymentMethod('COD')}
+              >
+                <Text style={[styles.paymentToggleBtnText, paymentMethod === 'COD' && styles.activePaymentToggleBtnText]}>COD</Text>
+              </TouchableOpacity>
+            )}
           </View>
           
           {paymentMethod === 'Bank' ? (
@@ -309,22 +474,75 @@ export default function CheckoutScreen() {
               <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>A/C Number:</Text> 50200081273891</Text>
               <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>IFSC:</Text> HDFC0001203</Text>
             </View>
-          ) : (
+          ) : paymentMethod === 'UPI' ? (
             <View style={styles.bankBox}>
               <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>GPay / PhonePe / Paytm:</Text></Text>
               <Text style={[styles.bankText, { fontSize: 14, fontWeight: 'bold', color: '#D4AF37', marginVertical: 4 }]}>+91 99258 11771</Text>
               <Text style={styles.bankText}>Pay to: Akshay Patel / Brahmani Jewellers</Text>
             </View>
+          ) : paymentMethod === 'Razorpay' ? (
+            <View style={styles.bankBox}>
+              <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>Online Payment via Razorpay:</Text></Text>
+              <Text style={styles.bankText}>Pay securely using Cards, Netbanking, UPI, or Wallet.</Text>
+            </View>
+          ) : (
+            <View style={styles.bankBox}>
+              <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>Cash on Delivery (COD):</Text></Text>
+              <Text style={styles.bankText}>Pay in cash when your order is delivered to your door.</Text>
+            </View>
           )}
 
-          <Text style={[styles.sectionTitle, { marginTop: 14, marginBottom: 8 }]}>Enter Payment Reference ID</Text>
-          <TextInput
-            placeholder="UPI Transaction Ref ID or Bank UTR Number"
-            placeholderTextColor="rgba(28,28,30,0.3)"
-            style={styles.textInput}
-            value={payReference}
-            onChangeText={setPayReference}
-          />
+          {paymentMethod !== 'Razorpay' && paymentMethod !== 'COD' && (
+            <>
+              <Text style={[styles.sectionTitle, { marginTop: 14, marginBottom: 8 }]}>Enter Payment Reference ID</Text>
+              <TextInput
+                placeholder="UPI Transaction Ref ID or Bank UTR Number"
+                placeholderTextColor="rgba(28,28,30,0.3)"
+                style={styles.textInput}
+                value={payReference}
+                onChangeText={setPayReference}
+              />
+            </>
+          )}
+        </View>
+
+        {/* Coupon Code Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Apply Coupon</Text>
+          <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+            <TextInput
+              placeholder="Enter Coupon Code"
+              placeholderTextColor="rgba(28,28,30,0.3)"
+              autoCapitalize="characters"
+              style={[styles.textInput, { flex: 1, marginBottom: 0 }]}
+              value={couponInput}
+              onChangeText={(text) => setCouponInput(text.toUpperCase())}
+              editable={!couponCode}
+            />
+            {couponCode ? (
+              <TouchableOpacity 
+                style={[styles.couponBtn, { backgroundColor: '#FF3B30' }]} 
+                onPress={() => {
+                  setCouponCode('');
+                  setCouponInput('');
+                  setDiscountPercent(0);
+                  setCouponSuccess('');
+                  setCouponError('');
+                }}
+              >
+                <Text style={styles.couponBtnText}>Remove</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity 
+                style={styles.couponBtn} 
+                onPress={handleApplyCoupon}
+              >
+                <Text style={styles.couponBtnText}>Apply</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          {couponError ? <Text style={styles.errorText}>{couponError}</Text> : null}
+          {couponSuccess ? <Text style={styles.successText}>{couponSuccess}</Text> : null}
         </View>
 
         {/* Pricing Summary */}
@@ -334,6 +552,12 @@ export default function CheckoutScreen() {
             <Text style={styles.priceLabel}>Items Subtotal</Text>
             <Text style={styles.priceVal}>₹{getSubtotal().toLocaleString('en-IN')}</Text>
           </View>
+          {discountPercent > 0 && (
+            <View style={styles.priceRow}>
+              <Text style={[styles.priceLabel, { color: '#34C759' }]}>Coupon Discount ({discountPercent}%)</Text>
+              <Text style={[styles.priceVal, { color: '#34C759' }]}>- ₹{getDiscountAmount().toLocaleString('en-IN')}</Text>
+            </View>
+          )}
           <View style={styles.priceRow}>
             <Text style={styles.priceLabel}>Shipping Charge</Text>
             <Text style={styles.priceVal}>{getShippingCharge() === 0 ? 'FREE' : `₹${getShippingCharge()}`}</Text>
@@ -347,6 +571,11 @@ export default function CheckoutScreen() {
             <Text style={styles.grandTotalLabel}>Grand Total</Text>
             <Text style={styles.grandTotalVal}>₹{getGrandTotal().toLocaleString('en-IN')}</Text>
           </View>
+          {getDistance() > 0 && deliveryRates.freeDeliveryKmLimit > 0 && (
+            <Text style={{ fontSize: 10, color: '#8E8E93', marginTop: 8, fontStyle: 'italic', textAlign: 'center' }}>
+              * Free delivery up to {deliveryRates.freeDeliveryKmLimit} km. ₹{deliveryRates.deliveryChargePerKm}/km above it.
+            </Text>
+          )}
         </View>
 
         {/* Confirm Order Button */}
@@ -406,5 +635,57 @@ const styles = StyleSheet.create({
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40, paddingVertical: 120 },
   emptyText: { fontSize: 16, color: '#8E8E93', marginTop: 14, marginBottom: 24, fontWeight: '600' },
   browseBtn: { backgroundColor: '#1C1C1E', paddingVertical: 12, paddingHorizontal: 40, borderRadius: 8 },
-  browseBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 14 }
+  browseBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 14 },
+
+  paymentToggleBtn: {
+    flex: 1,
+    minWidth: '45%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    backgroundColor: '#FAF9F6',
+    marginBottom: 6,
+    gap: 6
+  },
+  activePaymentToggleBtn: {
+    backgroundColor: '#1C1C1E',
+    borderColor: '#1C1C1E'
+  },
+  paymentToggleBtnText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#8E8E93'
+  },
+  activePaymentToggleBtnText: {
+    color: '#FFFFFF'
+  },
+  couponBtn: {
+    backgroundColor: '#1C1C1E',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  couponBtnText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 13
+  },
+  errorText: {
+    fontSize: 11,
+    color: '#FF3B30',
+    marginTop: 6,
+    fontWeight: 'bold'
+  },
+  successText: {
+    fontSize: 11,
+    color: '#34C759',
+    marginTop: 6,
+    fontWeight: 'bold'
+  }
 });

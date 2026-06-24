@@ -1,17 +1,47 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, Modal, ActivityIndicator } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
+  const [loginMethod, setLoginMethod] = useState<'password' | 'otp'>('password');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
   const router = useRouter();
-  const { login } = useAuth();
+  const { login } = useAuth() as any;
+
+  const handleRequestOtp = async () => {
+    if (!identifier) {
+      alert('Please enter your email or mobile number to receive an OTP');
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetch('https://brahmani-jewellers-api.onrender.com/api/auth/request-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert('OTP sent successfully! Please enter it to verify.');
+        setShowOtpModal(true);
+      } else {
+        alert(data.message || 'Failed to send OTP');
+      }
+    } catch (error) {
+      alert('Error connecting to server');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!identifier || !password) {
@@ -24,7 +54,7 @@ export default function LoginScreen() {
       const response = await fetch('https://brahmani-jewellers-api.onrender.com/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password, source: 'app' }),
+        body: JSON.stringify({ identifier: identifier.trim(), password, source: 'app' }),
       });
       
       const data = await response.json();
@@ -33,6 +63,18 @@ export default function LoginScreen() {
         login({ ...data.user, token: data.token }, rememberMe);
         alert('Login Successful!');
         router.push('/');
+      } else if (response.status === 403 && data.unverified) {
+        alert('Your account is not verified yet. An OTP has been generated. Please enter it below to verify.');
+        try {
+          await fetch('https://brahmani-jewellers-api.onrender.com/api/auth/request-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identifier: identifier.trim() }),
+          });
+        } catch (otpErr) {
+          // ignore or log
+        }
+        setShowOtpModal(true);
       } else {
         alert(data.message || 'Login failed');
       }
@@ -40,6 +82,37 @@ export default function LoginScreen() {
       alert('Error connecting to server');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp.trim()) {
+      alert('Please enter the OTP');
+      return;
+    }
+    setOtpLoading(true);
+    try {
+      const response = await fetch('https://brahmani-jewellers-api.onrender.com/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: identifier.trim(), otp: otp.trim(), source: 'app' }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setShowOtpModal(false);
+        setOtp('');
+        login({ ...data.user, token: data.token }, rememberMe);
+        alert('Account verified and logged in successfully!');
+        router.push('/');
+      } else {
+        alert(data.message || 'Verification failed');
+      }
+    } catch (error) {
+      alert('Error connecting to server');
+    } finally {
+      setOtpLoading(false);
     }
   };
 
@@ -62,6 +135,22 @@ export default function LoginScreen() {
             </View>
 
             <View style={styles.form}>
+              {/* Login Method Segment Switcher */}
+              <View style={styles.segmentContainer}>
+                <TouchableOpacity 
+                  style={[styles.segmentButton, loginMethod === 'otp' && styles.segmentButtonActive]}
+                  onPress={() => { setLoginMethod('otp'); setPassword(''); }}
+                >
+                  <Text style={[styles.segmentButtonText, loginMethod === 'otp' && styles.segmentButtonTextActive]}>OTP</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.segmentButton, loginMethod === 'password' && styles.segmentButtonActive]}
+                  onPress={() => setLoginMethod('password')}
+                >
+                  <Text style={[styles.segmentButtonText, loginMethod === 'password' && styles.segmentButtonTextActive]}>Password</Text>
+                </TouchableOpacity>
+              </View>
+
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Email or Mobile Number</Text>
                 <TextInput
@@ -74,46 +163,55 @@ export default function LoginScreen() {
                 />
               </View>
 
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Password</Text>
-                <View style={styles.passwordInputWrapper}>
-                  <TextInput
-                    style={styles.passwordInput}
-                    placeholder="Enter password"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                    placeholderTextColor="#A0A0A0"
-                  />
-                  <TouchableOpacity style={styles.eyeIconContainer} onPress={() => setShowPassword(!showPassword)}>
-                    <Ionicons name={showPassword ? "eye" : "eye-off"} size={22} color="#3D2B1F" />
-                  </TouchableOpacity>
+              {loginMethod === 'password' && (
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Password</Text>
+                  <View style={styles.passwordInputWrapper}>
+                    <TextInput
+                      style={styles.passwordInput}
+                      placeholder="Enter password"
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry={!showPassword}
+                      placeholderTextColor="#A0A0A0"
+                    />
+                    <TouchableOpacity style={styles.eyeIconContainer} onPress={() => setShowPassword(!showPassword)}>
+                      <Ionicons name={showPassword ? "eye" : "eye-off"} size={22} color="#3D2B1F" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
+              )}
 
               {/* Remember Me & Forgot Password Row */}
-              <View style={styles.checkboxForgotPasswordRow}>
-                <View style={styles.checkboxRow}>
-                  <TouchableOpacity 
-                    style={[styles.checkbox, rememberMe && styles.checkboxActive]}
-                    onPress={() => setRememberMe(!rememberMe)}
-                  >
-                    {rememberMe && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+              {loginMethod === 'password' && (
+                <View style={styles.checkboxForgotPasswordRow}>
+                  <View style={styles.checkboxRow}>
+                    <TouchableOpacity 
+                      style={[styles.checkbox, rememberMe && styles.checkboxActive]}
+                      onPress={() => setRememberMe(!rememberMe)}
+                    >
+                      {rememberMe && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+                    </TouchableOpacity>
+                    <Text style={styles.checkboxText}>Remember Me</Text>
+                  </View>
+                  
+                  <TouchableOpacity onPress={() => router.push('/forgot-password')}>
+                    <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
                   </TouchableOpacity>
-                  <Text style={styles.checkboxText}>Remember Me</Text>
                 </View>
-                
-                <TouchableOpacity onPress={() => router.push('/forgot-password')}>
-                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                </TouchableOpacity>
-              </View>
+              )}
 
               <TouchableOpacity 
                 style={[styles.button, loading && styles.buttonDisabled]} 
-                onPress={handleLogin}
+                onPress={loginMethod === 'password' ? handleLogin : handleRequestOtp}
                 disabled={loading}
               >
-                <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'LOGIN'}</Text>
+                <Text style={styles.buttonText}>
+                  {loading 
+                    ? (loginMethod === 'password' ? 'Logging in...' : 'Sending OTP...') 
+                    : (loginMethod === 'password' ? 'LOGIN' : 'SEND OTP')
+                  }
+                </Text>
               </TouchableOpacity>
               
               <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -132,6 +230,47 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* OTP Verification Modal */}
+      <Modal
+        visible={showOtpModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowOtpModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Verify Your Account</Text>
+            <Text style={styles.modalSubtitle}>Please enter the 6-digit OTP code sent to your email/mobile.</Text>
+            
+            <TextInput
+              style={styles.otpInput}
+              placeholder="Enter 6-digit OTP"
+              keyboardType="numeric"
+              maxLength={6}
+              value={otp}
+              onChangeText={setOtp}
+              placeholderTextColor="#A0A0A0"
+            />
+
+            <TouchableOpacity 
+              style={[styles.button, otpLoading && styles.buttonDisabled]} 
+              onPress={handleVerifyOtp}
+              disabled={otpLoading}
+            >
+              {otpLoading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.buttonText}>VERIFY & SIGN IN</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.cancelLink} onPress={() => setShowOtpModal(false)}>
+              <Text style={styles.cancelLinkText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -291,5 +430,95 @@ const styles = StyleSheet.create({
     color: '#EBA938',
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(61, 43, 31, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 320,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    shadowColor: '#3D2B1F',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    color: '#3D2B1F',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: 'rgba(61, 43, 31, 0.7)',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 20,
+  },
+  otpInput: {
+    backgroundColor: '#FAF9F6',
+    borderWidth: 1,
+    borderColor: 'rgba(61, 43, 31, 0.15)',
+    borderRadius: 8,
+    padding: 16,
+    fontSize: 18,
+    color: '#3D2B1F',
+    textAlign: 'center',
+    letterSpacing: 8,
+    marginBottom: 16,
+  },
+  cancelLink: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  cancelLinkText: {
+    color: '#3D2B1F',
+    fontWeight: '500',
+    fontSize: 14,
+  },
+  segmentContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#FAF9F6',
+    borderRadius: 8,
+    padding: 4,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(61, 43, 31, 0.1)',
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 6,
+  },
+  segmentButtonActive: {
+    backgroundColor: '#3D2B1F',
+    shadowColor: '#3D2B1F',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  segmentButtonText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: 'rgba(61, 43, 31, 0.6)',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  segmentButtonTextActive: {
+    color: '#FFF6E6',
   }
 });
