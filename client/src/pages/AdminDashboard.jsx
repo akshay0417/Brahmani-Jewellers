@@ -43,6 +43,7 @@ const AdminDashboard = () => {
   const [purity, setPurity] = useState('22K');
   const [makingCharges, setMakingCharges] = useState('');
   const [otherCharges, setOtherCharges] = useState('');
+  const [price, setPrice] = useState('');
   const [isFeatured, setIsFeatured] = useState(false);
   const [showOnHomepage, setShowOnHomepage] = useState(false);
   const [additionalImagesFiles, setAdditionalImagesFiles] = useState([]);
@@ -263,7 +264,7 @@ const AdminDashboard = () => {
     formData.append('targetPage', targetPage);
     formData.append('weight', weight);
     formData.append('purity', purity);
-    formData.append('price', rates.price || '');
+    formData.append('price', price);
     formData.append('makingCharges', makingCharges);
     formData.append('otherCharges', otherCharges);
     formData.append('isFeatured', isFeatured);
@@ -288,7 +289,7 @@ const AdminDashboard = () => {
       setOtherCharges('');
       setIsFeatured(false);
       setShowOnHomepage(false);
-      setRates({ ...rates, price: '' });
+      setPrice('');
       fetchData();
       setStatus({ type: 'success', message: 'Image uploaded successfully!' });
     } catch (err) {
@@ -726,7 +727,7 @@ const AdminDashboard = () => {
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="text-xs text-coffee/70 uppercase tracking-widest">Silver Rate (90%)</label>
+                            <label className="text-xs text-coffee/70 uppercase tracking-widest">Silver Rate (per kg)</label>
                             <input
                               type="number"
                               value={rates.manualSilver90}
@@ -966,8 +967,8 @@ const AdminDashboard = () => {
                         <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Price (₹ - Optional)</label>
                         <input
                           type="number"
-                          value={rates.price || ''}
-                          onChange={(e) => setRates({ ...rates, price: e.target.value })}
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
                           className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
                           placeholder="Enter price"
                         />
@@ -993,7 +994,8 @@ const AdminDashboard = () => {
                           <option value="24K">24K Gold</option>
                           <option value="22K">22K Gold</option>
                           <option value="18K">18K Gold</option>
-                          <option value="90%">90% Silver</option>
+                          <option value="92.5%">92.5% Silver</option>
+                          <option value="silver">Silver</option>
                         </select>
                       </div>
                       <div className="space-y-2">
@@ -2101,7 +2103,8 @@ const AdminDashboard = () => {
                     <option value="24K">24K Gold</option>
                     <option value="22K">22K Gold</option>
                     <option value="18K">18K Gold</option>
-                    <option value="90%">90% Silver</option>
+                    <option value="92.5%">92.5% Silver</option>
+                    <option value="silver">Silver</option>
                   </select>
                 </div>
                 <div className="space-y-2">

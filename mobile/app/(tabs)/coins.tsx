@@ -63,7 +63,11 @@ export default function CoinsScreen() {
       else if (purity.includes('22') || purity === '') ratePerGram = rates.gold22K / 10;
       else if (purity.includes('18')) ratePerGram = rates.gold18K / 10;
     } else if (cat === 'silver') {
-      ratePerGram = (rates.silver90 || rates.silver || 74) / 1000;
+      if (purity.includes('92.5') || purity.includes('925')) {
+        ratePerGram = ((rates.silver90 || rates.silver || 74) / 1000) * (92.5 / 90);
+      } else {
+        ratePerGram = (rates.silver90 || rates.silver || 74) / 1000;
+      }
     }
 
     if (!ratePerGram) return 0;

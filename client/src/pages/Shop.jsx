@@ -73,6 +73,7 @@ const Shop = () => {
     if (p.includes('24')) ratePerGram = rates.gold24K / 10;
     else if (p.includes('22')) ratePerGram = rates.gold22K / 10;
     else if (p.includes('18')) ratePerGram = rates.gold18K / 10;
+    else if (p.includes('92.5') || p.includes('925')) ratePerGram = (rates.silver90 / 1000) * (92.5 / 90);
     else if (p.includes('90') || p.includes('SILVER')) ratePerGram = rates.silver90 / 1000;
 
     if (!ratePerGram) return { final: 0, breakdown: null };
