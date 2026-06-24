@@ -6,6 +6,26 @@ const AuthContext = createContext<any>(null);
 
 export const AuthProvider = ({ children }: any) => {
   const [user, setUser] = useState<any>(null);
+  const [cartCount, setCartCount] = useState<number>(0);
+
+  const refreshCartCount = async (token = user?.token) => {
+    if (!token) {
+      setCartCount(0);
+      return;
+    }
+    try {
+      const response = await fetch('https://brahmani-jewellers-api.onrender.com/api/cart', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const count = data.items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
+        setCartCount(count);
+      }
+    } catch (e) {
+      console.error('Failed to fetch cart count', e);
+    }
+  };
 
   useEffect(() => {
     const loadPersistedUser = async () => {
@@ -13,12 +33,16 @@ export const AuthProvider = ({ children }: any) => {
         if (Platform.OS === 'web') {
           const storedUser = localStorage.getItem('mobile_user');
           if (storedUser) {
-            setUser(JSON.parse(storedUser));
+            const parsed = JSON.parse(storedUser);
+            setUser(parsed);
+            refreshCartCount(parsed.token);
           }
         } else {
           const storedUser = await AsyncStorage.getItem('mobile_user');
           if (storedUser) {
-            setUser(JSON.parse(storedUser));
+            const parsed = JSON.parse(storedUser);
+            setUser(parsed);
+            refreshCartCount(parsed.token);
           }
         }
       } catch (e) {
@@ -28,8 +52,17 @@ export const AuthProvider = ({ children }: any) => {
     loadPersistedUser();
   }, []);
 
+  useEffect(() => {
+    if (user?.token) {
+      refreshCartCount(user.token);
+    } else {
+      setCartCount(0);
+    }
+  }, [user]);
+
   const login = async (userData: any, rememberMe = true) => {
     setUser(userData);
+    refreshCartCount(userData.token);
     try {
       if (rememberMe) {
         if (Platform.OS === 'web') {
@@ -51,6 +84,7 @@ export const AuthProvider = ({ children }: any) => {
 
   const logout = async () => {
     setUser(null);
+    setCartCount(0);
     try {
       if (Platform.OS === 'web') {
         localStorage.removeItem('mobile_user');
@@ -63,7 +97,7 @@ export const AuthProvider = ({ children }: any) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, cartCount, refreshCartCount }}>
       {children}
     </AuthContext.Provider>
   );

@@ -117,7 +117,7 @@ export default function HomeScreen() {
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
 
-  const { user, logout } = useAuth();
+  const { user, logout, cartCount, refreshCartCount } = useAuth();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [heroSlides, setHeroSlides] = useState<any[]>(HERO_SLIDES);
@@ -185,6 +185,7 @@ export default function HomeScreen() {
     registerForNotifications();
     if (user && user.token) {
       fetchOrders();
+      refreshCartCount();
     } else {
       setOrders([]);
     }
@@ -289,6 +290,11 @@ export default function HomeScreen() {
               </TouchableOpacity>
               <TouchableOpacity onPress={() => router.push('/cart')} style={styles.cartIconBtn}>
                 <Ionicons name="cart-outline" size={28} color="#3D2B1F" />
+                {cartCount > 0 && (
+                  <View style={styles.badgeContainer}>
+                    <Text style={styles.badgeText}>{cartCount}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -845,6 +851,7 @@ const styles = StyleSheet.create({
   },
   cartIconBtn: {
     padding: 8,
+    position: 'relative',
   },
   brandRow: {
     flexDirection: 'row',
@@ -1345,5 +1352,24 @@ const styles = StyleSheet.create({
     marginTop: 2,
     textAlign: 'center',
     fontWeight: '500',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    backgroundColor: '#FF3B30',
+    borderRadius: 9,
+    width: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#FAF9F6',
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: 'bold',
+    textAlign: 'center',
   }
 });

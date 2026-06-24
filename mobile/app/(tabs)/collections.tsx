@@ -10,7 +10,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
 
 export default function CollectionsScreen() {
-  const { user } = useAuth() as any;
+  const { user, refreshCartCount } = useAuth() as any;
   const router = useRouter();
   const params = useLocalSearchParams();
   const [items, setItems] = useState<any[]>([
@@ -68,6 +68,7 @@ export default function CollectionsScreen() {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       Alert.alert("Success", "Item added to cart");
+      refreshCartCount();
     } catch (error) {
       Alert.alert("Error", "Could not add to cart");
     }
@@ -148,6 +149,7 @@ export default function CollectionsScreen() {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       setSelectedProduct(null);
+      refreshCartCount();
       router.push('/cart');
     } catch (error) {
       Alert.alert("Error", "Could not add item to cart for purchase");

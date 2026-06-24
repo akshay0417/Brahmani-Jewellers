@@ -10,7 +10,7 @@ const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
 
 export default function CartScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, refreshCartCount } = useAuth();
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,6 +41,7 @@ export default function CartScreen() {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       setCart(response.data);
+      refreshCartCount();
     } catch (error) {
       Alert.alert("Error", "Could not update quantity");
     }
@@ -52,6 +53,7 @@ export default function CartScreen() {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       setCart(response.data);
+      refreshCartCount();
     } catch (error) {
       Alert.alert("Error", "Could not remove item");
     }

@@ -8,7 +8,7 @@ import Reanimated, { FadeInDown } from 'react-native-reanimated';
 const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
 
 export default function CoinsScreen() {
-  const { user } = useAuth();
+  const { user, refreshCartCount } = useAuth();
   const [coins, setCoins] = useState([
     { _id: 'c1', name: '24K Gold Coin (1 Gram)', category: 'gold', weight: '1', purity: '24K', imageUrl: 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80' },
     { _id: 'c2', name: '24K Gold Coin (5 Gram)', category: 'gold', weight: '5', purity: '24K', imageUrl: 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80' },
@@ -96,6 +96,7 @@ export default function CoinsScreen() {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       Alert.alert("Success", "Coin added to cart successfully");
+      refreshCartCount();
     } catch (error) {
       Alert.alert("Error", "Could not add coin to cart");
     }
