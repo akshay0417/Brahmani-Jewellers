@@ -469,7 +469,7 @@ const Contact = () => {
             
             <div className="bg-cream p-2 rounded-xl border border-ochre/20 overflow-hidden h-[300px] shadow-sm">
               <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3672.4847954930107!2d72.62886267597148!3d22.99676741753765!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x395e8705e46bfb3f%3A0xe104cfbc17cbb8df!2sBrahmani%20Jewellers!5e0!3m2!1sen!2sin!4v1715800000000!5m2!1sen!2sin" 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3672.1931558231575!2d72.6237243!3d23.0044041!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x395e86720e480ae5%3A0x3f1a429425213530!2sBrahmani%20Jewellers!5e0!3m2!1sen!2sin!4v1717000000000!5m2!1sen!2sin" 
                 width="100%" 
                 height="100%" 
                 style={{ border: 0, filter: 'sepia(20%) hue-rotate(340deg) saturate(120%)' }} 
