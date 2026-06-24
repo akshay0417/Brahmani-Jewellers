@@ -17,7 +17,6 @@ const Checkout = () => {
     pincode: '',
     paymentMethod: 'Card'
   });
-  const [payReference, setPayReference] = useState('');
   const [loading, setLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [deliveryRates, setDeliveryRates] = useState({ freeDeliveryKmLimit: 10, deliveryChargePerKm: 15, codEnabled: true });

@@ -18,7 +18,6 @@ export default function CheckoutScreen() {
   // Checkout Form State
   const [deliveryMode, setDeliveryMode] = useState('Delivery'); // 'Delivery' | 'Pickup'
   const [paymentMethod, setPaymentMethod] = useState('Razorpay'); // 'Razorpay' | 'COD'
-  const [payReference, setPayReference] = useState('');
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [address, setAddress] = useState('');
