@@ -17,7 +17,7 @@ export default function CheckoutScreen() {
 
   // Checkout Form State
   const [deliveryMode, setDeliveryMode] = useState('Delivery'); // 'Delivery' | 'Pickup'
-  const [paymentMethod, setPaymentMethod] = useState('UPI'); // 'UPI' | 'Bank' | 'Razorpay' | 'COD'
+  const [paymentMethod, setPaymentMethod] = useState('Razorpay'); // 'Razorpay' | 'COD'
   const [payReference, setPayReference] = useState('');
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
@@ -189,12 +189,7 @@ export default function CheckoutScreen() {
       }
     }
 
-    if (paymentMethod !== 'Razorpay' && paymentMethod !== 'COD') {
-      if (!payReference.trim()) {
-        Alert.alert("Payment Verification Required", "Please transfer the grand total using UPI or Bank Transfer and enter the Transaction ID / Ref Number below.");
-        return;
-      }
-    }
+    // No payment reference validation needed since UPI/Bank are removed
 
     try {
       setPlacingOrder(true);
@@ -233,11 +228,11 @@ export default function CheckoutScreen() {
         discountAmount: getDiscountAmount()
       };
 
-      if (paymentMethod !== 'Razorpay') {
+      if (paymentMethod === 'COD') {
         const payload = {
           ...orderData,
-          paymentMethod: paymentMethod === 'Bank' ? 'Bank Transfer' : paymentMethod === 'COD' ? 'COD' : 'UPI',
-          paymentReference: paymentMethod === 'COD' ? 'COD Order' : payReference.trim(),
+          paymentMethod: 'COD',
+          paymentReference: 'COD Order',
           deliveryMode,
           pickupCode: deliveryMode === 'Pickup' ? randomPickupCode : undefined,
         };
@@ -439,24 +434,6 @@ export default function CheckoutScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Payment Method</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-            <TouchableOpacity 
-              style={[styles.paymentToggleBtn, paymentMethod === 'UPI' && styles.activePaymentToggleBtn]}
-              onPress={() => setPaymentMethod('UPI')}
-            >
-              <Text style={[styles.paymentToggleBtnText, paymentMethod === 'UPI' && styles.activePaymentToggleBtnText]}>UPI / QR</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.paymentToggleBtn, paymentMethod === 'Bank' && styles.activePaymentToggleBtn]}
-              onPress={() => setPaymentMethod('Bank')}
-            >
-              <Text style={[styles.paymentToggleBtnText, paymentMethod === 'Bank' && styles.activePaymentToggleBtnText]}>Bank</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.paymentToggleBtn, paymentMethod === 'Razorpay' && styles.activePaymentToggleBtn]}
-              onPress={() => setPaymentMethod('Razorpay')}
-            >
-              <Text style={[styles.paymentToggleBtnText, paymentMethod === 'Razorpay' && styles.activePaymentToggleBtnText]}>Online</Text>
-            </TouchableOpacity>
             {deliveryRates.codEnabled && (
               <TouchableOpacity 
                 style={[styles.paymentToggleBtn, paymentMethod === 'COD' && styles.activePaymentToggleBtn]}
@@ -465,22 +442,15 @@ export default function CheckoutScreen() {
                 <Text style={[styles.paymentToggleBtnText, paymentMethod === 'COD' && styles.activePaymentToggleBtnText]}>COD</Text>
               </TouchableOpacity>
             )}
+            <TouchableOpacity 
+              style={[styles.paymentToggleBtn, paymentMethod === 'Razorpay' && styles.activePaymentToggleBtn]}
+              onPress={() => setPaymentMethod('Razorpay')}
+            >
+              <Text style={[styles.paymentToggleBtnText, paymentMethod === 'Razorpay' && styles.activePaymentToggleBtnText]}>Online (UPI/Card)</Text>
+            </TouchableOpacity>
           </View>
           
-          {paymentMethod === 'Bank' ? (
-            <View style={styles.bankBox}>
-              <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>Bank Name:</Text> HDFC Bank</Text>
-              <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>A/C Name:</Text> Brahmani Jewellers</Text>
-              <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>A/C Number:</Text> 50200081273891</Text>
-              <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>IFSC:</Text> HDFC0001203</Text>
-            </View>
-          ) : paymentMethod === 'UPI' ? (
-            <View style={styles.bankBox}>
-              <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>GPay / PhonePe / Paytm:</Text></Text>
-              <Text style={[styles.bankText, { fontSize: 14, fontWeight: 'bold', color: '#D4AF37', marginVertical: 4 }]}>+91 99258 11771</Text>
-              <Text style={styles.bankText}>Pay to: Akshay Patel / Brahmani Jewellers</Text>
-            </View>
-          ) : paymentMethod === 'Razorpay' ? (
+          {paymentMethod === 'Razorpay' ? (
             <View style={styles.bankBox}>
               <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>Online Payment via Razorpay:</Text></Text>
               <Text style={styles.bankText}>Pay securely using Cards, Netbanking, UPI, or Wallet.</Text>
@@ -490,19 +460,6 @@ export default function CheckoutScreen() {
               <Text style={styles.bankText}><Text style={{ fontWeight: 'bold' }}>Cash on Delivery (COD):</Text></Text>
               <Text style={styles.bankText}>Pay in cash when your order is delivered to your door.</Text>
             </View>
-          )}
-
-          {paymentMethod !== 'Razorpay' && paymentMethod !== 'COD' && (
-            <>
-              <Text style={[styles.sectionTitle, { marginTop: 14, marginBottom: 8 }]}>Enter Payment Reference ID</Text>
-              <TextInput
-                placeholder="UPI Transaction Ref ID or Bank UTR Number"
-                placeholderTextColor="rgba(28,28,30,0.3)"
-                style={styles.textInput}
-                value={payReference}
-                onChangeText={setPayReference}
-              />
-            </>
           )}
         </View>
 
