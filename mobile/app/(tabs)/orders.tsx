@@ -34,6 +34,35 @@ export default function OrdersScreen() {
     }
   };
 
+  const handleCancelOrder = async (orderId) => {
+    Alert.alert(
+      "Cancel Order",
+      "Are you sure you want to cancel this order?",
+      [
+        { text: "No", style: "cancel" },
+        { 
+          text: "Yes, Cancel", 
+          style: "destructive", 
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await axios.put(`${API_URL}/orders/${orderId}/cancel`, {}, {
+                headers: { Authorization: `Bearer ${user.token}` }
+              });
+              Alert.alert("Success", "Order cancelled successfully");
+              fetchOrders();
+            } catch (error) {
+              console.error(error);
+              const errMsg = error.response?.data?.message || "Could not cancel order";
+              Alert.alert("Error", errMsg);
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   if (!user) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -237,6 +266,19 @@ export default function OrdersScreen() {
                   <Text style={styles.totalValue}>₹{order.totalAmount?.toLocaleString('en-IN')}</Text>
                 </View>
               </View>
+
+              {/* Order Actions */}
+              {order.status === 'Pending' && (
+                <View style={styles.cardActionsContainer}>
+                  <TouchableOpacity 
+                    style={styles.cancelBtn} 
+                    onPress={() => handleCancelOrder(order._id)}
+                  >
+                    <Ionicons name="close-circle-outline" size={14} color="#FF3B30" />
+                    <Text style={styles.cancelBtnText}>Cancel Order</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </Reanimated.View>
           ))
         )}
@@ -447,5 +489,30 @@ const styles = StyleSheet.create({
   expectedDeliveryText: {
     fontSize: 11,
     color: '#8E8E93'
+  },
+  cardActionsContainer: {
+    borderTopWidth: 1,
+    borderTopColor: '#F2F2F7',
+    paddingTop: 10,
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  cancelBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 59, 48, 0.2)',
+    backgroundColor: 'rgba(255, 59, 48, 0.05)',
+  },
+  cancelBtnText: {
+    color: '#FF3B30',
+    fontSize: 11,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
   }
 });

@@ -2154,6 +2154,31 @@ router.get('/orders/my', auth, async (req, res) => {
   }
 });
 
+// Cancel Order by User
+router.put('/orders/:id/cancel', auth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    // Verify ownership
+    if (order.user.toString() !== req.user) {
+      return res.status(403).json({ message: 'You are not authorized to cancel this order' });
+    }
+
+    // Verify order status is Pending
+    if (order.status !== 'Pending') {
+      return res.status(400).json({ message: 'Only pending orders can be cancelled online. Please contact customer support for assistance.' });
+    }
+
+    order.status = 'Cancelled';
+    await order.save();
+
+    res.json({ message: 'Order cancelled successfully', order });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Get All Orders (Admin only)
 router.get('/admin/orders', auth, isAdmin, async (req, res) => {
   try {

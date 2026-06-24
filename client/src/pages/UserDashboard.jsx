@@ -94,6 +94,19 @@ const UserDashboard = () => {
     }
   };
 
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+    try {
+      const token = sessionStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await api.put(`/orders/${orderId}/cancel`, {}, config);
+      setOrders(prev => prev.map(order => order._id === orderId ? { ...order, status: 'Cancelled' } : order));
+      alert('Order cancelled successfully.');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error cancelling order');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-cream pt-12 pb-24 px-4 md:px-8 transition-colors duration-300">
       <div className="max-w-4xl mx-auto">
@@ -336,7 +349,7 @@ const UserDashboard = () => {
 
                     {/* Shipping and Actions */}
                     <div className="flex flex-wrap justify-between items-center gap-4 pt-3 border-t border-ochre/10">
-                      <div>
+                      <div className="flex items-center gap-4 flex-wrap">
                         {order.trackingId && (
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] uppercase font-bold text-coffee/50">Tracking:</span>
@@ -355,6 +368,14 @@ const UserDashboard = () => {
                               </span>
                             )}
                           </div>
+                        )}
+                        {order.status === 'Pending' && (
+                          <button
+                            onClick={() => handleCancelOrder(order._id)}
+                            className="text-[10px] text-red-600 border border-red-600/30 hover:bg-red-600 hover:text-white px-3 py-1 rounded transition-all font-bold uppercase tracking-wider hover:border-red-600"
+                          >
+                            Cancel Order
+                          </button>
                         )}
                       </div>
                       <div className="text-right">
