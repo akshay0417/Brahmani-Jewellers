@@ -72,7 +72,7 @@ app.listen(PORT, async () => {
         const newAdmin = new User({
           name: 'Brahmani Admin',
           email: 'info.brahmanijewellers@gmail.com',
-          mobile: '9925811771',
+          mobile: '7621967577',
           password: hashedPassword,
           role: 'admin'
         });

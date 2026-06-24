@@ -285,14 +285,14 @@ const Navbar = () => {
                     <Phone className="text-ochre flex-shrink-0 mt-1" size={20} />
                     <div>
                       <h4 className="text-coffee font-serif mb-1">Call Us</h4>
-                      <a href="tel:+919925811771" className="text-coffee/70 text-sm hover:text-ochre transition-colors">+91 9925811771</a>
+                      <a href="tel:+917621967577" className="text-coffee/70 text-sm hover:text-ochre transition-colors">+91 7621967577</a>
                     </div>
                   </div>
                   <div className="bg-cream-alt border border-ochre/20 p-4 rounded-lg flex items-start gap-4 shadow-sm">
                     <MessageSquare className="text-ochre flex-shrink-0 mt-1" size={20} />
                     <div>
                       <h4 className="text-coffee font-serif mb-1">WhatsApp</h4>
-                      <a href="https://wa.me/919925811771" className="text-coffee/70 text-sm hover:text-ochre transition-colors">Chat with Experts</a>
+                      <a href="https://wa.me/917621967577" className="text-coffee/70 text-sm hover:text-ochre transition-colors">Chat with Experts</a>
                     </div>
                   </div>
                   <div className="bg-cream-alt border border-ochre/20 p-4 rounded-lg flex items-start gap-4 shadow-sm">

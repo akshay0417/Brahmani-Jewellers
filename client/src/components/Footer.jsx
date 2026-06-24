@@ -82,7 +82,7 @@ const Footer = () => {
             <ul className="space-y-4 text-sm text-coffee/80 transition-colors duration-300">
               <li>
                 <span className="text-[9px] text-coffee/50 uppercase tracking-widest block font-bold">Main Store</span>
-                <a href="tel:+919925811771" className="hover:text-ochre font-semibold transition-colors block mt-0.5">+91 9925811771</a>
+                <a href="tel:+917621967577" className="hover:text-ochre font-semibold transition-colors block mt-0.5">+91 7621967577</a>
               </li>
               <li>
                 <span className="text-[9px] text-coffee/50 uppercase tracking-widest block font-bold">Support Line 1</span>

@@ -90,6 +90,7 @@ const InstagramPost = require('../models/InstagramPost');
 const Analytics = require('../models/Analytics');
 const NotificationToken = require('../models/NotificationToken');
 const Investment = require('../models/Investment');
+const Offer = require('../models/Offer');
 
 // --- ANALYTICS ROUTES ---
 // Increment visitor count (Public)
@@ -1187,7 +1188,7 @@ router.post('/rates', auth, isAdmin, async (req, res) => {
     // Trigger automated push notification to all devices (non-blocking)
     sendPushNotification(
       'Live Rates Updated! 📈',
-      `Gold 24K: ₹${rate.gold24K.toLocaleString('en-IN')} (10g) | Silver: ₹${rate.silver90.toLocaleString('en-IN')} (1kg)`
+      `Gold: 24K ₹${rate.gold24K.toLocaleString('en-IN')} | 22K ₹${rate.gold22K.toLocaleString('en-IN')} | 18K ₹${rate.gold18K.toLocaleString('en-IN')} (10g) • Silver: ₹${rate.silver90.toLocaleString('en-IN')} (1kg)`
     ).catch(err => console.error('[Rates Notification Error]:', err.message));
     
     res.json(rate);
@@ -2802,7 +2803,7 @@ const sendPushNotification = async (title, body, data = {}) => {
       return;
     }
 
-    const expoPushTokens = tokens.map(t => t.token).filter(t => t && t.startsWith('ExponentPushToken'));
+    const expoPushTokens = tokens.map(t => t.token).filter(t => t && (t.startsWith('ExponentPushToken') || t.startsWith('ExpoPushToken')));
     if (expoPushTokens.length === 0) {
       console.log('[Push Notification] No valid Expo push tokens found.');
       return;
@@ -2874,6 +2875,135 @@ router.post('/notifications/send', auth, isAdmin, async (req, res) => {
   try {
     await sendPushNotification(title, body, data || {});
     res.json({ message: 'Push notification broadcasted successfully!' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// --- OFFER/BANNER ROUTES ---
+
+// Get all active offers/banners (Public)
+router.get('/offers', async (req, res) => {
+  try {
+    const offers = await Offer.find({ isActive: true }).sort({ createdAt: -1 });
+    res.json(offers);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get all offers/banners (Admin only)
+router.get('/admin/offers', auth, isAdmin, async (req, res) => {
+  try {
+    const offers = await Offer.find().sort({ createdAt: -1 });
+    res.json(offers);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Create new offer/banner (Admin only)
+router.post('/offers', auth, isAdmin, (req, res, next) => {
+  upload.single('image')(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ message: err.message });
+    } else if (err) {
+      return res.status(400).json({ message: err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
+  const { title, subtitle, link } = req.body;
+  try {
+    const file = req.file;
+    if (!file) return res.status(400).json({ message: 'Offer image is required' });
+
+    let imageUrl = '';
+    const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && 
+                                   process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name';
+
+    if (isCloudinaryConfigured) {
+      const { Readable } = require('stream');
+      const uploadPromise = () => new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'brahmani_jewellers_offers',
+            resource_type: 'image'
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result.secure_url);
+          }
+        );
+        Readable.from(file.buffer).pipe(uploadStream);
+      });
+      imageUrl = await uploadPromise();
+    } else {
+      const b64 = Buffer.from(file.buffer).toString('base64');
+      imageUrl = `data:${file.mimetype};base64,${b64}`;
+    }
+
+    const newOffer = new Offer({
+      imageUrl,
+      title,
+      subtitle,
+      link,
+      isActive: true
+    });
+
+    await newOffer.save();
+
+    // Trigger automated push notification to all devices (non-blocking)
+    sendPushNotification(
+      `New Offer: ${newOffer.title}! 🎁`,
+      newOffer.subtitle || 'Check out our latest offer on Brahmani Jewellers. Tap to explore!'
+    ).catch(err => console.error('[Offer Notification Error]:', err.message));
+
+    res.status(201).json(newOffer);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Delete an offer (Admin only)
+router.delete('/offers/:id', auth, isAdmin, async (req, res) => {
+  try {
+    const offer = await Offer.findById(req.params.id);
+    if (!offer) return res.status(404).json({ message: 'Offer not found' });
+
+    // Delete image from Cloudinary if configured
+    const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && 
+                                   process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name';
+    if (isCloudinaryConfigured && offer.imageUrl.includes('cloudinary')) {
+      try {
+        const parts = offer.imageUrl.split('/');
+        const uploadIndex = parts.indexOf('upload');
+        if (uploadIndex !== -1 && uploadIndex + 2 < parts.length) {
+          const publicIdWithExt = parts.slice(uploadIndex + 2).join('/');
+          const publicId = publicIdWithExt.substring(0, publicIdWithExt.lastIndexOf('.'));
+          await cloudinary.uploader.destroy(publicId);
+        }
+      } catch (err) {
+        console.error('Error deleting image from Cloudinary:', err);
+      }
+    }
+
+    await Offer.deleteOne({ _id: req.params.id });
+    res.json({ message: 'Offer deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Toggle offer active state (Admin only)
+router.put('/offers/:id/toggle', auth, isAdmin, async (req, res) => {
+  try {
+    const offer = await Offer.findById(req.params.id);
+    if (!offer) return res.status(404).json({ message: 'Offer not found' });
+
+    offer.isActive = !offer.isActive;
+    await offer.save();
+    res.json(offer);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

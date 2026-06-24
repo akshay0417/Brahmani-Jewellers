@@ -77,7 +77,7 @@ const RefundPolicy = () => {
             </p>
             <div className="mt-4 p-4 bg-cream/50 rounded-lg border border-ochre/10 text-sm space-y-1">
               <p><strong>Email:</strong> info.brahmanijewellers@gmail.com</p>
-              <p><strong>Phone:</strong> +91 9925811771</p>
+              <p><strong>Phone:</strong> +91 7621967577</p>
             </div>
           </section>
         </div>

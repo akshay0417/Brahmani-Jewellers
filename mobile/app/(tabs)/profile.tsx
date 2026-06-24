@@ -242,7 +242,7 @@ export default function ProfileScreen() {
 
   const initiateWhatsApp = () => {
     const message = "Hello Brahmani Jewellers! I would like to consult about a custom design.";
-    const url = `https://wa.me/919925811771?text=${encodeURIComponent(message)}`;
+    const url = `https://wa.me/917621967577?text=${encodeURIComponent(message)}`;
     Linking.openURL(url).catch(() => {
       Alert.alert("Error", "WhatsApp is not installed on your phone.");
     });

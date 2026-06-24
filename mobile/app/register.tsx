@@ -420,7 +420,7 @@ export default function RegisterScreen() {
                 {"\n"}
                 Email: info.brahmanijewellers@gmail.com
                 {"\n"}
-                Phone: +91 9925811771
+                Phone: +91 7621967577
               </Text>
             </ScrollView>
             <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowTermsModal(false)}>
@@ -465,7 +465,7 @@ export default function RegisterScreen() {
                 {"\n"}
                 Email: info.brahmanijewellers@gmail.com
                 {"\n"}
-                Phone: +91 9925811771
+                Phone: +91 7621967577
                 {"\n"}
                 Address: Near Amraiwadi Metro, Ahmedabad, Gujarat, India
               </Text>

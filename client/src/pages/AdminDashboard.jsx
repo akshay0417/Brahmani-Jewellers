@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Tag, Upload, Trash2, TrendingUp, Image as ImageIcon, CheckCircle, AlertCircle, User, MessageSquare, Lock, X, Mail, Star, Menu, ShoppingBag } from 'lucide-react';
+import { LogOut, Tag, Upload, Trash2, TrendingUp, Image as ImageIcon, CheckCircle, AlertCircle, User, MessageSquare, Lock, X, Mail, Star, Menu, ShoppingBag, Gift, Home } from 'lucide-react';
 
 const AdminDashboard = () => {
   const [rates, setRates] = useState({ isManual: true, goldImpFine: '', silverFine: '', manualGold24K: '', manualGold22K: '', manualGold18K: '', manualSilver90: '', freeDeliveryKmLimit: '', deliveryChargePerKm: '', codEnabled: true });
@@ -14,6 +14,14 @@ const AdminDashboard = () => {
   const [visitorCount, setVisitorCount] = useState(0);
   const [coupons, setCoupons] = useState([]);
   const [couponForm, setCouponForm] = useState({ code: '', discountPercent: '', expirationDate: '', maxUses: 100 });
+  
+  // Offers/Banners State
+  const [offers, setOffers] = useState([]);
+  const [offerTitle, setOfferTitle] = useState('');
+  const [offerSubtitle, setOfferSubtitle] = useState('');
+  const [offerLink, setOfferLink] = useState('');
+  const [offerImage, setOfferImage] = useState(null);
+  const [offerLoading, setOfferLoading] = useState(false);
   
   // Investments State
   const [investments, setInvestments] = useState([]);
@@ -84,7 +92,7 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [rateRes, galleryRes, usersRes, messagesRes, subscribersRes, ordersRes, instagramRes, analyticsRes, investmentsRes, couponsRes] = await Promise.all([
+      const [rateRes, galleryRes, usersRes, messagesRes, subscribersRes, ordersRes, instagramRes, analyticsRes, investmentsRes, couponsRes, offersRes] = await Promise.all([
         api.get('/rates'),
         api.get('/gallery'),
         api.get('/users', config),
@@ -94,7 +102,8 @@ const AdminDashboard = () => {
         api.get('/instagram'),
         api.get('/analytics', config).catch(() => ({ data: { views: 0 } })),
         api.get('/admin/investments', config).catch(() => ({ data: [] })),
-        api.get('/admin/coupons', config).catch(() => ({ data: [] }))
+        api.get('/admin/coupons', config).catch(() => ({ data: [] })),
+        api.get('/admin/offers', config).catch(() => ({ data: [] }))
       ]);
 
       if (rateRes.data) setRates({ 
@@ -119,8 +128,75 @@ const AdminDashboard = () => {
       if (analyticsRes && analyticsRes.data) setVisitorCount(analyticsRes.data.views || 0);
       if (investmentsRes && investmentsRes.data) setInvestments(investmentsRes.data);
       if (couponsRes && couponsRes.data) setCoupons(couponsRes.data);
+      if (offersRes && offersRes.data) setOffers(offersRes.data);
     } catch (err) {
       console.error("Error loading dashboard data", err);
+    }
+  };
+
+  const fetchOffers = async () => {
+    try {
+      const res = await api.get('/admin/offers', config);
+      if (res.data) setOffers(res.data);
+    } catch (err) {
+      console.error("Error fetching offers", err);
+    }
+  };
+
+  const handleCreateOffer = async (e) => {
+    e.preventDefault();
+    if (!offerTitle || !offerImage) {
+      setStatus({ type: 'error', message: 'Offer title and image are required.' });
+      return;
+    }
+    setOfferLoading(true);
+    setStatus({ type: '', message: '' });
+
+    const formData = new FormData();
+    formData.append('title', offerTitle);
+    formData.append('subtitle', offerSubtitle);
+    formData.append('link', offerLink);
+    formData.append('image', offerImage);
+
+    try {
+      await api.post('/offers', formData, {
+        headers: {
+          ...config.headers,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      setStatus({ type: 'success', message: 'Offer published successfully!' });
+      setOfferTitle('');
+      setOfferSubtitle('');
+      setOfferLink('');
+      setOfferImage(null);
+      const fileInput = document.getElementById('offer-image-input');
+      if (fileInput) fileInput.value = '';
+      fetchOffers();
+    } catch (err) {
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Error publishing offer' });
+    } finally {
+      setOfferLoading(false);
+    }
+  };
+
+  const handleDeleteOffer = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this offer?')) return;
+    try {
+      await api.delete(`/offers/${id}`, config);
+      setStatus({ type: 'success', message: 'Offer deleted successfully!' });
+      fetchOffers();
+    } catch (err) {
+      setStatus({ type: 'error', message: 'Error deleting offer' });
+    }
+  };
+
+  const handleToggleOffer = async (id) => {
+    try {
+      await api.put(`/offers/${id}/toggle`, {}, config);
+      fetchOffers();
+    } catch (err) {
+      setStatus({ type: 'error', message: 'Error toggling offer state' });
     }
   };
 
@@ -377,6 +453,21 @@ const AdminDashboard = () => {
     }
   };
 
+  const toggleShowOnHomepage = async (item) => {
+    try {
+      const updatedValue = !item.showOnHomepage;
+      await api.put(`/gallery/${item._id}`, { 
+        showOnHomepage: updatedValue 
+      }, config);
+      
+      // Update local state instantly
+      setGallery(prev => prev.map(g => g._id === item._id ? { ...g, showOnHomepage: updatedValue } : g));
+    } catch (err) {
+      console.error("Error toggling homepage status:", err);
+      alert('Failed to update homepage status.');
+    }
+  };
+
   const deleteImage = async (id) => {
     if (!window.confirm("Are you sure you want to delete this design?")) return;
     try {
@@ -556,6 +647,7 @@ const AdminDashboard = () => {
             { id: 'instagram', label: 'Instagram Feed', icon: Star },
             { id: 'orders', label: 'Manage Orders', icon: ShoppingBag },
             { id: 'coupons', label: 'Coupons Manager', icon: Tag },
+            { id: 'offers', label: 'Manage Offers', icon: Gift },
             { id: 'investments', label: 'Vault Investments', icon: TrendingUp },
             { id: 'users', label: 'Registered Users', icon: User },
             { id: 'subscribers', label: 'Subscribers & Campaign', icon: Mail },
@@ -604,6 +696,7 @@ const AdminDashboard = () => {
                 {activeTab === 'instagram' && 'Instagram Showcase'}
                 {activeTab === 'orders' && 'Manage Orders'}
                 {activeTab === 'coupons' && 'Coupons Manager'}
+                {activeTab === 'offers' && 'Manage Offers'}
                 {activeTab === 'investments' && 'Digital Vault Investments'}
                 {activeTab === 'users' && 'Registered Users'}
                 {activeTab === 'subscribers' && 'VIP Subscribers & Campaign'}
@@ -1149,6 +1242,13 @@ const AdminDashboard = () => {
                       <div key={item._id} className="relative group rounded-md overflow-hidden aspect-square border border-ochre/20 shadow-sm">
                         <img src={item.imageUrl} alt="Design" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                         <div className="absolute inset-0 bg-coffee/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+                          <button 
+                            onClick={() => toggleShowOnHomepage(item)} 
+                            className={`p-3 rounded-full text-white transform hover:scale-110 transition-all shadow-lg ${item.showOnHomepage ? 'bg-ochre' : 'bg-gray-600/90'}`}
+                            title={item.showOnHomepage ? "Remove from Website Homepage" : "Show on Website Homepage"}
+                          >
+                            <Home size={20} />
+                          </button>
                           <button onClick={() => setEditingItem({ ...item, targetPage: item.targetPage || 'both' })} className="p-3 bg-blue-600/90 rounded-full text-white hover:bg-blue-600 transform hover:scale-110 transition-all shadow-lg" title="Edit">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                           </button>
@@ -2016,6 +2116,130 @@ const AdminDashboard = () => {
                           })}
                         </tbody>
                       </table>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {activeTab === 'offers' && (
+              <section className="bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
+                <div className="flex items-center gap-3 mb-6 border-b border-ochre/10 pb-3">
+                  <Gift className="text-ochre" size={28} />
+                  <h2 className="text-2xl font-serif font-bold text-coffee transition-colors duration-300">
+                    App Offers & <span className="text-ochre">Banners</span>
+                  </h2>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                  {/* Create Offer Form */}
+                  <div className="bg-cream border border-ochre/25 p-6 rounded-lg shadow-sm space-y-4 lg:col-span-1">
+                    <h3 className="text-lg font-serif font-bold text-coffee border-b border-ochre/10 pb-2 uppercase tracking-wider">
+                      Publish Offer Banner
+                    </h3>
+                    <form onSubmit={handleCreateOffer} className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-xs text-coffee/70 uppercase tracking-widest font-semibold block">Banner Title</label>
+                        <input
+                          type="text"
+                          required
+                          value={offerTitle}
+                          onChange={(e) => setOfferTitle(e.target.value)}
+                          className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
+                          placeholder="e.g. Flat 10% Off on Gold Rings"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs text-coffee/70 uppercase tracking-widest font-semibold block">Subtitle / Description</label>
+                        <input
+                          type="text"
+                          value={offerSubtitle}
+                          onChange={(e) => setOfferSubtitle(e.target.value)}
+                          className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
+                          placeholder="e.g. Limited period festive season offer"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs text-coffee/70 uppercase tracking-widest font-semibold block">Redirect Link / Search Keyword</label>
+                        <input
+                          type="text"
+                          value={offerLink}
+                          onChange={(e) => setOfferLink(e.target.value)}
+                          className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
+                          placeholder="e.g. ring, silver, https://..."
+                        />
+                        <p className="text-[10px] text-coffee/60">Tapping the banner in the mobile app will redirect to this search or URL.</p>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs text-coffee/70 uppercase tracking-widest font-semibold block">Banner Image</label>
+                        <input
+                          id="offer-image-input"
+                          type="file"
+                          accept="image/*"
+                          required
+                          onChange={(e) => setOfferImage(e.target.files ? e.target.files[0] : null)}
+                          className="w-full bg-cream-alt border border-ochre/20 p-2 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={offerLoading}
+                        className="w-full bg-coffee hover:bg-coffee/90 text-cream p-3 rounded-sm font-semibold text-sm transition-all duration-200 border border-ochre tracking-widest flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        {offerLoading ? 'Uploading...' : 'Publish Banner'}
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* Offers List */}
+                  <div className="lg:col-span-2 space-y-4">
+                    <h3 className="text-lg font-serif font-bold text-coffee uppercase tracking-wider">
+                      Active Banners ({offers.length})
+                    </h3>
+                    
+                    {offers.length === 0 ? (
+                      <div className="bg-cream border border-ochre/10 p-8 rounded-lg text-center text-coffee/50">
+                        No active promotional banners configured. App will fall back to default banners.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {offers.map((offer) => (
+                          <div key={offer._id} className="bg-cream border border-ochre/15 rounded-lg overflow-hidden shadow-sm flex flex-col">
+                            <img src={offer.imageUrl} alt={offer.title} className="w-full h-32 object-cover border-b border-ochre/10" />
+                            <div className="p-4 flex-1 flex flex-col justify-between">
+                              <div>
+                                <div className="flex items-start justify-between gap-2">
+                                  <h4 className="font-bold text-coffee text-base">{offer.title}</h4>
+                                  <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full ${offer.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                    {offer.isActive ? 'Active' : 'Paused'}
+                                  </span>
+                                </div>
+                                {offer.subtitle && <p className="text-xs text-coffee/70 mt-1">{offer.subtitle}</p>}
+                                {offer.link && (
+                                  <div className="text-[11px] text-ochre mt-2 font-semibold">
+                                    Link: <span className="font-mono text-coffee/80">{offer.link}</span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="flex items-center justify-end gap-3 mt-4 border-t border-ochre/10 pt-3">
+                                <button
+                                  onClick={() => handleToggleOffer(offer._id)}
+                                  className={`text-xs font-semibold px-3 py-1 rounded-sm border cursor-pointer ${offer.isActive ? 'border-amber-500 text-amber-600 hover:bg-amber-50' : 'border-green-500 text-green-600 hover:bg-green-50'}`}
+                                >
+                                  {offer.isActive ? 'Pause' : 'Activate'}
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteOffer(offer._id)}
+                                  className="text-xs font-semibold px-3 py-1 rounded-sm border border-red-200 text-red-600 hover:bg-red-50 flex items-center gap-1 cursor-pointer"
+                                >
+                                  <Trash2 size={12} /> Delete
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>

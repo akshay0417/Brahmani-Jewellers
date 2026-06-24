@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, TextInput, Platform, Linking, Modal } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, TextInput, Platform, Linking, Modal, Share } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
 import Reanimated, { FadeInDown } from 'react-native-reanimated';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 // Replace with your actual backend URL for mobile testing
 const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
 
 export default function CollectionsScreen() {
   const { user } = useAuth() as any;
+  const router = useRouter();
   const params = useLocalSearchParams();
   const [items, setItems] = useState<any[]>([
     { _id: 'i1', name: 'Royal Gold Necklace', category: 'gold', subCategory: 'Necklace', weight: '22.5', purity: '22K', imageUrl: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80', description: 'Exquisite royal design handcrafted gold necklace.' },
@@ -21,6 +22,7 @@ export default function CollectionsScreen() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('shop'); // 'shop' | 'collection'
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -105,11 +107,76 @@ export default function CollectionsScreen() {
     if (price > 0) message += `*Estimated Price:* ₹${price.toLocaleString('en-IN')}\n`;
     message += `\nImage: ${item.imageUrl}`;
 
-    const url = `https://wa.me/919925811771?text=${encodeURIComponent(message)}`;
+    const url = `https://wa.me/917621967577?text=${encodeURIComponent(message)}`;
     Linking.openURL(url).catch(() => {
       Alert.alert("Error", "WhatsApp is not installed on your phone.");
     });
   };
+
+  const shareProduct = async (product: any) => {
+    try {
+      const computedPrice = calculatePrice(product);
+      let shareMessage = `Check out this beautiful design from Brahmani Jewellers!\n\n`;
+      shareMessage += `*${product.name || `${product.category} Ornament`}*\n`;
+      if (product.description) shareMessage += `${product.description}\n\n`;
+      if (product.weight) shareMessage += `Weight: ${product.weight}g\n`;
+      if (product.purity) shareMessage += `Purity: ${product.purity}\n`;
+      if (computedPrice > 0) {
+        shareMessage += `Price: ₹${computedPrice.toLocaleString('en-IN')}\n`;
+      }
+      shareMessage += `\nView image: ${product.imageUrl}`;
+
+      await Share.share({
+        message: shareMessage,
+        title: product.name || 'Brahmani Jewellers Item',
+      });
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
+  const buyNow = async (productId: any) => {
+    if (!user || !user.token) {
+      Alert.alert("Login Required", "Please login to buy items");
+      router.push('/login');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await axios.post(`${API_URL}/cart/add`, { productId, quantity: 1 }, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      setSelectedProduct(null);
+      router.push('/cart');
+    } catch (error) {
+      Alert.alert("Error", "Could not add item to cart for purchase");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const uniqueSubCategories = React.useMemo(() => {
+    const tabFiltered = items.filter(item => {
+      const isShopItem = item.targetPage === 'shop' || item.targetPage === 'both' || !item.targetPage;
+      const isCollectionItem = item.targetPage === 'collection' || item.targetPage === 'both';
+      if (activeTab === 'shop' && !isShopItem) return false;
+      if (activeTab === 'collection' && !isCollectionItem) return false;
+      return true;
+    });
+
+    const subCats = tabFiltered
+      .map((item: any) => item.subCategory)
+      .filter((val): val is string => typeof val === 'string' && val.trim() !== '');
+
+    const unique = Array.from(new Set(subCats));
+    unique.sort((a, b) => a.localeCompare(b));
+    return ['All', ...unique];
+  }, [items, activeTab]);
+
+  useEffect(() => {
+    setSelectedSubCategory('All');
+  }, [activeTab]);
 
   const filteredItems = items.filter(item => {
     // 1. Tab segmentation filtering
@@ -119,7 +186,14 @@ export default function CollectionsScreen() {
     if (activeTab === 'shop' && !isShopItem) return false;
     if (activeTab === 'collection' && !isCollectionItem) return false;
 
-    // 2. Search query filtering
+    // 2. SubCategory filtering
+    if (selectedSubCategory !== 'All') {
+      if (!item.subCategory || item.subCategory.toLowerCase() !== selectedSubCategory.toLowerCase()) {
+        return false;
+      }
+    }
+
+    // 3. Search query filtering
     const query = searchQuery.toLowerCase();
     return (
       (item.category && item.category.toLowerCase().includes(query)) ||
@@ -173,6 +247,35 @@ export default function CollectionsScreen() {
             <Text style={[styles.tabButtonText, activeTab === 'collection' && styles.activeTabButtonText]}>Collection</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Subcategory Pills Container */}
+        {uniqueSubCategories.length > 1 && (
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            contentContainerStyle={styles.subCategoryContainer}
+          >
+            {uniqueSubCategories.map((subCat) => (
+              <TouchableOpacity
+                key={subCat}
+                style={[
+                  styles.subCategoryButton,
+                  selectedSubCategory.toLowerCase() === subCat.toLowerCase() && styles.activeSubCategoryButton
+                ]}
+                onPress={() => setSelectedSubCategory(subCat)}
+              >
+                <Text 
+                  style={[
+                    styles.subCategoryButtonText,
+                    selectedSubCategory.toLowerCase() === subCat.toLowerCase() && styles.activeSubCategoryButtonText
+                  ]}
+                >
+                  {subCat}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
       </View>
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -256,6 +359,14 @@ export default function CollectionsScreen() {
                 onPress={() => setSelectedProduct(null)}
               >
                 <Ionicons name="close" size={24} color="#1C1C1E" />
+              </TouchableOpacity>
+
+              {/* Share Button */}
+              <TouchableOpacity 
+                style={[styles.closeButton, { right: 65 }]} 
+                onPress={() => shareProduct(selectedProduct)}
+              >
+                <Ionicons name="share-social-outline" size={20} color="#1C1C1E" />
               </TouchableOpacity>
 
               <ScrollView contentContainerStyle={styles.modalScroll} showsVerticalScrollIndicator={false}>
@@ -356,16 +467,26 @@ export default function CollectionsScreen() {
                   {/* Actions inside Modal */}
                   <View style={styles.modalActionRow}>
                     {activeTab === 'shop' ? (
-                      <TouchableOpacity 
-                        style={[styles.modalButton, styles.modalCartButton]} 
-                        onPress={() => {
-                          addToCart(selectedProduct._id);
-                          setSelectedProduct(null);
-                        }}
-                      >
-                        <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" style={{ marginRight: 6 }} />
-                        <Text style={styles.modalButtonText}>Add to Cart</Text>
-                      </TouchableOpacity>
+                      <View style={{ gap: 10 }}>
+                        <TouchableOpacity 
+                          style={[styles.modalButton, styles.modalBuyButton]} 
+                          onPress={() => buyNow(selectedProduct._id)}
+                        >
+                          <Ionicons name="card-outline" size={20} color="#FFFFFF" style={{ marginRight: 6 }} />
+                          <Text style={styles.modalButtonText}>Buy Now</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                          style={[styles.modalButton, styles.modalCartButton]} 
+                          onPress={() => {
+                            addToCart(selectedProduct._id);
+                            setSelectedProduct(null);
+                          }}
+                        >
+                          <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" style={{ marginRight: 6 }} />
+                          <Text style={styles.modalButtonText}>Add to Cart</Text>
+                        </TouchableOpacity>
+                      </View>
                     ) : (
                       <TouchableOpacity 
                         style={[styles.modalButton, styles.modalWhatsappButton]} 
@@ -685,8 +806,40 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: '100%',
   },
+  subCategoryContainer: {
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    gap: 8,
+    flexDirection: 'row',
+  },
+  subCategoryButton: {
+    backgroundColor: '#FAF9F6',
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeSubCategoryButton: {
+    backgroundColor: '#D4AF37',
+    borderColor: '#D4AF37',
+  },
+  subCategoryButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#8E8E93',
+    textTransform: 'capitalize',
+  },
+  activeSubCategoryButtonText: {
+    color: '#FFFFFF',
+  },
   modalCartButton: {
     backgroundColor: '#1C1C1E',
+  },
+  modalBuyButton: {
+    backgroundColor: '#D4AF37',
   },
   modalWhatsappButton: {
     backgroundColor: '#25D366',

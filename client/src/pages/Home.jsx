@@ -82,7 +82,7 @@ const About = () => (
             <Phone className="text-ochre w-6 h-6 mt-1 flex-shrink-0" />
             <div>
               <p className="text-sm text-coffee/60 uppercase tracking-wider font-semibold mb-1 transition-colors duration-300">Contact Us</p>
-              <p className="text-coffee font-semibold text-lg transition-colors duration-300">+91 9925811771</p>
+              <p className="text-coffee font-semibold text-lg transition-colors duration-300">+91 7621967577</p>
             </div>
           </div>
         </div>
@@ -438,8 +438,8 @@ const Contact = () => {
                 <Phone className="text-ochre flex-shrink-0 mt-1" size={20} />
                 <div>
                   <h4 className="text-coffee font-serif text-sm mb-0.5 transition-colors duration-300 font-bold">Call Us</h4>
-                  <p className="text-coffee/70 text-xs mb-1.5 transition-colors duration-300 font-medium">+91 9925811771</p>
-                  <a href="tel:+919925811771" className="text-ochre text-[10px] font-bold uppercase tracking-wider hover:underline">Call Now</a>
+                  <p className="text-coffee/70 text-xs mb-1.5 transition-colors duration-300 font-medium">+91 7621967577</p>
+                  <a href="tel:+917621967577" className="text-ochre text-[10px] font-bold uppercase tracking-wider hover:underline">Call Now</a>
                 </div>
               </div>
               <div className="bg-cream border border-ochre/20 p-5 rounded-lg flex items-start gap-3 shadow-sm">
@@ -447,7 +447,7 @@ const Contact = () => {
                 <div>
                   <h4 className="text-coffee font-serif text-sm mb-0.5 transition-colors duration-300 font-bold">WhatsApp</h4>
                   <p className="text-coffee/70 text-xs mb-1.5 transition-colors duration-300 font-medium">Chat with us</p>
-                  <a href="https://wa.me/919925811771" className="text-ochre text-[10px] font-bold uppercase tracking-wider hover:underline">Message</a>
+                  <a href="https://wa.me/917621967577" className="text-ochre text-[10px] font-bold uppercase tracking-wider hover:underline">Message</a>
                 </div>
               </div>
               <div className="bg-cream border border-ochre/20 p-5 rounded-lg flex items-start gap-3 shadow-sm">

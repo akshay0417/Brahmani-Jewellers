@@ -120,9 +120,32 @@ export default function HomeScreen() {
   const { user, logout } = useAuth();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [heroSlides, setHeroSlides] = useState<any[]>(HERO_SLIDES);
+
+  const fetchOffers = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/offers`);
+      if (response.data && response.data.length > 0) {
+        const mapped = response.data.map((offer: any) => ({
+          id: offer._id,
+          image: offer.imageUrl,
+          title: offer.title,
+          subtitle: offer.subtitle || '',
+          link: offer.link || '',
+        }));
+        setHeroSlides(mapped);
+      } else {
+        setHeroSlides(HERO_SLIDES);
+      }
+    } catch (error) {
+      console.log('Error fetching offers:', error);
+      setHeroSlides(HERO_SLIDES);
+    }
+  };
 
   useEffect(() => {
     fetchRates();
+    fetchOffers();
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 650,
@@ -203,20 +226,34 @@ export default function HomeScreen() {
 
   const initiateWhatsApp = () => {
     const message = "Hello Brahmani Jewellers! I would like to consult about a custom design.";
-    const url = `https://wa.me/919925811771?text=${encodeURIComponent(message)}`;
+    const url = `https://wa.me/917621967577?text=${encodeURIComponent(message)}`;
     Linking.openURL(url).catch(() => {
       Alert.alert("Error", "WhatsApp is not installed on your phone.");
     });
   };
 
+  const handleBannerPress = (item: any) => {
+    if (item.link) {
+      if (item.link.startsWith('http://') || item.link.startsWith('https://')) {
+        Linking.openURL(item.link).catch(() => {});
+      } else {
+        router.push({ pathname: '/collections', params: { search: item.link.toLowerCase() } });
+      }
+    }
+  };
+
   const renderBanner = ({ item }) => (
-    <View style={styles.bannerSlide}>
+    <TouchableOpacity 
+      activeOpacity={0.9} 
+      onPress={() => handleBannerPress(item)} 
+      style={styles.bannerSlide}
+    >
       <Image source={{ uri: item.image }} style={styles.bannerImage} />
       <View style={styles.bannerOverlay}>
         <Text style={styles.bannerTitle}>{item.title}</Text>
         <Text style={styles.bannerSubtitle}>{item.subtitle}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -243,9 +280,17 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <TouchableOpacity onPress={() => router.push('/cart')} style={styles.cartIconBtn}>
-              <Ionicons name="cart-outline" size={28} color="#3D2B1F" />
-            </TouchableOpacity>
+            <View style={styles.headerRight}>
+              <TouchableOpacity onPress={initiateWhatsApp} style={styles.whatsappIconBtn}>
+                <FontAwesome name="whatsapp" size={28} color="#25D366" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowNotifications(true)} style={styles.headerIconBtn}>
+                <Ionicons name="notifications-outline" size={28} color="#3D2B1F" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/cart')} style={styles.cartIconBtn}>
+                <Ionicons name="cart-outline" size={28} color="#3D2B1F" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -264,7 +309,7 @@ export default function HomeScreen() {
 
         {/* Carousel / Banner Slider */}
         <FlatList
-          data={HERO_SLIDES}
+          data={heroSlides}
           renderItem={renderBanner}
           keyExtractor={(item) => item.id}
           horizontal
@@ -665,7 +710,7 @@ export default function HomeScreen() {
                 {"\n"}
                 Email: info.brahmanijewellers@gmail.com
                 {"\n"}
-                Phone: +91 9925811771
+                Phone: +91 7621967577
               </Text>
             </ScrollView>
             <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowTerms(false)}>
@@ -710,7 +755,7 @@ export default function HomeScreen() {
                 {"\n"}
                 Email: info.brahmanijewellers@gmail.com
                 {"\n"}
-                Phone: +91 9925811771
+                Phone: +91 7621967577
                 {"\n"}
                 Address: Near Amraiwadi Metro, Ahmedabad, Gujarat, India
               </Text>
@@ -786,6 +831,17 @@ const styles = StyleSheet.create({
     color: '#1C1C1E',
     marginTop: 1,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  whatsappIconBtn: {
+    padding: 8,
+  },
+  headerIconBtn: {
+    padding: 8,
   },
   cartIconBtn: {
     padding: 8,
