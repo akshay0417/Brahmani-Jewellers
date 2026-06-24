@@ -171,9 +171,10 @@ export default function CollectionsScreen() {
       .map((item: any) => item.subCategory)
       .filter((val): val is string => typeof val === 'string' && val.trim() !== '');
 
-    const unique = Array.from(new Set(subCats));
-    unique.sort((a, b) => a.localeCompare(b));
-    return ['All', ...unique];
+    const defaultSubCategories = ['Ring', 'Pendant', 'Chain', 'Bracelet', 'Earrings', 'Necklace', 'Payal'];
+    const combined = Array.from(new Set([...subCats.map(s => s.trim()), ...defaultSubCategories]));
+    combined.sort((a, b) => a.localeCompare(b));
+    return ['All', ...combined];
   }, [items, activeTab]);
 
   useEffect(() => {
@@ -188,9 +189,25 @@ export default function CollectionsScreen() {
     if (activeTab === 'shop' && !isShopItem) return false;
     if (activeTab === 'collection' && !isCollectionItem) return false;
 
-    // 2. SubCategory filtering
+    // 2. SubCategory filtering (matches field or name/description keywords)
     if (selectedSubCategory !== 'All') {
-      if (!item.subCategory || item.subCategory.toLowerCase() !== selectedSubCategory.toLowerCase()) {
+      const subCatLower = selectedSubCategory.toLowerCase();
+      
+      // Singular forms for matching (e.g. 'earrings' matching 'earring')
+      const singularSubCat = subCatLower.endsWith('s') ? subCatLower.slice(0, -1) : subCatLower;
+      
+      const hasSubCatMatch = item.subCategory && (
+        item.subCategory.toLowerCase() === subCatLower ||
+        item.subCategory.toLowerCase() === singularSubCat
+      );
+      
+      const hasTextMatch = (
+        (item.name && (item.name.toLowerCase().includes(subCatLower) || item.name.toLowerCase().includes(singularSubCat))) ||
+        (item.description && (item.description.toLowerCase().includes(subCatLower) || item.description.toLowerCase().includes(singularSubCat))) ||
+        (item.category && (item.category.toLowerCase().includes(subCatLower) || item.category.toLowerCase().includes(singularSubCat)))
+      );
+
+      if (!hasSubCatMatch && !hasTextMatch) {
         return false;
       }
     }
