@@ -1510,7 +1510,7 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
     next();
   });
 }, async (req, res) => {
-  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges, isFeatured } = req.body;
+  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges, isFeatured, showOnHomepage } = req.body;
   try {
     const primaryFile = req.files && req.files['image'] ? req.files['image'][0] : null;
     if (!primaryFile) return res.status(400).json({ message: 'No primary image uploaded' });
@@ -1584,6 +1584,7 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
       makingCharges: parseFloat(makingCharges) || 0,
       otherCharges: parseFloat(otherCharges) || 0,
       isFeatured: isFeatured === 'true' || isFeatured === true,
+      showOnHomepage: showOnHomepage === 'true' || showOnHomepage === true,
       additionalImages
     });
 
@@ -1604,7 +1605,7 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
 
 // Edit Image/Details (Admin only)
 router.put('/gallery/:id', auth, isAdmin, async (req, res) => {
-  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges, isFeatured, additionalImages } = req.body;
+  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges, isFeatured, showOnHomepage, additionalImages } = req.body;
   try {
     const item = await Gallery.findById(req.params.id);
     if (!item) return res.status(404).json({ message: 'Item not found' });
@@ -1620,6 +1621,7 @@ router.put('/gallery/:id', auth, isAdmin, async (req, res) => {
     if (makingCharges !== undefined) item.makingCharges = parseFloat(makingCharges) || 0;
     if (otherCharges !== undefined) item.otherCharges = parseFloat(otherCharges) || 0;
     if (isFeatured !== undefined) item.isFeatured = isFeatured === 'true' || isFeatured === true;
+    if (showOnHomepage !== undefined) item.showOnHomepage = showOnHomepage === 'true' || showOnHomepage === true;
     if (additionalImages !== undefined) item.additionalImages = additionalImages;
 
     await item.save();

@@ -44,6 +44,7 @@ const AdminDashboard = () => {
   const [makingCharges, setMakingCharges] = useState('');
   const [otherCharges, setOtherCharges] = useState('');
   const [isFeatured, setIsFeatured] = useState(false);
+  const [showOnHomepage, setShowOnHomepage] = useState(false);
   const [additionalImagesFiles, setAdditionalImagesFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
@@ -266,6 +267,7 @@ const AdminDashboard = () => {
     formData.append('makingCharges', makingCharges);
     formData.append('otherCharges', otherCharges);
     formData.append('isFeatured', isFeatured);
+    formData.append('showOnHomepage', showOnHomepage);
     
     // Append additional images
     if (additionalImagesFiles.length > 0) {
@@ -285,6 +287,7 @@ const AdminDashboard = () => {
       setMakingCharges('');
       setOtherCharges('');
       setIsFeatured(false);
+      setShowOnHomepage(false);
       setRates({ ...rates, price: '' });
       fetchData();
       setStatus({ type: 'success', message: 'Image uploaded successfully!' });
@@ -1015,17 +1018,31 @@ const AdminDashboard = () => {
                         />
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 pt-2">
-                      <input 
-                        type="checkbox" 
-                        id="isFeatured" 
-                        checked={isFeatured}
-                        onChange={(e) => setIsFeatured(e.target.checked)}
-                        className="w-5 h-5 accent-ochre"
-                      />
-                      <label htmlFor="isFeatured" className="text-sm text-coffee font-bold cursor-pointer">
-                        Highlight this photo on Home Page?
-                      </label>
+                    <div className="flex flex-col gap-3 pt-2">
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="checkbox" 
+                          id="showOnHomepage" 
+                          checked={showOnHomepage}
+                          onChange={(e) => setShowOnHomepage(e.target.checked)}
+                          className="w-5 h-5 accent-ochre"
+                        />
+                        <label htmlFor="showOnHomepage" className="text-sm text-coffee font-bold cursor-pointer">
+                          Add this photo to Home Page?
+                        </label>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="checkbox" 
+                          id="isFeatured" 
+                          checked={isFeatured}
+                          onChange={(e) => setIsFeatured(e.target.checked)}
+                          className="w-5 h-5 accent-ochre"
+                        />
+                        <label htmlFor="isFeatured" className="text-sm text-coffee font-bold cursor-pointer">
+                          Highlight / Feature this photo?
+                        </label>
+                      </div>
                     </div>
                     <button disabled={loading || !newImage} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 transition-all disabled:opacity-50 rounded-sm">
                       {loading ? 'Uploading...' : 'Add to Collection'}
@@ -1142,11 +1159,18 @@ const AdminDashboard = () => {
                             {item.subCategory}
                           </div>
                         )}
-                        {item.isFeatured && (
-                          <div className="absolute top-2 right-2 bg-ochre text-coffee p-1 rounded-full shadow-md" title="Highlighted on Home Page">
-                            <Star size={12} className="fill-coffee" />
-                          </div>
-                        )}
+                        <div className="absolute top-2 right-2 flex flex-col gap-1.5">
+                          {item.isFeatured && (
+                            <div className="bg-ochre text-coffee p-1 rounded-full shadow-md" title="Highlighted / Featured">
+                              <Star size={12} className="fill-coffee" />
+                            </div>
+                          )}
+                          {item.showOnHomepage && (
+                            <div className="bg-blue-600 text-white p-1 rounded-full shadow-md" title="Shown on Home Page">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            </div>
+                          )}
+                        </div>
                         <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-cream-alt/90 text-coffee text-[10px] uppercase font-bold tracking-wider rounded-sm shadow-sm backdrop-blur-sm">
                           {item.category} {item.weight && `| ${item.weight}`} {item.purity && `| ${item.purity}`} {item.price && `| ₹${item.price}`}
                         </div>
@@ -2114,17 +2138,31 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              <div className="flex items-center gap-3 pt-4">
-                <input 
-                  type="checkbox" 
-                  id="editIsFeatured" 
-                  checked={editingItem.isFeatured || false}
-                  onChange={(e) => setEditingItem({ ...editingItem, isFeatured: e.target.checked })}
-                  className="w-5 h-5 accent-ochre"
-                />
-                <label htmlFor="editIsFeatured" className="text-sm text-coffee font-bold cursor-pointer">
-                  Highlight this photo on Home Page?
-                </label>
+              <div className="flex flex-col gap-3 pt-4">
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="checkbox" 
+                    id="editShowOnHomepage" 
+                    checked={editingItem.showOnHomepage || false}
+                    onChange={(e) => setEditingItem({ ...editingItem, showOnHomepage: e.target.checked })}
+                    className="w-5 h-5 accent-ochre"
+                  />
+                  <label htmlFor="editShowOnHomepage" className="text-sm text-coffee font-bold cursor-pointer">
+                    Add this photo to Home Page?
+                  </label>
+                </div>
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="checkbox" 
+                    id="editIsFeatured" 
+                    checked={editingItem.isFeatured || false}
+                    onChange={(e) => setEditingItem({ ...editingItem, isFeatured: e.target.checked })}
+                    className="w-5 h-5 accent-ochre"
+                  />
+                  <label htmlFor="editIsFeatured" className="text-sm text-coffee font-bold cursor-pointer">
+                    Highlight / Feature this photo?
+                  </label>
+                </div>
               </div>
               <button disabled={loading} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 rounded-sm mt-4">
                 {loading ? 'Saving...' : 'Save Changes'}

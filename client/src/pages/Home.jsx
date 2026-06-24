@@ -101,9 +101,9 @@ const Categories = () => {
   
   useEffect(() => {
     api.get('/gallery').then(res => {
-      // Filter for items that are marked as featured by the admin
-      let showcased = res.data.filter(item => item.isFeatured === true);
-      // Fallback to top 8 items if no items are featured yet
+      // Filter for items that are marked to show on the homepage by the admin
+      let showcased = res.data.filter(item => item.showOnHomepage === true);
+      // Fallback to top 8 items if no items are marked yet
       if (showcased.length === 0) {
         showcased = res.data.slice(0, 8);
       }
