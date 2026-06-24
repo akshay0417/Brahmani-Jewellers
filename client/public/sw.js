@@ -1,4 +1,4 @@
-const CACHE_NAME = 'brahmani-jewellers-v1';
+const CACHE_NAME = 'brahmani-jewellers-v2';
 const ASSETS = [
   '/',
   '/index.html',
@@ -30,7 +30,7 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Fetch Event
+// Fetch Event - Network First falling back to Cache
 self.addEventListener('fetch', (e) => {
   // Let the browser handle standard non-GET requests or API requests directly
   if (e.request.method !== 'GET' || e.request.url.includes('/api/')) {
@@ -38,22 +38,20 @@ self.addEventListener('fetch', (e) => {
   }
   
   e.respondWith(
-    caches.match(e.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(e.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
+    fetch(e.request)
+      .then((networkResponse) => {
+        // If request is successful, clone and cache it
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(e.request, responseToCache);
+          });
         }
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(e.request, responseToCache);
-        });
         return networkResponse;
-      }).catch(() => {
-        // Fallback or ignore if offline
-      });
-    })
+      })
+      .catch(() => {
+        // If network fails (offline), return cached version
+        return caches.match(e.request);
+      })
   );
 });
