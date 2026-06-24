@@ -205,7 +205,7 @@ export default function OrdersScreen() {
                   <View style={styles.codeContainer}>
                     <Text style={styles.pickupCodeText}>Secure Code: {order.pickupCode || 'BP-8329'}</Text>
                   </View>
-                  <Text style={styles.storeAddress}>Amraiwadi Showroom, Near Hatkeshwar Circle, Ahmedabad</Text>
+                  <Text style={styles.storeAddress}>Choksi Bazar, Azad Chowk, Amraiwadi, Ahmedabad</Text>
                 </View>
               ) : (
                 <>

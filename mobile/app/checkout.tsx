@@ -370,9 +370,9 @@ export default function CheckoutScreen() {
               <Ionicons name="location" size={20} color="#D4AF37" style={{ marginBottom: 4 }} />
               <Text style={styles.storeName}>Brahmani Jewellers Showroom</Text>
               <Text style={styles.storeAddress}>
-                Shop 4, Brahmani Complex, Near Hatkeshwar Circle, Amraiwadi, Ahmedabad, 380026.
+                Choksi Bazar, Azad Chowk, Amraiwadi, Ahmedabad.
                 {"\n"}
-                Phone: +91 99258 11771
+                Phone: +91 7621967577
               </Text>
             </View>
             <Text style={styles.pickupNote}>* You will receive a secure pickup code on confirmation. Show this code at the counter to collect your jewellery.</Text>

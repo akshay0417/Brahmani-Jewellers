@@ -100,7 +100,7 @@ export default function CartScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}><Text style={styles.title}>Shopping Cart</Text></View>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContainer}>
         {cart.items.map((item) => (
           <Reanimated.View 
             layout={LinearTransition}

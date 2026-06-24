@@ -804,7 +804,7 @@ export default function InvestScreen() {
                           <Ionicons name="location" size={20} color="#D4AF37" style={{ marginBottom: 4 }} />
                           <Text style={styles.pickupStoreTitle}>Brahmani Showroom Address</Text>
                           <Text style={styles.pickupStoreDesc}>
-                            Shop 4, Brahmani Complex, Near Hatkeshwar Circle, Amraiwadi, Ahmedabad, 380026.
+                            Choksi Bazar, Azad Chowk, Amraiwadi, Ahmedabad.
                             {"\n"}
                             Hours: 10:00 AM - 8:30 PM (Closed on Sundays)
                           </Text>
