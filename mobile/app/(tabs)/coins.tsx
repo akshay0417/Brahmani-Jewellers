@@ -51,7 +51,7 @@ export default function CoinsScreen() {
   };
 
   const calculatePrice = (item) => {
-    if (item.price) return item.price;
+    if (item.price) return Math.round(Number(item.price) * 1.03);
     if (!rates || !item.weight) return 0;
 
     let ratePerGram = 0;

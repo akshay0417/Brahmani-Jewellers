@@ -101,7 +101,7 @@ export const CartProvider = ({ children }) => {
 
   const calculatePrice = (product) => {
     if (!product) return 0;
-    if (product.price) return product.price;
+    if (product.price) return Math.round(Number(product.price) * 1.03);
     if (!rates || !product.weight || !product.purity) return 0;
 
     let ratePerGram = 0;
@@ -109,6 +109,7 @@ export const CartProvider = ({ children }) => {
     if (p.includes('24')) ratePerGram = rates.gold24K / 10;
     else if (p.includes('22')) ratePerGram = rates.gold22K / 10;
     else if (p.includes('18')) ratePerGram = rates.gold18K / 10;
+    else if (p.includes('92.5') || p.includes('925')) ratePerGram = (rates.silver90 / 1000) * (92.5 / 90);
     else if (p.includes('90') || p.includes('SILVER')) ratePerGram = rates.silver90 / 1000;
 
     if (!ratePerGram) return 0;

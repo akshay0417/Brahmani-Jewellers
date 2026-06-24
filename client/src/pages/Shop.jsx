@@ -65,7 +65,15 @@ const Shop = () => {
   }, []);
 
   const calculatePrice = (item) => {
-    if (item.price) return { final: item.price, breakdown: null };
+    if (item.price) {
+      const basePrice = Number(item.price);
+      const gst = basePrice * 0.03;
+      const final = Math.round(basePrice + gst);
+      return { 
+        final, 
+        breakdown: { basePrice, makingPercent: 0, makingAmount: 0, other: 0, gst, subtotal: basePrice } 
+      };
+    }
     if (!rates || !item.weight || !item.purity) return { final: 0, breakdown: null };
 
     let ratePerGram = 0;

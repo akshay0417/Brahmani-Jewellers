@@ -72,7 +72,7 @@ export default function CollectionsScreen() {
   };
 
   const calculatePrice = (item: any) => {
-    if (item.price) return item.price;
+    if (item.price) return Math.round(Number(item.price) * 1.03);
     if (!rates || !item.weight || !item.purity) return 0;
 
     let ratePerGram = 0;
