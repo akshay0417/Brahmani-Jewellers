@@ -86,10 +86,13 @@ export default function CheckoutScreen() {
     }, [user])
   );
 
+  const [rates, setRates] = useState<any>(null);
+
   const fetchDeliveryRates = async () => {
     try {
       const response = await axios.get(`${API_URL}/rates`);
       if (response.data) {
+        setRates(response.data);
         setDeliveryRates({
           freeDeliveryKmLimit: response.data.freeDeliveryKmLimit ?? 10,
           deliveryChargePerKm: response.data.deliveryChargePerKm ?? 15,
@@ -151,9 +154,34 @@ export default function CheckoutScreen() {
     return calculateDistance(pincode);
   };
 
+  const calculatePrice = (product: any) => {
+    if (!product) return 0;
+    if (product.price) return Math.round(Number(product.price) * 1.03);
+    if (!rates || !product.weight || !product.purity) return 0;
+
+    let ratePerGram = 0;
+    const p = (product.purity || '').toUpperCase();
+    if (p.includes('24')) ratePerGram = rates.gold24K / 10;
+    else if (p.includes('22')) ratePerGram = rates.gold22K / 10;
+    else if (p.includes('18')) ratePerGram = rates.gold18K / 10;
+    else if (p.includes('92.5') || p.includes('925')) ratePerGram = (rates.silver90 / 1000) * (92.5 / 90);
+    else if (p.includes('90') || p.includes('SILVER')) ratePerGram = rates.silver90 / 1000;
+
+    if (!ratePerGram) return 0;
+
+    const weight = parseFloat(product.weight);
+    const basePrice = ratePerGram * weight;
+    const makingPercent = product.makingCharges || 0;
+    const makingAmount = basePrice * (makingPercent / 100);
+    const other = product.otherCharges || 0;
+    const subtotal = basePrice + makingAmount + other;
+    const gst = subtotal * 0.03;
+    return Math.round(subtotal + gst);
+  };
+
   const getItemsBaseTotal = () => {
     if (!cart || !cart.items) return 0;
-    return cart.items.reduce((sum, item) => sum + (item.product ? (Math.round(item.product.price / 1.03) * item.quantity) : 0), 0);
+    return cart.items.reduce((sum, item) => sum + (item.product ? (Math.round(calculatePrice(item.product) / 1.03) * item.quantity) : 0), 0);
   };
 
   const getShippingCharge = () => {
@@ -247,7 +275,7 @@ export default function CheckoutScreen() {
         .map(item => ({
           product: item.product._id,
           quantity: item.quantity,
-          priceAtPurchase: item.product.price
+          priceAtPurchase: calculatePrice(item.product)
         }));
 
       const randomPickupCode = Math.floor(1000 + Math.random() * 9000).toString(); // Generate random pickup pin

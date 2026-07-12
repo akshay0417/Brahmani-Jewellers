@@ -12,19 +12,30 @@ const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
 export default function CartScreen() {
   const router = useRouter();
   const { user, refreshCartCount } = useAuth();
-  const [cart, setCart] = useState(null);
+  const [cart, setCart] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [rates, setRates] = useState<any>(null);
   const insets = useSafeAreaInsets();
 
   useFocusEffect(
     useCallback(() => {
       if (user && user.token) {
+        fetchRates();
         fetchCart();
       } else {
         setLoading(false);
       }
     }, [user])
   );
+
+  const fetchRates = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/rates`);
+      setRates(response.data);
+    } catch (error) {
+      console.error("Error fetching rates in Cart:", error);
+    }
+  };
 
   const fetchCart = async () => {
     try {
@@ -101,32 +112,60 @@ export default function CartScreen() {
     );
   }
 
-  const total = cart.items.reduce((sum, item) => sum + (item.product ? (item.product.price * item.quantity) : 0), 0);
+  const calculatePrice = (product: any) => {
+    if (!product) return 0;
+    if (product.price) return Math.round(Number(product.price) * 1.03);
+    if (!rates || !product.weight || !product.purity) return 0;
+
+    let ratePerGram = 0;
+    const p = (product.purity || '').toUpperCase();
+    if (p.includes('24')) ratePerGram = rates.gold24K / 10;
+    else if (p.includes('22')) ratePerGram = rates.gold22K / 10;
+    else if (p.includes('18')) ratePerGram = rates.gold18K / 10;
+    else if (p.includes('92.5') || p.includes('925')) ratePerGram = (rates.silver90 / 1000) * (92.5 / 90);
+    else if (p.includes('90') || p.includes('SILVER')) ratePerGram = rates.silver90 / 1000;
+
+    if (!ratePerGram) return 0;
+
+    const weight = parseFloat(product.weight);
+    const basePrice = ratePerGram * weight;
+    const makingPercent = product.makingCharges || 0;
+    const makingAmount = basePrice * (makingPercent / 100);
+    const other = product.otherCharges || 0;
+    const subtotal = basePrice + makingAmount + other;
+    const gst = subtotal * 0.03;
+    return Math.round(subtotal + gst);
+  };
+
+  const total = cart.items.reduce((sum, item) => sum + (item.product ? (calculatePrice(item.product) * item.quantity) : 0), 0);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={[styles.header, { paddingTop: 12 }]}><Text style={styles.title}>Shopping Cart</Text></View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContainer}>
-        {cart.items.filter(item => item.product).map((item) => (
-          <Reanimated.View 
-            layout={LinearTransition}
-            exiting={SlideOutRight.duration(250)}
-            key={item.product._id} 
-            style={styles.cartItem}
-          >
-            <Image source={{ uri: item.product.imageUrl }} style={styles.itemImage} />
-            <View style={styles.itemDetails}>
-              <Text style={styles.itemName}>{item.product.category} Ornament</Text>
-              <Text style={styles.itemPrice}>₹{(item.product.price).toLocaleString('en-IN')}</Text>
-              <View style={styles.quantityContainer}>
-                <TouchableOpacity onPress={() => updateQuantity(item.product._id, item.quantity - 1)} style={styles.qtyBtn}><FontAwesome name="minus" size={12} color="#FFFFFF" /></TouchableOpacity>
-                <Text style={styles.qtyText}>{item.quantity}</Text>
-                <TouchableOpacity onPress={() => updateQuantity(item.product._id, item.quantity + 1)} style={styles.qtyBtn}><FontAwesome name="plus" size={12} color="#FFFFFF" /></TouchableOpacity>
+        {cart.items.filter(item => item.product).map((item) => {
+          const itemPrice = calculatePrice(item.product);
+          return (
+            <Reanimated.View 
+              layout={LinearTransition}
+              exiting={SlideOutRight.duration(250)}
+              key={item.product._id} 
+              style={styles.cartItem}
+            >
+              <Image source={{ uri: item.product.imageUrl }} style={styles.itemImage} />
+              <View style={styles.itemDetails}>
+                <Text style={styles.itemName}>{item.product.category} Ornament</Text>
+                <Text style={styles.itemPrice}>₹{itemPrice.toLocaleString('en-IN')}</Text>
+                <View style={styles.quantityContainer}>
+                  <TouchableOpacity onPress={() => updateQuantity(item.product._id, item.quantity - 1)} style={styles.qtyBtn}><FontAwesome name="minus" size={12} color="#FFFFFF" /></TouchableOpacity>
+                  <Text style={styles.qtyText}>{item.quantity}</Text>
+                  <TouchableOpacity onPress={() => updateQuantity(item.product._id, item.quantity + 1)} style={styles.qtyBtn}><FontAwesome name="plus" size={12} color="#FFFFFF" /></TouchableOpacity>
+                </View>
               </View>
-            </View>
-            <TouchableOpacity onPress={() => removeFromCart(item.product._id)} style={styles.removeBtn}><FontAwesome name="trash" size={20} color="#FF6B6B" /></TouchableOpacity>
-          </Reanimated.View>
-        ))}
+              <TouchableOpacity onPress={() => removeFromCart(item.product._id)} style={styles.removeBtn}><FontAwesome name="trash" size={20} color="#FF6B6B" /></TouchableOpacity>
+            </Reanimated.View>
+          );
+        })}
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) + 70 }]}>
         <View style={styles.totalRow}>
