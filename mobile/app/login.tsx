@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, Modal, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, Modal, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Link } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -118,10 +119,6 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
         <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
           <View style={styles.topBar}>
             <TouchableOpacity style={styles.backArrow} onPress={() => router.back()}>
@@ -219,7 +216,7 @@ export default function LoginScreen() {
               </TouchableOpacity>
               
               <View style={{ marginTop: 24, alignItems: 'center' }}>
-                <Text style={{ color: '#3D2B1F' }}>Don't have an account?</Text>
+                <Text style={{ color: '#3D2B1F' }}>Don&apos;t have an account?</Text>
                 <Link href="/register" asChild>
                   <TouchableOpacity style={{ marginTop: 8 }}>
                     <Text style={{ color: '#EBA938', fontWeight: 'bold', fontSize: 16 }}>Create Account</Text>
@@ -229,7 +226,6 @@ export default function LoginScreen() {
             </View>
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
 
       {/* OTP Verification Modal */}
       <Modal

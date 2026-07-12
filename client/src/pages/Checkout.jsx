@@ -109,8 +109,22 @@ const Checkout = () => {
     }
   }
   
-  const discountAmount = Math.round((cartTotal * discountPercent) / 100);
-  const grandTotal = cartTotal + deliveryCharge - discountAmount;
+  const itemsBaseTotal = cart && cart.items
+    ? cart.items.reduce((sum, item) => sum + Math.round((item.product.price || 0) / 1.03) * item.quantity, 0)
+    : 0;
+
+  const gstAmount = Math.round(itemsBaseTotal * 0.03);
+  const discountAmount = Math.round((itemsBaseTotal * discountPercent) / 100);
+  const getGatewayCharge = () => {
+    if (formData.paymentMethod === 'Card') {
+      const subtotal = itemsBaseTotal + gstAmount + deliveryCharge - discountAmount;
+      return Math.round(subtotal * 0.02); // 2% Razorpay Gateway Fee
+    }
+    return 0;
+  };
+
+  const gatewayCharge = getGatewayCharge();
+  const grandTotal = itemsBaseTotal + gstAmount + deliveryCharge - discountAmount + gatewayCharge;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -405,7 +419,7 @@ const Checkout = () => {
               <div className="pt-6 border-t border-ochre/20">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-coffee/60">Subtotal</span>
-                  <span className="font-medium text-coffee">₹{cartTotal.toLocaleString('en-IN')}</span>
+                  <span className="font-medium text-coffee">₹{itemsBaseTotal.toLocaleString('en-IN')}</span>
                 </div>
                 {discountAmount > 0 && (
                   <div className="flex justify-between items-center mb-2 text-xs text-green-600 font-bold">
@@ -419,7 +433,7 @@ const Checkout = () => {
                     <span>{distance} km</span>
                   </div>
                 )}
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-center mb-2">
                   <span className="text-coffee/60">Delivery</span>
                   {deliveryCharge > 0 ? (
                     <span className="font-medium text-coffee">₹{deliveryCharge.toLocaleString('en-IN')}</span>
@@ -429,6 +443,16 @@ const Checkout = () => {
                     </span>
                   )}
                 </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-coffee/60">GST (3%)</span>
+                  <span className="font-medium text-coffee">₹{gstAmount.toLocaleString('en-IN')}</span>
+                </div>
+                {formData.paymentMethod === 'Card' && (
+                  <div className="flex justify-between items-center mb-6">
+                    <span className="text-coffee/60">Gateway Charges (2%)</span>
+                    <span className="font-medium text-coffee">₹{gatewayCharge.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="text-xl font-serif text-coffee font-bold">Grand Total</span>
                   <span className="text-2xl font-serif text-ochre font-bold">₹{grandTotal.toLocaleString('en-IN')}</span>

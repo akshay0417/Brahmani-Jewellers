@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, TextInput, Platform, Linking, Modal, Share } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, TextInput, Platform, Linking, Modal, Share } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
 import Reanimated, { FadeInDown } from 'react-native-reanimated';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 
 // Replace with your actual backend URL for mobile testing
 const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
@@ -23,12 +24,12 @@ export default function CollectionsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('shop'); // 'shop' | 'collection'
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [])
+  );
 
   useEffect(() => {
     if (params && params.search) {
@@ -60,6 +61,7 @@ export default function CollectionsScreen() {
   const addToCart = async (productId: any) => {
     if (!user || !user.token) {
       Alert.alert("Login Required", "Please login to add items to cart");
+      router.push('/login');
       return;
     }
 
@@ -69,8 +71,13 @@ export default function CollectionsScreen() {
       });
       Alert.alert("Success", "Item added to cart");
       refreshCartCount();
-    } catch (error) {
-      Alert.alert("Error", "Could not add to cart");
+    } catch (error: any) {
+      if (error.response && error.response.status === 401) {
+        Alert.alert("Session Expired", "Your session has expired. Please login again.");
+        router.push('/login');
+      } else {
+        Alert.alert("Error", "Could not add to cart");
+      }
     }
   };
 
@@ -114,48 +121,25 @@ export default function CollectionsScreen() {
     });
   };
 
-  const shareProduct = async (product: any) => {
-    try {
-      const computedPrice = calculatePrice(product);
-      let shareMessage = `Check out this beautiful design from Brahmani Jewellers!\n\n`;
-      shareMessage += `*${product.name || `${product.category} Ornament`}*\n`;
-      if (product.description) shareMessage += `${product.description}\n\n`;
-      if (product.weight) shareMessage += `Weight: ${product.weight}g\n`;
-      if (product.purity) shareMessage += `Purity: ${product.purity}\n`;
-      if (computedPrice > 0) {
-        shareMessage += `Price: ₹${computedPrice.toLocaleString('en-IN')}\n`;
+  const navigateToDetails = (item: any) => {
+    router.push({
+      pathname: '/product-details',
+      params: {
+        id: item._id,
+        name: item.name || '',
+        category: item.category || '',
+        subCategory: item.subCategory || '',
+        weight: item.weight ? String(item.weight) : '',
+        purity: item.purity || '',
+        imageUrl: item.imageUrl || '',
+        description: item.description || '',
+        price: item.price ? String(item.price) : '',
+        makingCharges: item.makingCharges ? String(item.makingCharges) : '',
+        otherCharges: item.otherCharges ? String(item.otherCharges) : '',
+        targetPage: item.targetPage || 'shop',
+        additionalImages: item.additionalImages ? JSON.stringify(item.additionalImages) : '[]'
       }
-      shareMessage += `\nView image: ${product.imageUrl}`;
-
-      await Share.share({
-        message: shareMessage,
-        title: product.name || 'Brahmani Jewellers Item',
-      });
-    } catch (error: any) {
-      Alert.alert('Error', error.message);
-    }
-  };
-
-  const buyNow = async (productId: any) => {
-    if (!user || !user.token) {
-      Alert.alert("Login Required", "Please login to buy items");
-      router.push('/login');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await axios.post(`${API_URL}/cart/add`, { productId, quantity: 1 }, {
-        headers: { Authorization: `Bearer ${user.token}` }
-      });
-      setSelectedProduct(null);
-      refreshCartCount();
-      router.push('/cart');
-    } catch (error) {
-      Alert.alert("Error", "Could not add item to cart for purchase");
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   const uniqueSubCategories = React.useMemo(() => {
@@ -297,7 +281,7 @@ export default function CollectionsScreen() {
         )}
       </View>
 
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {filteredItems.length === 0 ? (
           <View style={styles.noResultsContainer}>
             <Ionicons name="search-outline" size={48} color="rgba(28, 28, 30, 0.2)" />
@@ -313,7 +297,7 @@ export default function CollectionsScreen() {
                   key={item._id} 
                   style={styles.card}
                 >
-                  <TouchableOpacity onPress={() => { setSelectedProduct(item); setCurrentImageIndex(0); }} activeOpacity={0.8}>
+                  <TouchableOpacity onPress={() => navigateToDetails(item)} activeOpacity={0.8}>
                     <Image source={{ uri: item.imageUrl }} style={styles.image} />
                     
                     {/* Weight tag floating on image if exists */}
@@ -325,7 +309,7 @@ export default function CollectionsScreen() {
                   </TouchableOpacity>
 
                   <View style={styles.cardInfo}>
-                    <TouchableOpacity onPress={() => { setSelectedProduct(item); setCurrentImageIndex(0); }} activeOpacity={0.8}>
+                    <TouchableOpacity onPress={() => navigateToDetails(item)} activeOpacity={0.8}>
                       <Text style={styles.itemName} numberOfLines={1}>{item.name || `${item.category} Ornament`}</Text>
                       
                       <Text style={styles.itemDetails} numberOfLines={1}>
@@ -362,169 +346,6 @@ export default function CollectionsScreen() {
         )}
       </ScrollView>
 
-      {/* Product Details Modal */}
-      {selectedProduct && (
-        <Modal
-          visible={!!selectedProduct}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setSelectedProduct(null)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              {/* Close Button */}
-              <TouchableOpacity 
-                style={styles.closeButton} 
-                onPress={() => setSelectedProduct(null)}
-              >
-                <Ionicons name="close" size={24} color="#1C1C1E" />
-              </TouchableOpacity>
-
-              {/* Share Button */}
-              <TouchableOpacity 
-                style={[styles.closeButton, { right: 65 }]} 
-                onPress={() => shareProduct(selectedProduct)}
-              >
-                <Ionicons name="share-social-outline" size={20} color="#1C1C1E" />
-              </TouchableOpacity>
-
-              <ScrollView contentContainerStyle={styles.modalScroll} showsVerticalScrollIndicator={false}>
-                {/* Image Gallery */}
-                <View style={styles.modalImageContainer}>
-                  {(() => {
-                    const allImages = [selectedProduct.imageUrl, ...(selectedProduct.additionalImages || [])].filter(Boolean);
-                    if (allImages.length > 0) {
-                      return (
-                        <>
-                          <Image 
-                            source={{ uri: allImages[currentImageIndex] }} 
-                            style={styles.modalImage} 
-                          />
-                          
-                          {allImages.length > 1 && (
-                            <>
-                              {/* Navigation Arrows */}
-                              <TouchableOpacity 
-                                style={[styles.navArrow, styles.leftArrow]}
-                                onPress={() => setCurrentImageIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1))}
-                              >
-                                <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
-                              </TouchableOpacity>
-                              <TouchableOpacity 
-                                style={[styles.navArrow, styles.rightArrow]}
-                                onPress={() => setCurrentImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1))}
-                              >
-                                <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
-                              </TouchableOpacity>
-
-                              {/* Dots Indicator */}
-                              <View style={styles.dotsContainer}>
-                                {allImages.map((_, idx) => (
-                                  <View 
-                                    key={idx} 
-                                    style={[
-                                      styles.dot, 
-                                      currentImageIndex === idx && styles.activeDot
-                                    ]} 
-                                  />
-                                ))}
-                              </View>
-                            </>
-                          )}
-                        </>
-                      );
-                    } else {
-                      return (
-                        <View style={[styles.modalImage, styles.noImagePlaceholder]}>
-                          <Ionicons name="image-outline" size={48} color="rgba(28, 28, 30, 0.2)" />
-                        </View>
-                      );
-                    }
-                  })()}
-                </View>
-
-                {/* Details Section */}
-                <View style={styles.modalDetails}>
-                  <Text style={styles.modalTitle}>{selectedProduct.name || `${selectedProduct.category} Ornament`}</Text>
-                  
-                  <View style={styles.modalTagsRow}>
-                    <Text style={styles.modalPurity}>{selectedProduct.purity || '22K Gold'}</Text>
-                    <Text style={styles.modalCategory}>{selectedProduct.subCategory || selectedProduct.category}</Text>
-                  </View>
-
-                  {/* Pricing / Weight Table */}
-                  <View style={styles.detailsTable}>
-                    {selectedProduct.weight && (
-                      <View style={styles.tableRow}>
-                        <Text style={styles.tableLabel}>Weight</Text>
-                        <Text style={styles.tableValue}>{selectedProduct.weight} g</Text>
-                      </View>
-                    )}
-                    {selectedProduct.makingCharges && (
-                      <View style={styles.tableRow}>
-                        <Text style={styles.tableLabel}>Making Charges</Text>
-                        <Text style={styles.tableValue}>{selectedProduct.makingCharges}%</Text>
-                      </View>
-                    )}
-                    <View style={styles.tableRow}>
-                      <Text style={styles.tableLabel}>Price Estimate</Text>
-                      <Text style={styles.tableValueGold}>
-                        {calculatePrice(selectedProduct) > 0 
-                          ? `₹${calculatePrice(selectedProduct).toLocaleString('en-IN')}` 
-                          : 'Price on Request'}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {selectedProduct.description && (
-                    <View style={styles.descriptionContainer}>
-                      <Text style={styles.descriptionTitle}>Description</Text>
-                      <Text style={styles.descriptionText}>{selectedProduct.description}</Text>
-                    </View>
-                  )}
-
-                  {/* Actions inside Modal */}
-                  <View style={styles.modalActionRow}>
-                    {activeTab === 'shop' ? (
-                      <View style={{ gap: 10 }}>
-                        <TouchableOpacity 
-                          style={[styles.modalButton, styles.modalBuyButton]} 
-                          onPress={() => buyNow(selectedProduct._id)}
-                        >
-                          <Ionicons name="card-outline" size={20} color="#FFFFFF" style={{ marginRight: 6 }} />
-                          <Text style={styles.modalButtonText}>Buy Now</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity 
-                          style={[styles.modalButton, styles.modalCartButton]} 
-                          onPress={() => {
-                            addToCart(selectedProduct._id);
-                            setSelectedProduct(null);
-                          }}
-                        >
-                          <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" style={{ marginRight: 6 }} />
-                          <Text style={styles.modalButtonText}>Add to Cart</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ) : (
-                      <TouchableOpacity 
-                        style={[styles.modalButton, styles.modalWhatsappButton]} 
-                        onPress={() => {
-                          initiateWhatsAppInquiry(selectedProduct);
-                          setSelectedProduct(null);
-                        }}
-                      >
-                        <FontAwesome name="whatsapp" size={20} color="#FFFFFF" style={{ marginRight: 6 }} />
-                        <Text style={styles.modalButtonText}>WhatsApp Inquiry</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </View>
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
-      )}
     </SafeAreaView>
   );
 }

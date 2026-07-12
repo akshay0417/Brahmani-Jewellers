@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform, KeyboardAvoidingView, RefreshControl } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform, KeyboardAvoidingView, RefreshControl, Modal } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { WebView } from 'react-native-webview';
 import { useAuth } from '../../context/AuthContext';
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -10,9 +12,50 @@ const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
 
 export default function InvestScreen() {
   const { user } = useAuth() as any;
-  const [rates, setRates] = useState<any>({ gold22K: 66000, gold24K: 72000, gold18K: 54000 });
+  const [rates, setRates] = useState<any>({ gold22K: 66000, gold24K: 72000, gold18K: 54000, investEnabled: false });
   const [balance, setBalance] = useState<any>({ goldGrams: 0, transactions: [] });
   const [loading, setLoading] = useState(false);
+  const [selectedTx, setSelectedTx] = useState<any>(null);
+
+  // Razorpay WebView states
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentHtml, setPaymentHtml] = useState('');
+  const [pendingInvestmentInfo, setPendingInvestmentInfo] = useState<any>(null);
+
+  const handleWebViewMessage = async (event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      setShowPaymentModal(false);
+      
+      if (data.status === 'success') {
+        setLoading(true);
+        const { amountNum, rate } = pendingInvestmentInfo;
+        
+        const verifyRes = await axios.post(`${API_URL}/investments/verify-payment`, {
+          amount: amountNum,
+          ratePerGram: rate,
+          razorpay_payment_id: data.razorpay_payment_id,
+          razorpay_order_id: data.razorpay_order_id,
+          razorpay_signature: data.razorpay_signature
+        }, {
+          headers: { Authorization: `Bearer ${user.token}` }
+        });
+        
+        Alert.alert("Success 🎉", "Payment verified and gold credited to vault!");
+        setBalance(verifyRes.data.balance);
+        setBuyAmount('');
+      } else if (data.status === 'cancelled') {
+        Alert.alert("Payment Cancelled", "The payment process was cancelled.");
+      } else {
+        Alert.alert("Payment Failed", data.error?.description || data.message || "Payment transaction failed.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      Alert.alert("Verification Error", "Failed to verify investment payment.");
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // KYC State
   const [kycStatus, setKycStatus] = useState('not_submitted');
@@ -22,7 +65,7 @@ export default function InvestScreen() {
   const [showKycTrigger, setShowKycTrigger] = useState(false);
 
   // Forms state
-  const [activeSegment, setActiveSegment] = useState('buy'); // 'buy' | 'redeem' | 'calc' | 'history'
+  const [activeSegment, setActiveSegment] = useState('calc'); // 'calc' | 'buy' | 'redeem' | 'history'
   const [buyAmount, setBuyAmount] = useState('');
   const [showPayment, setShowPayment] = useState(false);
   const [buyPaymentMethod, setBuyPaymentMethod] = useState('UPI'); // 'UPI' | 'Bank'
@@ -32,6 +75,17 @@ export default function InvestScreen() {
   const [redeemGrams, setRedeemGrams] = useState('');
   const [deliveryMode, setDeliveryMode] = useState('Pickup'); // 'Pickup' | 'Delivery'
   const [address, setAddress] = useState({ name: '', mobile: '', address: '', city: '', state: '', pincode: '' });
+
+  // Sell state
+  const [sellGrams, setSellGrams] = useState('');
+  const [sellPaymentMethod, setSellPaymentMethod] = useState('UPI'); // 'UPI' | 'Bank'
+  const [sellBankDetails, setSellBankDetails] = useState({
+    bankName: '',
+    accountHolder: '',
+    accountNumber: '',
+    ifscCode: '',
+    upiId: ''
+  });
 
   // Calculator State
   const [calcKarat, setCalcKarat] = useState('24K');
@@ -51,8 +105,6 @@ export default function InvestScreen() {
   const doMath = (field: any, val: any, makingVal?: any, otherVal?: any, karatVal?: any) => {
     const activeKarat = karatVal !== undefined ? karatVal : calcKarat;
     const rate = getRate(activeKarat);
-    const m = parseFloat(makingVal !== undefined ? makingVal : calcMaking) || 0;
-    const o = parseFloat(otherVal !== undefined ? otherVal : calcOther) || 0;
 
     if (field === 'weight') {
       const w = parseFloat(val) || 0;
@@ -61,21 +113,15 @@ export default function InvestScreen() {
         return;
       }
       const metalValue = w * rate;
-      const makingCharges = metalValue * (m / 100);
-      const base = metalValue + makingCharges + o;
-      const gst = base * 0.03;
-      const total = base + gst;
-      setCalcPrice(total.toFixed(2));
+      setCalcPrice(metalValue.toFixed(2));
     } else if (field === 'price') {
       const p = parseFloat(val) || 0;
       if (p === 0) {
         setCalcWeight('');
         return;
       }
-      const base = p / 1.03;
-      const divisor = rate * (1 + m / 100);
-      const w = divisor > 0 ? (base - o) / divisor : 0;
-      setCalcWeight(w > 0 ? w.toFixed(4) : '0.0000');
+      const w = rate > 0 ? p / rate : 0;
+      setCalcWeight(w > 0 ? w.toFixed(3) : '0.000');
     }
   };
 
@@ -306,9 +352,9 @@ export default function InvestScreen() {
       const activeRates = rates || { gold22K: 6250, gold24K: 6820, gold18K: 5120 };
       const rate = activeRates.gold24K / 10;
 
-      // 1. Create Razorpay order on backend
+      // 1. Create Razorpay order on backend (adding 2% gateway charge)
       const rzpOrderRes = await axios.post(`${API_URL}/investments/razorpay-order`, {
-        amount: amountNum
+        amount: Math.round(amountNum * 1.02)
       }, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
@@ -354,43 +400,24 @@ export default function InvestScreen() {
           ]
         );
       } else {
-        // Live Razorpay mode: fallback simulator for standard Expo
+        // Live Razorpay mode: Open Razorpay WebView modal
         setLoading(false);
-        Alert.alert(
-          "Payment Gateway",
-          `Razorpay payment gateway initialized (Order ID: ${rzpOrderId}). Would you like to confirm the transaction?`,
-          [
-            { text: "Cancel", style: "cancel" },
-            {
-              text: "Confirm Payment",
-              onPress: async () => {
-                try {
-                  setLoading(true);
-                  const mockPaymentId = 'pay_live_inv_' + Math.random().toString(36).substring(2, 15);
-                  const mockSignature = 'sig_live_inv_' + Math.random().toString(36).substring(2, 15);
+        const rzpKey = rzpOrderRes.data.key || 'rzp_test_mockKeyId123';
+        const rzpAmount = rzpOrderRes.data.amount;
+        const rzpCurrency = rzpOrderRes.data.currency || 'INR';
 
-                  const verifyRes = await axios.post(`${API_URL}/investments/verify-payment`, {
-                    amount: amountNum,
-                    ratePerGram: rate,
-                    razorpay_payment_id: mockPaymentId,
-                    razorpay_order_id: rzpOrderId,
-                    razorpay_signature: mockSignature
-                  }, {
-                    headers: { Authorization: `Bearer ${user.token}` }
-                  });
-
-                  Alert.alert("Success 🎉", "Payment verified and gold credited to vault!");
-                  setBalance(verifyRes.data.balance);
-                  setBuyAmount('');
-                } catch (verifyErr: any) {
-                  Alert.alert("Error", verifyErr.response?.data?.message || "Payment verification failed");
-                } finally {
-                  setLoading(false);
-                }
-              }
-            }
-          ]
+        setPendingInvestmentInfo({ amountNum, rate });
+        const html = generateRazorpayHtml(
+          rzpKey,
+          rzpAmount,
+          rzpCurrency,
+          rzpOrderId,
+          user.name || '',
+          user.mobile || '',
+          user.email || ''
         );
+        setPaymentHtml(html);
+        setShowPaymentModal(true);
       }
     } catch (err: any) {
       Alert.alert("Error", err.response?.data?.message || "Could not complete transaction");
@@ -448,6 +475,62 @@ export default function InvestScreen() {
     }
   };
 
+  const handleSell = async () => {
+    if (!user) return;
+    const gramsNum = parseFloat(sellGrams);
+    if (isNaN(gramsNum) || gramsNum <= 0) {
+      Alert.alert("Invalid Weight", "Please enter a valid weight in grams to sell");
+      return;
+    }
+
+    const currentBal = balance.goldGrams || 0;
+    if (currentBal < gramsNum) {
+      Alert.alert("Insufficient Balance", "You cannot sell more gold than what is in your vault");
+      return;
+    }
+
+    if (kycStatus !== 'approved') {
+      setShowKycTrigger(true);
+      return;
+    }
+
+    if (sellPaymentMethod === 'UPI' && !sellBankDetails.upiId.trim()) {
+      Alert.alert("Missing Details", "Please enter your UPI ID");
+      return;
+    }
+
+    if (sellPaymentMethod === 'Bank' && (!sellBankDetails.bankName.trim() || !sellBankDetails.accountHolder.trim() || !sellBankDetails.accountNumber.trim() || !sellBankDetails.ifscCode.trim())) {
+      Alert.alert("Missing Details", "Please enter all bank account details");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const activeRates = rates || { gold22K: 6250, gold24K: 6820, gold18K: 5120 };
+      const rate = activeRates.gold24K / 10;
+
+      const response = await axios.post(`${API_URL}/investments/sell`, {
+        metal: 'GOLD',
+        grams: gramsNum,
+        ratePerGram: rate,
+        paymentMethod: sellPaymentMethod,
+        bankDetails: sellBankDetails
+      }, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+
+      Alert.alert("Request Submitted! 🏦", "Your sell request has been submitted. The amount will be transferred to your account after admin verification.");
+      setBalance(response.data.balance);
+      setSellGrams('');
+      setSellBankDetails({ bankName: '', accountHolder: '', accountNumber: '', ifscCode: '', upiId: '' });
+      setActiveSegment('history');
+    } catch (err: any) {
+      Alert.alert("Error", err.response?.data?.message || "Could not process sell request");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getCalculatedGrams = () => {
     const amount = parseFloat(buyAmount);
     if (isNaN(amount) || amount <= 0 || !rates) return '0.0000';
@@ -475,10 +558,6 @@ export default function InvestScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Digital Gold Vault</Text>
@@ -505,6 +584,15 @@ export default function InvestScreen() {
               <Text style={[styles.segmentBtnText, activeSegment === 'redeem' && styles.activeSegmentBtnText]}>Redeem</Text>
             </TouchableOpacity>
             <TouchableOpacity 
+              style={[styles.segmentBtn, activeSegment === 'sell' && styles.activeSegmentBtn]}
+              onPress={() => {
+                setActiveSegment('sell');
+                setShowKycTrigger(false);
+              }}
+            >
+              <Text style={[styles.segmentBtnText, activeSegment === 'sell' && styles.activeSegmentBtnText]}>Sell Gold</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
               style={[styles.segmentBtn, activeSegment === 'calc' && styles.activeSegmentBtn]}
               onPress={() => {
                 setActiveSegment('calc');
@@ -526,6 +614,7 @@ export default function InvestScreen() {
         </View>
 
         <ScrollView 
+          style={{ flex: 1 }}
           contentContainerStyle={styles.container} 
           showsVerticalScrollIndicator={false} 
           keyboardShouldPersistTaps="handled"
@@ -588,7 +677,7 @@ export default function InvestScreen() {
                   />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.inputLabel}>Total Price (₹)</Text>
+                  <Text style={styles.inputLabel}>Gold Price (₹)</Text>
                   <TextInput
                     placeholder="0.00"
                     placeholderTextColor="rgba(28,28,30,0.3)"
@@ -637,39 +726,58 @@ export default function InvestScreen() {
               </View>
 
               {/* Calculations Breakdown Card */}
-              <View style={styles.breakdownBox}>
-                <View style={styles.breakdownRow}>
-                  <Text style={styles.breakdownText}>System Rate/gram</Text>
-                  <Text style={styles.breakdownVal}>₹{Math.round(getRate(calcKarat))}</Text>
-                </View>
-                <View style={styles.breakdownRow}>
-                  <Text style={styles.breakdownText}>Metal Value (Rate × Weight)</Text>
-                  <Text style={styles.breakdownVal}>
-                    ₹{Math.round((parseFloat(calcWeight) || 0) * getRate(calcKarat)).toLocaleString('en-IN')}
-                  </Text>
-                </View>
-                <View style={styles.breakdownRow}>
-                  <Text style={styles.breakdownText}>Making Charges ({calcMaking || 0}%)</Text>
-                  <Text style={styles.breakdownVal}>
-                    ₹{Math.round((parseFloat(calcWeight) || 0) * getRate(calcKarat) * ((parseFloat(calcMaking) || 0) / 100)).toLocaleString('en-IN')}
-                  </Text>
-                </View>
-                <View style={styles.breakdownRow}>
-                  <Text style={styles.breakdownText}>Other Charges</Text>
-                  <Text style={styles.breakdownVal}>₹{(parseFloat(calcOther) || 0).toLocaleString('en-IN')}</Text>
-                </View>
-                <View style={styles.breakdownRow}>
-                  <Text style={styles.breakdownText}>Fixed GST (3%)</Text>
-                  <Text style={styles.breakdownVal}>
-                    ₹{Math.round((parseFloat(calcPrice) || 0) - ((parseFloat(calcPrice) || 0) / 1.03)).toLocaleString('en-IN')}
-                  </Text>
-                </View>
-                <View style={styles.divider} />
-                <View style={styles.breakdownRow}>
-                  <Text style={styles.estimatedGramsLabel}>Total Value (Payable)</Text>
-                  <Text style={styles.estimatedGramsVal}>₹{Math.round(parseFloat(calcPrice) || 0).toLocaleString('en-IN')}</Text>
-                </View>
-              </View>
+              {(() => {
+                const metalVal = (parseFloat(calcWeight) || 0) * getRate(calcKarat);
+                const makingChg = metalVal * ((parseFloat(calcMaking) || 0) / 100);
+                const otherChg = parseFloat(calcOther) || 0;
+                const subTotal = metalVal + makingChg + otherChg;
+                const gstChg = subTotal * 0.03;
+                const grandTotal = subTotal + gstChg;
+
+                return (
+                  <View style={styles.breakdownBox}>
+                    <View style={styles.breakdownRow}>
+                      <Text style={styles.breakdownText}>System Rate/gram</Text>
+                      <Text style={styles.breakdownVal}>₹{Math.round(getRate(calcKarat))}</Text>
+                    </View>
+                    <View style={styles.breakdownRow}>
+                      <Text style={styles.breakdownText}>Metal Value (Rate × Weight)</Text>
+                      <Text style={styles.breakdownVal}>
+                        ₹{Math.round(metalVal).toLocaleString('en-IN')}
+                      </Text>
+                    </View>
+                    <View style={styles.breakdownRow}>
+                      <Text style={styles.breakdownText}>Making Charges ({calcMaking || 0}%)</Text>
+                      <Text style={styles.breakdownVal}>
+                        ₹{Math.round(makingChg).toLocaleString('en-IN')}
+                      </Text>
+                    </View>
+                    <View style={styles.breakdownRow}>
+                      <Text style={styles.breakdownText}>Other Charges</Text>
+                      <Text style={styles.breakdownVal}>₹{otherChg.toLocaleString('en-IN')}</Text>
+                    </View>
+                    <View style={styles.breakdownRow}>
+                      <Text style={styles.breakdownText}>Fixed GST (3%)</Text>
+                      <Text style={styles.breakdownVal}>
+                        ₹{Math.round(gstChg).toLocaleString('en-IN')}
+                      </Text>
+                    </View>
+                    <View style={styles.divider} />
+                    <View style={styles.breakdownRow}>
+                      <Text style={styles.estimatedGramsLabel}>Total Value (Payable)</Text>
+                      <Text style={styles.estimatedGramsVal}>₹{Math.round(grandTotal).toLocaleString('en-IN')}</Text>
+                    </View>
+                  </View>
+                );
+              })()}
+            </Reanimated.View>
+          ) : rates && !rates.investEnabled ? (
+            <Reanimated.View entering={FadeInDown.duration(300)} style={styles.kycPlaceholderCard}>
+              <MaterialCommunityIcons name="gold" size={56} color="#D4AF37" style={{ marginBottom: 12 }} />
+              <Text style={styles.kycPlaceholderTitle}>Investment Scheme Coming Soon</Text>
+              <Text style={styles.kycPlaceholderDesc}>
+                We are launching our Digital Gold Investment scheme very soon! You will be able to buy, sell, and redeem BIS-hallmarked 24K gold directly from your mobile app.
+              </Text>
             </Reanimated.View>
           ) : (
             <>
@@ -728,8 +836,17 @@ export default function InvestScreen() {
                             <Text style={styles.breakdownVal}>₹{Math.round(goldRateGram)}</Text>
                           </View>
                           <View style={styles.breakdownRow}>
-                            <Text style={styles.breakdownText}>GST (3% included)</Text>
-                            <Text style={styles.breakdownVal}>₹{getCalculatedGST()}</Text>
+                            <Text style={styles.breakdownText}>Subtotal (incl. 3% GST)</Text>
+                            <Text style={styles.breakdownVal}>₹{parseFloat(buyAmount).toLocaleString('en-IN')}</Text>
+                          </View>
+                          <View style={styles.breakdownRow}>
+                            <Text style={styles.breakdownText}>Gateway Charges (2%)</Text>
+                            <Text style={styles.breakdownVal}>₹{Math.round(parseFloat(buyAmount) * 0.02).toLocaleString('en-IN')}</Text>
+                          </View>
+                          <View style={styles.divider} />
+                          <View style={styles.breakdownRow}>
+                            <Text style={styles.breakdownText}><Text style={{ fontWeight: 'bold', color: '#1C1C1E' }}>Total Payable Amount</Text></Text>
+                            <Text style={styles.breakdownVal}><Text style={{ fontWeight: 'bold', color: '#D4AF37' }}>₹{Math.round(parseFloat(buyAmount) * 1.02).toLocaleString('en-IN')}</Text></Text>
                           </View>
                           <View style={styles.divider} />
                           <View style={styles.breakdownRow}>
@@ -747,21 +864,124 @@ export default function InvestScreen() {
 
                   {activeSegment === 'sell' && (
                     <Reanimated.View entering={FadeInDown.duration(300)} style={styles.section}>
-                      {/* Resell Info Card */}
-                      <View style={styles.resellCard}>
-                        <View style={styles.resellCardHeader}>
-                          <Ionicons name="information-circle" size={20} color="#D4AF37" style={{ marginRight: 6 }} />
-                          <Text style={styles.resellCardTitle}>Want to Resell Gold?</Text>
-                        </View>
-                        <Text style={styles.resellCardDesc}>
-                          To comply with state regulations and prevent online identity theft, reselling is **In-Store Only**.
-                          {"\n\n"}
-                          Please visit our physical showroom at **Amraiwadi, Ahmedabad** with your app verification credentials for instant offline valuation and cash settlements.
+                      <Text style={styles.sectionTitle}>Sell Digital Gold</Text>
+                      <Text style={styles.sectionDesc}>Sell gold from your vault at the live rate. Funds will be transferred to your bank account after verification.</Text>
+
+                      {/* Info Card: Tax disclaimer */}
+                      <View style={[styles.resellCard, { marginBottom: 16 }]}>
+                        <Text style={{ fontSize: 11, color: '#FF3B30', fontWeight: 'bold', marginBottom: 4 }}>Tax and Rate Note:</Text>
+                        <Text style={{ fontSize: 11, color: '#666666', lineHeight: 15 }}>
+                          The 3% GST paid during purchase is a government tax and is non-refundable. Payout value is calculated as <Text style={{ fontWeight: 'bold' }}>Weight × Live Gold Rate</Text> (excluding GST).
                         </Text>
-                        {user && (
-                          <Text style={styles.resellUserId}>Your Verification User ID: {user.id || user._id}</Text>
-                        )}
                       </View>
+
+                      {/* Weight Input */}
+                      <View style={styles.inputGroup}>
+                        <Text style={styles.inputLabel}>Weight to Sell (Grams)</Text>
+                        <TextInput
+                          placeholder="e.g. 0.5, 1, 2"
+                          placeholderTextColor="rgba(28,28,30,0.3)"
+                          keyboardType="numeric"
+                          style={styles.textInput}
+                          value={sellGrams}
+                          onChangeText={setSellGrams}
+                        />
+                      </View>
+
+                      {/* Live calculation breakdown */}
+                      {(() => {
+                        const gramsNum = parseFloat(sellGrams) || 0;
+                        const goldRate = rates ? (rates.gold24K / 10) : 0;
+                        const payoutVal = gramsNum * goldRate;
+
+                        return (
+                          <View style={[styles.breakdownBox, { marginBottom: 14 }]}>
+                            <View style={styles.breakdownRow}>
+                              <Text style={styles.breakdownText}>Live Gold Rate/g</Text>
+                              <Text style={styles.breakdownVal}>₹{Math.round(goldRate)}</Text>
+                            </View>
+                            <View style={styles.breakdownRow}>
+                              <Text style={styles.breakdownText}>Metal Value (Rate × Weight)</Text>
+                              <Text style={styles.breakdownVal}>₹{Math.round(payoutVal).toLocaleString('en-IN')}</Text>
+                            </View>
+                            <View style={styles.divider} />
+                            <View style={styles.breakdownRow}>
+                              <Text style={styles.estimatedGramsLabel}>Total Payout (No GST)</Text>
+                              <Text style={styles.estimatedGramsVal}>₹{Math.round(payoutVal).toLocaleString('en-IN')}</Text>
+                            </View>
+                          </View>
+                        );
+                      })()}
+
+                      {/* Payout Mode Selector */}
+                      <Text style={styles.inputLabel}>Payout Bank Method</Text>
+                      <View style={styles.metalSelectionRow}>
+                        <TouchableOpacity 
+                          style={[styles.metalBtn, sellPaymentMethod === 'UPI' && styles.activeMetalBtnDark]}
+                          onPress={() => setSellPaymentMethod('UPI')}
+                        >
+                          <Text style={[styles.metalBtnText, sellPaymentMethod === 'UPI' && styles.activeMetalBtnText]}>UPI Payout</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                          style={[styles.metalBtn, sellPaymentMethod === 'Bank' && styles.activeMetalBtnDark]}
+                          onPress={() => setSellPaymentMethod('Bank')}
+                        >
+                          <Text style={[styles.metalBtnText, sellPaymentMethod === 'Bank' && styles.activeMetalBtnText]}>Bank Transfer</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      {/* Conditional forms based on payout method */}
+                      {sellPaymentMethod === 'UPI' ? (
+                        <View style={styles.deliveryForm}>
+                          <Text style={styles.formTitle}>UPI Details</Text>
+                          <TextInput
+                            placeholder="Enter UPI ID (e.g., name@okaxis)"
+                            placeholderTextColor="rgba(28,28,30,0.3)"
+                            autoCapitalize="none"
+                            style={styles.formInput}
+                            value={sellBankDetails.upiId}
+                            onChangeText={(val) => setSellBankDetails({ ...sellBankDetails, upiId: val })}
+                          />
+                        </View>
+                      ) : (
+                        <View style={styles.deliveryForm}>
+                          <Text style={styles.formTitle}>Bank Account Details</Text>
+                          <TextInput
+                            placeholder="Account Holder's Name"
+                            placeholderTextColor="rgba(28,28,30,0.3)"
+                            style={styles.formInput}
+                            value={sellBankDetails.accountHolder}
+                            onChangeText={(val) => setSellBankDetails({ ...sellBankDetails, accountHolder: val })}
+                          />
+                          <TextInput
+                            placeholder="Bank Name"
+                            placeholderTextColor="rgba(28,28,30,0.3)"
+                            style={styles.formInput}
+                            value={sellBankDetails.bankName}
+                            onChangeText={(val) => setSellBankDetails({ ...sellBankDetails, bankName: val })}
+                          />
+                          <TextInput
+                            placeholder="Account Number"
+                            placeholderTextColor="rgba(28,28,30,0.3)"
+                            keyboardType="numeric"
+                            style={styles.formInput}
+                            value={sellBankDetails.accountNumber}
+                            onChangeText={(val) => setSellBankDetails({ ...sellBankDetails, accountNumber: val })}
+                          />
+                          <TextInput
+                            placeholder="IFSC Code"
+                            placeholderTextColor="rgba(28,28,30,0.3)"
+                            autoCapitalize="characters"
+                            style={styles.formInput}
+                            value={sellBankDetails.ifscCode}
+                            onChangeText={(val) => setSellBankDetails({ ...sellBankDetails, ifscCode: val })}
+                          />
+                        </View>
+                      )}
+
+                      <TouchableOpacity style={[styles.buyBtn, { backgroundColor: '#FF3B30', marginTop: 10 }]} onPress={handleSell}>
+                        <Text style={[styles.buyBtnText, { color: '#FFFFFF' }]}>CONFIRM SELL & PAYOUT</Text>
+                      </TouchableOpacity>
                     </Reanimated.View>
                   )}
 
@@ -782,77 +1002,17 @@ export default function InvestScreen() {
                         />
                       </View>
 
-                      {/* Delivery/Pickup Select */}
+                      {/* Redemption Mode - In-Store Pickup Only */}
                       <Text style={[styles.inputLabel, { marginTop: 12 }]}>Redemption Mode</Text>
-                      <View style={styles.metalSelectionRow}>
-                        <TouchableOpacity 
-                          style={[styles.metalBtn, deliveryMode === 'Pickup' && styles.activeMetalBtnDark]}
-                          onPress={() => setDeliveryMode('Pickup')}
-                        >
-                          <Text style={[styles.metalBtnText, deliveryMode === 'Pickup' && styles.activeMetalBtnText]}>In-Store Pickup (₹0)</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity 
-                          style={[styles.metalBtn, deliveryMode === 'Delivery' && styles.activeMetalBtnDark]}
-                          onPress={() => setDeliveryMode('Delivery')}
-                        >
-                          <Text style={[styles.metalBtnText, deliveryMode === 'Delivery' && styles.activeMetalBtnText]}>Home Delivery</Text>
-                        </TouchableOpacity>
+                      <View style={styles.pickupStoreBox}>
+                        <Ionicons name="location" size={20} color="#D4AF37" style={{ marginBottom: 4 }} />
+                        <Text style={styles.pickupStoreTitle}>In-Store Pickup (Amraiwadi Showroom)</Text>
+                        <Text style={styles.pickupStoreDesc}>
+                          Choksi Bazar, Azad Chowk, Amraiwadi, Ahmedabad.
+                          {"\n"}
+                          Hours: 10:00 AM - 8:30 PM (Closed on Sundays)
+                        </Text>
                       </View>
-
-                      {deliveryMode === 'Pickup' ? (
-                        <View style={styles.pickupStoreBox}>
-                          <Ionicons name="location" size={20} color="#D4AF37" style={{ marginBottom: 4 }} />
-                          <Text style={styles.pickupStoreTitle}>Brahmani Showroom Address</Text>
-                          <Text style={styles.pickupStoreDesc}>
-                            Choksi Bazar, Azad Chowk, Amraiwadi, Ahmedabad.
-                            {"\n"}
-                            Hours: 10:00 AM - 8:30 PM (Closed on Sundays)
-                          </Text>
-                        </View>
-                      ) : (
-                        <View style={styles.deliveryForm}>
-                          <Text style={styles.formTitle}>Shipping Details</Text>
-                          <TextInput
-                            placeholder="Receiver's Full Name"
-                            placeholderTextColor="rgba(28,28,30,0.3)"
-                            style={styles.formInput}
-                            value={address.name}
-                            onChangeText={(val) => setAddress({ ...address, name: val })}
-                          />
-                          <TextInput
-                            placeholder="Mobile Number"
-                            placeholderTextColor="rgba(28,28,30,0.3)"
-                            keyboardType="phone-pad"
-                            style={styles.formInput}
-                            value={address.mobile}
-                            onChangeText={(val) => setAddress({ ...address, mobile: val })}
-                          />
-                          <TextInput
-                            placeholder="Address Line (Flat/House/Street)"
-                            placeholderTextColor="rgba(28,28,30,0.3)"
-                            style={styles.formInput}
-                            value={address.address}
-                            onChangeText={(val) => setAddress({ ...address, address: val })}
-                          />
-                          <View style={{ flexDirection: 'row', gap: 10 }}>
-                            <TextInput
-                              placeholder="City"
-                              placeholderTextColor="rgba(28,28,30,0.3)"
-                              style={[styles.formInput, { flex: 1 }]}
-                              value={address.city}
-                              onChangeText={(val) => setAddress({ ...address, city: val })}
-                            />
-                            <TextInput
-                              placeholder="Pincode"
-                              placeholderTextColor="rgba(28,28,30,0.3)"
-                              keyboardType="numeric"
-                              style={[styles.formInput, { flex: 1 }]}
-                              value={address.pincode}
-                              onChangeText={(val) => setAddress({ ...address, pincode: val })}
-                            />
-                          </View>
-                        </View>
-                      )}
 
                       <TouchableOpacity style={[styles.buyBtn, { backgroundColor: '#D4AF37' }]} onPress={handleRedeem}>
                         <Text style={[styles.buyBtnText, { color: '#FFFFFF' }]}>CONFIRM REDEMPTION</Text>
@@ -882,6 +1042,13 @@ export default function InvestScreen() {
                               <Text style={styles.historyLabel}>Rate/g: <Text style={styles.historyValue}>₹{Math.round(tx.ratePerGram)}</Text></Text>
                               <Text style={styles.historyLabel}>Amount: <Text style={styles.historyValue}>₹{tx.amount.toLocaleString()}</Text></Text>
                             </View>
+                            <TouchableOpacity 
+                              style={styles.receiptLink}
+                              onPress={() => setSelectedTx(tx)}
+                            >
+                              <Ionicons name="document-text" size={14} color="#D4AF37" />
+                              <Text style={styles.receiptLinkText}>View Receipt</Text>
+                            </TouchableOpacity>
                           </View>
                         ))
                       )}
@@ -893,7 +1060,121 @@ export default function InvestScreen() {
           )}
 
         </ScrollView>
-      </KeyboardAvoidingView>
+
+      {/* Razorpay WebView Modal */}
+      <Modal
+        visible={showPaymentModal}
+        animationType="slide"
+        onRequestClose={() => {
+          setShowPaymentModal(false);
+          Alert.alert("Payment Cancelled", "Payment process was cancelled.");
+        }}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+          <View style={{ height: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', paddingHorizontal: 16 }}>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1C1C1E' }}>Secure Payment Gateway</Text>
+            <TouchableOpacity 
+              onPress={() => {
+                setShowPaymentModal(false);
+                Alert.alert("Payment Cancelled", "Payment process was cancelled.");
+              }}
+              style={{ padding: 4 }}
+            >
+              <Ionicons name="close" size={24} color="#1C1C1E" />
+            </TouchableOpacity>
+          </View>
+          <WebView
+            originWhitelist={['*']}
+            source={{ html: paymentHtml }}
+            onMessage={handleWebViewMessage}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            cacheEnabled={true}
+            cacheMode="LOAD_CACHE_ELSE_NETWORK"
+            androidHardwareAccelerationDisabled={false}
+            scalesPageToFit={true}
+            style={{ flex: 1 }}
+          />
+        </SafeAreaView>
+      </Modal>
+
+
+      {/* Receipt Modal */}
+      <Modal
+        visible={!!selectedTx}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setSelectedTx(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.receiptModalContainer}>
+            <View style={styles.receiptHeader}>
+              <MaterialCommunityIcons name="gold" size={28} color="#D4AF37" />
+              <Text style={styles.receiptHeaderTitle}>Brahmani Jewellers</Text>
+              <Text style={styles.receiptHeaderSubtitle}>Digital Vault Settlement Receipt</Text>
+            </View>
+
+            {selectedTx && (() => {
+              const baseAmt = selectedTx.amount / 1.03;
+              const taxAmt = selectedTx.amount - baseAmt;
+              return (
+                <ScrollView contentContainerStyle={styles.receiptContent} showsVerticalScrollIndicator={false}>
+                  <View style={styles.receiptDetailRow}>
+                    <Text style={styles.receiptLabel}>Transaction Date</Text>
+                    <Text style={styles.receiptValue}>{new Date(selectedTx.createdAt || Date.now()).toLocaleString('en-IN')}</Text>
+                  </View>
+                  <View style={styles.receiptDetailRow}>
+                    <Text style={styles.receiptLabel}>Transaction Type</Text>
+                    <Text style={[styles.receiptValue, { fontWeight: 'bold', color: selectedTx.type === 'BUY' ? '#2ecc71' : selectedTx.type === 'SELL' ? '#e74c3c' : '#3498db' }]}>
+                      {selectedTx.type} {selectedTx.metal}
+                    </Text>
+                  </View>
+                  <View style={styles.receiptDetailRow}>
+                    <Text style={styles.receiptLabel}>Reference ID</Text>
+                    <Text style={[styles.receiptValue, { fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', fontSize: 12 }]}>{selectedTx.paymentReference || 'N/A'}</Text>
+                  </View>
+
+                  <View style={styles.receiptDivider} />
+
+                  <View style={styles.receiptDetailRow}>
+                    <Text style={styles.receiptLabel}>Gold Weight</Text>
+                    <Text style={[styles.receiptValue, { fontWeight: 'bold' }]}>{selectedTx.grams?.toFixed(4)} g</Text>
+                  </View>
+                  <View style={styles.receiptDetailRow}>
+                    <Text style={styles.receiptLabel}>Gold Rate / Gram</Text>
+                    <Text style={styles.receiptValue}>₹{Math.round(selectedTx.ratePerGram || 0).toLocaleString('en-IN')}</Text>
+                  </View>
+
+                  <View style={styles.receiptDivider} />
+
+                  <View style={styles.receiptDetailRow}>
+                    <Text style={styles.receiptLabel}>Base Amount</Text>
+                    <Text style={styles.receiptValue}>₹{Math.round(baseAmt).toLocaleString('en-IN')}</Text>
+                  </View>
+                  <View style={styles.receiptDetailRow}>
+                    <Text style={styles.receiptLabel}>GST (3%)</Text>
+                    <Text style={styles.receiptValue}>₹{Math.round(taxAmt).toLocaleString('en-IN')}</Text>
+                  </View>
+
+                  <View style={styles.receiptDivider} />
+
+                  <View style={styles.receiptDetailRow}>
+                    <Text style={[styles.receiptLabel, { fontSize: 15, fontWeight: 'bold', color: '#1C1C1E' }]}>Total Paid</Text>
+                    <Text style={[styles.receiptValue, { fontSize: 16, fontWeight: 'bold', color: '#D4AF37' }]}>₹{Math.round(selectedTx.amount).toLocaleString('en-IN')}</Text>
+                  </View>
+                </ScrollView>
+              );
+            })()}
+
+            <TouchableOpacity 
+              style={styles.closeReceiptBtn} 
+              onPress={() => setSelectedTx(null)}
+            >
+              <Text style={styles.closeReceiptBtnText}>CLOSE RECEIPT</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1110,4 +1391,204 @@ const styles = StyleSheet.create({
     color: '#8A1F19',
     lineHeight: 16,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20
+  },
+  receiptModalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '80%',
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#D4AF37',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8
+  },
+  receiptHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5EA',
+    paddingBottom: 16
+  },
+  receiptHeaderTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+    marginTop: 6,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif'
+  },
+  receiptHeaderSubtitle: {
+    fontSize: 11,
+    color: '#8E8E93',
+    marginTop: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5
+  },
+  receiptContent: {
+    paddingVertical: 10
+  },
+  receiptDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 6,
+    alignItems: 'center'
+  },
+  receiptLabel: {
+    fontSize: 13,
+    color: 'rgba(28,28,30,0.5)'
+  },
+  receiptValue: {
+    fontSize: 13,
+    color: '#1C1C1E',
+    fontWeight: '500'
+  },
+  receiptDivider: {
+    height: 1,
+    backgroundColor: '#E5E5EA',
+    marginVertical: 12
+  },
+  closeReceiptBtn: {
+    backgroundColor: '#1C1C1E',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 20
+  },
+  closeReceiptBtnText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 13,
+    letterSpacing: 0.5
+  },
+  receiptLink: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 4, 
+    marginTop: 8, 
+    alignSelf: 'flex-start' 
+  },
+  receiptLinkText: { 
+    fontSize: 12, 
+    fontWeight: 'bold', 
+    color: '#D4AF37' 
+  },
 });
+
+const generateRazorpayHtml = (key: string, amount: number, currency: string, orderId: string, name: string, contact: string, email: string) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="preconnect" href="https://checkout.razorpay.com" crossorigin>
+      <link rel="dns-prefetch" href="https://checkout.razorpay.com">
+      <style>
+        body {
+          margin: 0;
+          padding: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          background-color: #ffffff;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .loader-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+        .loader {
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #D4AF37;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .message {
+          margin-top: 20px;
+          font-size: 15px;
+          font-weight: 500;
+          color: #1C1C1E;
+        }
+      </style>
+      <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    </head>
+    <body>
+      <div class="loader-container">
+        <div class="loader"></div>
+        <div class="message" id="msg">Initializing secure payment...</div>
+      </div>
+
+      <script>
+        const options = {
+          key: "${key}",
+          amount: ${amount},
+          currency: "${currency}",
+          name: "Brahmani Jewellers",
+          description: "Luxury Gold Investment",
+          order_id: "${orderId}",
+          handler: function (response) {
+            document.getElementById('msg').innerText = "Payment successful! Verifying transaction...";
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              status: 'success',
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature
+            }));
+          },
+          prefill: {
+            name: "${name}",
+            contact: "${contact}",
+            email: "${email}"
+          },
+          theme: {
+            color: "#1C1C1E"
+          },
+          modal: {
+            ondismiss: function () {
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                status: 'cancelled'
+              }));
+            }
+          }
+        };
+
+        window.onload = function() {
+          try {
+            const rzp = new Razorpay(options);
+            rzp.on('payment.failed', function (response){
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                status: 'failed',
+                error: response.error
+              }));
+            });
+            rzp.open();
+          } catch (err) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              status: 'error',
+              message: err.message
+            }));
+          }
+        };
+      </script>
+    </body>
+    </html>
+  `;
+};

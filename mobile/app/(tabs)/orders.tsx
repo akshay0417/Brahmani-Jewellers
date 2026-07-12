@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Image, Platform, Linking } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Image, Platform, Linking } from 'react-native';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -66,7 +67,7 @@ export default function OrdersScreen() {
   if (!user) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}><Text style={styles.title}>My Orders</Text></View>
+        <View style={[styles.header, { paddingTop: 12 }]}><Text style={styles.title}>My Orders</Text></View>
         <View style={styles.noUserContainer}>
           <Ionicons name="lock-closed" size={64} color="rgba(28, 28, 30, 0.2)" />
           <Text style={styles.noUserText}>Please login to view your orders</Text>
@@ -85,7 +86,7 @@ export default function OrdersScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: 12 }]}>
         <Text style={styles.title}>Order History</Text>
         <Text style={styles.subtitle}>Track your purchases, deliveries, and in-store pickups</Text>
       </View>
@@ -94,7 +95,7 @@ export default function OrdersScreen() {
         {orders.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons name="receipt-outline" size={64} color="rgba(28, 28, 30, 0.2)" />
-            <Text style={styles.emptyText}>You haven't placed any orders yet.</Text>
+            <Text style={styles.emptyText}>You haven&apos;t placed any orders yet.</Text>
           </View>
         ) : (
           orders.map((order, index) => (

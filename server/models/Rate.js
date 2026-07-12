@@ -16,6 +16,9 @@ const RateSchema = new mongoose.Schema({
   freeDeliveryKmLimit: { type: Number, default: 10 },
   deliveryChargePerKm: { type: Number, default: 15 },
   codEnabled: { type: Boolean, default: true },
+  investEnabled: { type: Boolean, default: false },
+  latestAppVersion: { type: String, default: '1.0.0' },
+  apkDownloadUrl: { type: String, default: 'https://brahmani-jewellers.vercel.app/download' },
   
   // Bank Details
   bankName: { type: String, default: 'HDFC Bank' },

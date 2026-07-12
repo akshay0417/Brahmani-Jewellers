@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, Image, Modal, Alert, Linking, TextInput, Animated, Platform } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, ScrollView, Image, Modal, Alert, Linking, TextInput, Animated, Platform } from 'react-native';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'expo-router';
@@ -40,6 +41,8 @@ export default function ProfileScreen() {
   const [silverInput, setSilverInput] = useState('');
   const [updatingRates, setUpdatingRates] = useState(false);
   const [visitorCount, setVisitorCount] = useState(0);
+  const [latestAppVersionInput, setLatestAppVersionInput] = useState('');
+  const [apkDownloadUrlInput, setApkDownloadUrlInput] = useState('');
 
   // Push Notification States
   const [notiTitle, setNotiTitle] = useState('');
@@ -79,6 +82,8 @@ export default function ProfileScreen() {
         setGold22kInput(String(response.data.gold22K || ''));
         setGold18kInput(String(response.data.gold18K || ''));
         setSilverInput(String(response.data.silver90 || response.data.silver || ''));
+        setLatestAppVersionInput(response.data.latestAppVersion || '1.0.0');
+        setApkDownloadUrlInput(response.data.apkDownloadUrl || 'https://brahmani-jewellers.vercel.app/download');
 
         setBankNameInput(response.data.bankName || 'HDFC Bank');
         setBankAccountNameInput(response.data.bankAccountName || 'Brahmani Jewellers');
@@ -166,7 +171,9 @@ export default function ProfileScreen() {
         bankAccountName: bankAccountNameInput,
         bankAccountNumber: bankAccountNumberInput,
         bankIfsc: bankIfscInput,
-        bankBranch: bankBranchInput
+        bankBranch: bankBranchInput,
+        latestAppVersion: latestAppVersionInput,
+        apkDownloadUrl: apkDownloadUrlInput
       }, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
@@ -240,6 +247,24 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleMobileSelfDelivery = async (orderId) => {
+    try {
+      await axios.put(`${API_URL}/admin/orders/${orderId}`, {
+        deliveryPartner: 'Store Staff', 
+        trackingId: 'Delivered by Shop Person', 
+        expectedDelivery: 'Today',
+        status: 'Shipped'
+      }, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      Alert.alert("Success 🎉", "Assigned to Store Staff for Delivery!");
+      fetchAdminOrders();
+    } catch (error: any) {
+      console.error('Error setting self delivery:', error);
+      Alert.alert("Error", error.response?.data?.message || "Failed to assign self-delivery.");
+    }
+  };
+
   const initiateWhatsApp = () => {
     const message = "Hello Brahmani Jewellers! I would like to consult about a custom design.";
     const url = `https://wa.me/917621967577?text=${encodeURIComponent(message)}`;
@@ -251,7 +276,7 @@ export default function ProfileScreen() {
   if (!user) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: 12 }]}>
           <Text style={styles.title}>My Profile</Text>
         </View>
         <View style={styles.guestContainer}>
@@ -269,7 +294,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: 12 }]}>
           <Text style={styles.title}>My Profile</Text>
         </View>
         
@@ -421,6 +446,29 @@ export default function ProfileScreen() {
                     />
                   </View>
 
+                  {/* APP UPDATE SETTINGS */}
+                  <Text style={[styles.adminSectionTitle, { marginTop: 16 }]}>App Update Settings</Text>
+                  <View style={{ marginBottom: 12 }}>
+                    <Text style={styles.adminInputLabel}>Latest App Version</Text>
+                    <TextInput 
+                      style={styles.adminTextInput}
+                      value={latestAppVersionInput}
+                      onChangeText={setLatestAppVersionInput}
+                      placeholder="e.g. 1.1.0"
+                      placeholderTextColor="rgba(61,43,31,0.3)"
+                    />
+                  </View>
+                  <View style={{ marginBottom: 12 }}>
+                    <Text style={styles.adminInputLabel}>APK Download Link</Text>
+                    <TextInput 
+                      style={styles.adminTextInput}
+                      value={apkDownloadUrlInput}
+                      onChangeText={setApkDownloadUrlInput}
+                      placeholder="e.g. https://..."
+                      placeholderTextColor="rgba(61,43,31,0.3)"
+                    />
+                  </View>
+
                   <TouchableOpacity 
                     style={[styles.adminBtn, updatingRates && { opacity: 0.7 }]}
                     onPress={handleUpdateRates}
@@ -489,12 +537,22 @@ export default function ProfileScreen() {
                         <Text style={styles.adminOrderPhone}>Phone: {order.user?.mobile || 'N/A'}</Text>
                         
                         <View style={styles.adminOrderFooter}>
-                          <TouchableOpacity 
-                            style={styles.adminStatusBadge}
-                            onPress={() => handleChangeOrderStatus(order._id)}
-                          >
-                            <Text style={styles.adminStatusText}>{order.status} ⚙️</Text>
-                          </TouchableOpacity>
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <TouchableOpacity 
+                              style={styles.adminStatusBadge}
+                              onPress={() => handleChangeOrderStatus(order._id)}
+                            >
+                              <Text style={styles.adminStatusText}>{order.status} ⚙️</Text>
+                            </TouchableOpacity>
+                            {['Pending', 'Processing'].includes(order.status) && (
+                              <TouchableOpacity 
+                                style={styles.selfDeliveryBadge}
+                                onPress={() => handleMobileSelfDelivery(order._id)}
+                              >
+                                <Text style={styles.selfDeliveryText}>Self Delivery 🚗</Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
                           <Text style={styles.adminOrderTotal}>₹{order.totalAmount.toLocaleString('en-IN')}</Text>
                         </View>
                       </View>
@@ -547,7 +605,7 @@ export default function ProfileScreen() {
             {loadingOrders ? (
               <ActivityIndicator size="small" color="#EBA938" />
             ) : orders.length === 0 ? (
-              <Text style={styles.noOrdersText}>You haven't placed any orders yet.</Text>
+              <Text style={styles.noOrdersText}>You haven&apos;t placed any orders yet.</Text>
             ) : (
               orders.map((order) => (
                 <View key={order._id} style={styles.orderItem}>
@@ -816,5 +874,7 @@ const styles = StyleSheet.create({
   adminOrderFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, borderTopWidth: 1, borderTopColor: '#E5E5EA', paddingTop: 8 },
   adminStatusBadge: { backgroundColor: '#1C1C1E', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
   adminStatusText: { color: '#FFFFFF', fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase' },
-  adminOrderTotal: { fontSize: 14, fontWeight: 'bold', color: '#1C1C1E' }
+  adminOrderTotal: { fontSize: 14, fontWeight: 'bold', color: '#1C1C1E' },
+  selfDeliveryBadge: { backgroundColor: '#3D2B1F', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, marginLeft: 8 },
+  selfDeliveryText: { color: '#EBA938', fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase' }
 });

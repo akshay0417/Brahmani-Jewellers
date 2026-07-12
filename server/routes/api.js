@@ -1139,7 +1139,7 @@ router.put('/users/:id/approve', auth, isAdmin, async (req, res) => {
 router.get('/rates', async (req, res) => {
   try {
     const rate = await Rate.findOne().sort({ lastUpdated: -1 });
-    res.json(rate || { gold22K: 0, gold18K: 0, silver90: 0, isManual: true, freeDeliveryKmLimit: 10, deliveryChargePerKm: 15, codEnabled: true });
+    res.json(rate || { gold22K: 0, gold18K: 0, silver90: 0, isManual: true, freeDeliveryKmLimit: 10, deliveryChargePerKm: 15, codEnabled: true, investEnabled: false, latestAppVersion: '1.0.0', apkDownloadUrl: 'https://brahmani-jewellers.vercel.app/download' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -1147,7 +1147,7 @@ router.get('/rates', async (req, res) => {
 
 // Update Rates (Admin only)
 router.post('/rates', auth, isAdmin, async (req, res) => {
-  const { isManual, goldImpFine, silverFine, manualGold24K, manualGold22K, manualGold18K, manualSilver90, freeDeliveryKmLimit, deliveryChargePerKm, bankName, bankAccountName, bankAccountNumber, bankIfsc, bankBranch, codEnabled } = req.body;
+  const { isManual, goldImpFine, silverFine, manualGold24K, manualGold22K, manualGold18K, manualSilver90, freeDeliveryKmLimit, deliveryChargePerKm, bankName, bankAccountName, bankAccountNumber, bankIfsc, bankBranch, codEnabled, investEnabled, latestAppVersion, apkDownloadUrl } = req.body;
   try {
     let rate = await Rate.findOne();
     if (!rate) {
@@ -1158,6 +1158,9 @@ router.post('/rates', auth, isAdmin, async (req, res) => {
     if (freeDeliveryKmLimit !== undefined) rate.freeDeliveryKmLimit = freeDeliveryKmLimit;
     if (deliveryChargePerKm !== undefined) rate.deliveryChargePerKm = deliveryChargePerKm;
     if (codEnabled !== undefined) rate.codEnabled = codEnabled;
+    if (investEnabled !== undefined) rate.investEnabled = investEnabled;
+    if (latestAppVersion !== undefined) rate.latestAppVersion = latestAppVersion;
+    if (apkDownloadUrl !== undefined) rate.apkDownloadUrl = apkDownloadUrl;
     
     // Update Bank Details if provided
     if (bankName !== undefined) rate.bankName = bankName;
@@ -1168,8 +1171,8 @@ router.post('/rates', auth, isAdmin, async (req, res) => {
 
     if (rate.isManual) {
       if (manualGold24K !== undefined) rate.gold24K = manualGold24K;
-      if (manualGold22K !== undefined) rate.gold22K = manualGold22K;
-      if (manualGold18K !== undefined) rate.gold18K = manualGold18K;
+      rate.gold22K = (manualGold22K && Number(manualGold22K) > 0) ? Number(manualGold22K) : Math.round(rate.gold24K * 0.916);
+      rate.gold18K = (manualGold18K && Number(manualGold18K) > 0) ? Number(manualGold18K) : Math.round(rate.gold24K * 0.78);
       if (manualSilver90 !== undefined) rate.silver90 = manualSilver90;
     } else {
       if (goldImpFine !== undefined) rate.goldImpFine = goldImpFine;
@@ -1889,6 +1892,14 @@ router.get('/cart', auth, async (req, res) => {
       cart = new Cart({ user: req.user, items: [] });
       await cart.save();
     }
+    
+    // Filter out items with deleted products
+    const originalLength = cart.items.length;
+    cart.items = cart.items.filter(item => item.product !== null);
+    if (cart.items.length !== originalLength) {
+      await Cart.updateOne({ _id: cart._id }, { items: cart.items });
+    }
+    
     res.json(cart);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -1898,13 +1909,26 @@ router.get('/cart', auth, async (req, res) => {
 // Add Item to Cart
 router.post('/cart/add', auth, async (req, res) => {
   const { productId, quantity = 1 } = req.body;
+  
+  if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+    return res.status(400).json({ message: 'Invalid product ID' });
+  }
+
   try {
+    const productExists = await Gallery.findById(productId);
+    if (!productExists) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
     let cart = await Cart.findOne({ user: req.user });
     if (!cart) {
       cart = new Cart({ user: req.user, items: [] });
     }
 
-    const itemIndex = cart.items.findIndex(p => p.product.toString() === productId);
+    // Clean existing invalid/null products in the cart
+    cart.items = cart.items.filter(p => p.product !== null && p.product !== undefined);
+
+    const itemIndex = cart.items.findIndex(p => p.product && p.product.toString() === productId);
     if (itemIndex > -1) {
       cart.items[itemIndex].quantity += quantity;
     } else {
@@ -1912,7 +1936,15 @@ router.post('/cart/add', auth, async (req, res) => {
     }
 
     await cart.save();
+    
+    // Return populated cart, filtering out any deleted products
     const updatedCart = await Cart.findOne({ user: req.user }).populate('items.product');
+    const originalLength = updatedCart.items.length;
+    updatedCart.items = updatedCart.items.filter(item => item.product !== null);
+    if (updatedCart.items.length !== originalLength) {
+      await Cart.updateOne({ _id: updatedCart._id }, { items: updatedCart.items });
+    }
+    
     res.json(updatedCart);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -1922,11 +1954,19 @@ router.post('/cart/add', auth, async (req, res) => {
 // Update Item Quantity
 router.put('/cart/update', auth, async (req, res) => {
   const { productId, quantity } = req.body;
+  
+  if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+    return res.status(400).json({ message: 'Invalid product ID' });
+  }
+
   try {
     const cart = await Cart.findOne({ user: req.user });
     if (!cart) return res.status(404).json({ message: 'Cart not found' });
 
-    const itemIndex = cart.items.findIndex(p => p.product.toString() === productId);
+    // Clean existing invalid/null products
+    cart.items = cart.items.filter(p => p.product !== null && p.product !== undefined);
+
+    const itemIndex = cart.items.findIndex(p => p.product && p.product.toString() === productId);
     if (itemIndex > -1) {
       if (quantity <= 0) {
         cart.items.splice(itemIndex, 1);
@@ -1935,7 +1975,14 @@ router.put('/cart/update', auth, async (req, res) => {
       }
       await cart.save();
     }
+    
     const updatedCart = await Cart.findOne({ user: req.user }).populate('items.product');
+    const originalLength = updatedCart.items.length;
+    updatedCart.items = updatedCart.items.filter(item => item.product !== null);
+    if (updatedCart.items.length !== originalLength) {
+      await Cart.updateOne({ _id: updatedCart._id }, { items: updatedCart.items });
+    }
+    
     res.json(updatedCart);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -1944,14 +1991,27 @@ router.put('/cart/update', auth, async (req, res) => {
 
 // Remove Item from Cart
 router.delete('/cart/remove/:productId', auth, async (req, res) => {
+  const { productId } = req.params;
+  
+  if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+    return res.status(400).json({ message: 'Invalid product ID' });
+  }
+
   try {
     const cart = await Cart.findOne({ user: req.user });
     if (!cart) return res.status(404).json({ message: 'Cart not found' });
 
-    cart.items = cart.items.filter(p => p.product.toString() !== req.params.productId);
+    // Filter out item and any null/invalid products
+    cart.items = cart.items.filter(p => p.product && p.product.toString() !== productId);
     await cart.save();
     
     const updatedCart = await Cart.findOne({ user: req.user }).populate('items.product');
+    const originalLength = updatedCart.items.length;
+    updatedCart.items = updatedCart.items.filter(item => item.product !== null);
+    if (updatedCart.items.length !== originalLength) {
+      await Cart.updateOne({ _id: updatedCart._id }, { items: updatedCart.items });
+    }
+    
     res.json(updatedCart);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -2689,6 +2749,71 @@ router.post('/investments/redeem', auth, async (req, res) => {
   }
 });
 
+// Sell accumulated gold/silver balance back to the showroom
+router.post('/investments/sell', auth, async (req, res) => {
+  const { metal, grams, ratePerGram, paymentMethod, bankDetails } = req.body;
+  try {
+    const userObj = await User.findById(req.user);
+    if (!userObj || userObj.kycStatus !== 'approved') {
+      return res.status(403).json({ message: 'KYC approval is required to sell digital gold.' });
+    }
+
+    if (!metal || !grams || grams <= 0 || !ratePerGram || ratePerGram <= 0 || !paymentMethod || !bankDetails) {
+      return res.status(400).json({ message: 'Invalid sell parameters or bank details missing.' });
+    }
+
+    const m = metal.toUpperCase();
+    if (m !== 'GOLD' && m !== 'SILVER') {
+      return res.status(400).json({ message: 'Metal must be GOLD or SILVER' });
+    }
+
+    let inv = await Investment.findOne({ user: req.user });
+    if (!inv) return res.status(404).json({ message: 'Investment profile not found' });
+
+    if (m === 'GOLD' && inv.goldGrams < grams) {
+      return res.status(400).json({ message: 'Insufficient gold balance in vault' });
+    }
+    if (m === 'SILVER' && inv.silverGrams < grams) {
+      return res.status(400).json({ message: 'Insufficient silver balance in vault' });
+    }
+
+    // Deduct grams immediately to lock them during pending processing
+    if (m === 'GOLD') {
+      inv.goldGrams -= grams;
+    } else {
+      inv.silverGrams -= grams;
+    }
+
+    const amount = grams * ratePerGram; // Payout value (no GST is added on sellback)
+
+    // Store details inside paymentReference
+    let refStr = '';
+    if (paymentMethod === 'UPI') {
+      refStr = `UPI ID: ${bankDetails.upiId}`;
+    } else {
+      refStr = `A/C: ${bankDetails.accountNumber}, IFSC: ${bankDetails.ifscCode}, Holder: ${bankDetails.accountHolder}, Bank: ${bankDetails.bankName}`;
+    }
+
+    inv.transactions.push({
+      type: 'SELL',
+      metal: m,
+      grams,
+      amount,
+      ratePerGram,
+      gstAmount: 0,
+      paymentMethod,
+      paymentReference: refStr,
+      status: 'Pending'
+    });
+
+    await inv.save();
+
+    res.status(201).json({ message: 'Sell request submitted successfully! Funds will be transferred to your account after verification.', balance: inv });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Admin endpoint to adjust client balances manually (offline resell / adjustment)
 router.post('/admin/investments/adjust', auth, isAdmin, async (req, res) => {
   const { userId, metal, grams, amount, type, ratePerGram } = req.body;
@@ -2776,6 +2901,12 @@ router.put('/admin/investments/transactions/:txId', auth, isAdmin, async (req, r
 
     if (status === 'Completed') {
       if (tx.type === 'BUY') {
+        if (tx.metal === 'GOLD') inv.goldGrams += tx.grams;
+        else inv.silverGrams += tx.grams;
+      }
+    } else if (status === 'Failed') {
+      // Refund gold/silver grams back to vault if SELL or REDEEM request is rejected/failed
+      if (tx.type === 'SELL' || tx.type === 'REDEEM') {
         if (tx.metal === 'GOLD') inv.goldGrams += tx.grams;
         else inv.silverGrams += tx.grams;
       }

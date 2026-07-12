@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, Image } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Image } from 'react-native';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AboutScreen() {
   return (
@@ -17,7 +18,7 @@ export default function AboutScreen() {
           </View>
           <Text style={styles.desc}>
             Welcome to Brahmani Jewellers, your trusted destination for exquisite jewellery. 
-            We specialize in crafting timeless pieces that celebrate life's most precious moments.
+            We specialize in crafting timeless pieces that celebrate life&apos;s most precious moments.
           </Text>
           <Text style={styles.desc}>
             Our collection features 100% pure hallmarked gold and silver ornaments, ranging from traditional designs to modern everyday wear.

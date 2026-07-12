@@ -2,15 +2,22 @@ import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, Image, Platform, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, Animated, Image, Platform, TouchableOpacity, ActivityIndicator, Alert, Linking } from 'react-native';
 import { AuthProvider } from '../context/AuthContext';
 import { Feather } from '@expo/vector-icons';
 import * as Updates from 'expo-updates';
+import axios from 'axios';
+
+const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
+const APP_VERSION = '1.0.0';
 
 export default function RootLayout() {
   const [showSplash, setShowSplash] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [updateRequired, setUpdateRequired] = useState(false);
+  const [latestVersion, setLatestVersion] = useState('');
+  const [apkDownloadUrl, setApkDownloadUrl] = useState('https://brahmani-jewellers.vercel.app/download');
   const fadeAnim = new Animated.Value(1);
 
   const checkConnection = async () => {
@@ -62,7 +69,38 @@ export default function RootLayout() {
       console.log("Error checking for EAS updates:", err);
     }
   };
-
+  const checkAppVersion = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/rates`);
+      if (response.data && response.data.latestAppVersion) {
+        const remoteVersion = response.data.latestAppVersion;
+        if (remoteVersion !== APP_VERSION) {
+          const localParts = APP_VERSION.split('.').map(Number);
+          const remoteParts = remoteVersion.split('.').map(Number);
+          
+          let isNewer = false;
+          for (let i = 0; i < Math.max(localParts.length, remoteParts.length); i++) {
+            const localVal = localParts[i] || 0;
+            const remoteVal = remoteParts[i] || 0;
+            if (remoteVal > localVal) {
+              isNewer = true;
+              break;
+            } else if (localVal > remoteVal) {
+              break;
+            }
+          }
+          
+          if (isNewer) {
+            setApkDownloadUrl(response.data.apkDownloadUrl || 'https://brahmani-jewellers.vercel.app/download');
+            setLatestVersion(remoteVersion);
+            setUpdateRequired(true);
+          }
+        }
+      }
+    } catch (err) {
+      console.log("Error checking app version update:", err);
+    }
+  };
   useEffect(() => {
     // Show splash screen for 2.5 seconds, then fade out
     const splashTimeout = setTimeout(() => {
@@ -80,6 +118,9 @@ export default function RootLayout() {
 
     // Check for OTA Updates
     checkUpdates();
+
+    // Check for App Version Updates (Direct APK)
+    checkAppVersion();
 
     // Periodically verify network connection every 7 seconds
     const interval = setInterval(() => {
@@ -107,6 +148,27 @@ export default function RootLayout() {
         <Text style={styles.splashSubtitle}>JEWELLERS</Text>
         <StatusBar style="dark" />
       </Animated.View>
+    );
+  }
+
+  if (updateRequired) {
+    return (
+      <View style={styles.updateContainer}>
+        <Image source={require('../assets/images/logo.png')} style={styles.updateLogo} />
+        <Feather name="download-cloud" size={64} color="#D4AF37" style={{ marginBottom: 16 }} />
+        <Text style={styles.updateTitle}>Update Required! 🚀</Text>
+        <Text style={styles.updateSubtitle}>
+          A new version of the app (v{latestVersion}) is available. Please update to continue using the application.
+        </Text>
+        
+        <TouchableOpacity 
+          onPress={() => Linking.openURL(apkDownloadUrl)} 
+          style={styles.updateButton}
+        >
+          <Text style={styles.updateButtonText}>UPDATE NOW</Text>
+        </TouchableOpacity>
+        <StatusBar style="dark" />
+      </View>
     );
   }
 
@@ -143,6 +205,7 @@ export default function RootLayout() {
           <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal' }} />
           <Stack.Screen name="register" options={{ headerShown: false, presentation: 'modal' }} />
           <Stack.Screen name="checkout" options={{ headerShown: false, presentation: 'card' }} />
+          <Stack.Screen name="product-details" options={{ headerShown: false, presentation: 'card' }} />
         </Stack>
         <StatusBar style="dark" />
       </ThemeProvider>
@@ -215,6 +278,54 @@ const styles = StyleSheet.create({
     color: '#1C1C1E',
     fontWeight: 'bold',
     fontSize: 14,
+    letterSpacing: 2,
+  },
+  updateContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    gap: 8,
+  },
+  updateLogo: {
+    width: 90,
+    height: 90,
+    resizeMode: 'contain',
+    marginBottom: 20,
+  },
+  updateTitle: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+    marginBottom: 10,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
+  updateSubtitle: {
+    fontSize: 15,
+    color: '#666666',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 28,
+    paddingHorizontal: 10,
+  },
+  updateButton: {
+    backgroundColor: '#D4AF37',
+    paddingVertical: 15,
+    paddingHorizontal: 40,
+    borderRadius: 8,
+    minWidth: 200,
+    alignItems: 'center',
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  updateButtonText: {
+    color: '#1C1C1E',
+    fontWeight: 'bold',
+    fontSize: 15,
     letterSpacing: 2,
   }
 });

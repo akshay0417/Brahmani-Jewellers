@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, Image, FlatList, Modal, Pressable, Alert, Linking, TextInput, Animated, Platform } from 'react-native';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, ScrollView, Image, FlatList, Modal, Pressable, Alert, Linking, TextInput, Animated, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence } from 'react-native-reanimated';
 import * as Notifications from 'expo-notifications';
@@ -144,14 +145,25 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-    fetchRates();
-    fetchOffers();
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 650,
       useNativeDriver: true,
     }).start();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchRates();
+      fetchOffers();
+      if (user && user.token) {
+        fetchOrders();
+        refreshCartCount();
+      } else {
+        setOrders([]);
+      }
+    }, [user])
+  );
 
   const registerForNotifications = async () => {
     try {
@@ -183,12 +195,6 @@ export default function HomeScreen() {
 
   useEffect(() => {
     registerForNotifications();
-    if (user && user.token) {
-      fetchOrders();
-      refreshCartCount();
-    } else {
-      setOrders([]);
-    }
   }, [user]);
 
   const fetchRates = async () => {
@@ -260,7 +266,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Modern Header */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
@@ -445,7 +451,7 @@ export default function HomeScreen() {
           
           {/* Drawer Content */}
           <View style={styles.drawerContent}>
-            <SafeAreaView style={styles.drawerSafeArea}>
+            <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
               <View style={styles.drawerHeader}>
                 <View style={styles.drawerBrandRow}>
                   <Image source={require('../../assets/images/logo.png')} style={styles.drawerLogo} />
@@ -634,7 +640,7 @@ export default function HomeScreen() {
                 </View>
 
               </ScrollView>
-            </SafeAreaView>
+            </View>
           </View>
         </View>
       </Modal>

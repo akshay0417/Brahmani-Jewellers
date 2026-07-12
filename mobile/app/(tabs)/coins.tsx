@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import Reanimated, { FadeInDown } from 'react-native-reanimated';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 
 const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
 
 export default function CoinsScreen() {
+  const router = useRouter();
   const { user, refreshCartCount } = useAuth();
   const [coins, setCoins] = useState([
     { _id: 'c1', name: '24K Gold Coin (1 Gram)', category: 'gold', weight: '1', purity: '24K', imageUrl: 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80' },
@@ -18,9 +21,11 @@ export default function CoinsScreen() {
   const [loading, setLoading] = useState(false);
   const [metalFilter, setMetalFilter] = useState('all'); // 'all' | 'gold' | 'silver'
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [])
+  );
 
   const fetchData = async () => {
     try {
@@ -88,6 +93,7 @@ export default function CoinsScreen() {
   const addToCart = async (productId) => {
     if (!user || !user.token) {
       Alert.alert("Login Required", "Please login to buy gold & silver coins");
+      router.push('/login');
       return;
     }
 
@@ -97,8 +103,13 @@ export default function CoinsScreen() {
       });
       Alert.alert("Success", "Coin added to cart successfully");
       refreshCartCount();
-    } catch (error) {
-      Alert.alert("Error", "Could not add coin to cart");
+    } catch (error: any) {
+      if (error.response && error.response.status === 401) {
+        Alert.alert("Session Expired", "Your session has expired. Please login again.");
+        router.push('/login');
+      } else {
+        Alert.alert("Error", "Could not add coin to cart");
+      }
     }
   };
 
@@ -145,7 +156,7 @@ export default function CoinsScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {filteredCoins.length === 0 ? (
           <View style={styles.noResultsContainer}>
             <Ionicons name="gift-outline" size={48} color="rgba(28, 28, 30, 0.2)" />

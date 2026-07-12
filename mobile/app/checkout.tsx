@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Alert, Platform, KeyboardAvoidingView } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Alert, Platform, KeyboardAvoidingView, Modal } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { WebView } from 'react-native-webview';
 import { useAuth } from '../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import axios from 'axios';
 import Reanimated, { FadeInDown } from 'react-native-reanimated';
 
@@ -14,6 +16,44 @@ export default function CheckoutScreen() {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [placingOrder, setPlacingOrder] = useState(false);
+
+  // Razorpay WebView states
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentHtml, setPaymentHtml] = useState('');
+  const [pendingOrderInfo, setPendingOrderInfo] = useState<any>(null);
+
+  const handleWebViewMessage = async (event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      setShowPaymentModal(false);
+      
+      if (data.status === 'success') {
+        setPlacingOrder(true);
+        const { orderData, randomPickupCode } = pendingOrderInfo;
+        
+        await axios.post(`${API_URL}/orders/verify-payment`, {
+          orderData,
+          razorpay_payment_id: data.razorpay_payment_id,
+          razorpay_order_id: data.razorpay_order_id,
+          razorpay_signature: data.razorpay_signature
+        }, {
+          headers: { Authorization: `Bearer ${user.token}` }
+        });
+        
+        showOrderSuccess(randomPickupCode);
+      } else if (data.status === 'cancelled') {
+        Alert.alert("Payment Cancelled", "The payment process was cancelled.");
+        setPlacingOrder(false);
+      } else {
+        Alert.alert("Payment Failed", data.error?.description || data.message || "Payment transaction failed.");
+        setPlacingOrder(false);
+      }
+    } catch (err: any) {
+      console.error(err);
+      Alert.alert("Verification Error", "Failed to parse payment details or verify payment.");
+      setPlacingOrder(false);
+    }
+  };
 
   // Checkout Form State
   const [deliveryMode, setDeliveryMode] = useState('Delivery'); // 'Delivery' | 'Pickup'
@@ -35,14 +75,16 @@ export default function CheckoutScreen() {
   const [couponError, setCouponError] = useState('');
   const [couponSuccess, setCouponSuccess] = useState('');
 
-  useEffect(() => {
-    if (user) {
-      fetchCart();
-      fetchDeliveryRates();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        fetchCart();
+        fetchDeliveryRates();
+      } else {
+        setLoading(false);
+      }
+    }, [user])
+  );
 
   const fetchDeliveryRates = async () => {
     try {
@@ -109,9 +151,9 @@ export default function CheckoutScreen() {
     return calculateDistance(pincode);
   };
 
-  const getSubtotal = () => {
+  const getItemsBaseTotal = () => {
     if (!cart || !cart.items) return 0;
-    return cart.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    return cart.items.reduce((sum, item) => sum + (item.product ? (Math.round(item.product.price / 1.03) * item.quantity) : 0), 0);
   };
 
   const getShippingCharge = () => {
@@ -125,18 +167,25 @@ export default function CheckoutScreen() {
   };
 
   const getGST = () => {
-    const sub = getSubtotal();
-    // 3% GST is already included in prices, but we can display the component
-    return Math.round(sub * (3 / 103));
+    const baseTotal = getItemsBaseTotal();
+    return Math.round(baseTotal * 0.03);
   };
 
   const getDiscountAmount = () => {
-    const sub = getSubtotal();
-    return Math.round((sub * discountPercent) / 100);
+    const baseTotal = getItemsBaseTotal();
+    return Math.round((baseTotal * discountPercent) / 100);
+  };
+
+  const getGatewayCharge = () => {
+    if (paymentMethod === 'Razorpay') {
+      const subtotal = getItemsBaseTotal() + getGST() + getShippingCharge() - getDiscountAmount();
+      return Math.round(subtotal * 0.02); // 2% Razorpay Gateway Fee
+    }
+    return 0;
   };
 
   const getGrandTotal = () => {
-    return getSubtotal() + getShippingCharge() - getDiscountAmount();
+    return getItemsBaseTotal() + getGST() + getShippingCharge() - getDiscountAmount() + getGatewayCharge();
   };
 
   const handleApplyCoupon = async () => {
@@ -193,11 +242,13 @@ export default function CheckoutScreen() {
     try {
       setPlacingOrder(true);
       
-      const orderItems = cart.items.map(item => ({
-        product: item.product._id,
-        quantity: item.quantity,
-        priceAtPurchase: item.product.price
-      }));
+      const orderItems = cart.items
+        .filter(item => item.product)
+        .map(item => ({
+          product: item.product._id,
+          quantity: item.quantity,
+          priceAtPurchase: item.product.price
+        }));
 
       const randomPickupCode = Math.floor(1000 + Math.random() * 9000).toString(); // Generate random pickup pin
 
@@ -282,12 +333,23 @@ export default function CheckoutScreen() {
             ]
           );
         } else {
-          // Live Razorpay mode: warn the user that real payments are supported via website.
-          Alert.alert(
-            "Online Payment via App",
-            "Real-time online payment is currently supported through our website checkout. Please use UPI/Bank Transfer or checkout from your web browser to complete live card payments.",
-            [{ text: "OK" }]
+          // Live Razorpay mode: Open Razorpay WebView modal
+          const rzpKey = rzpOrderRes.data.key || 'rzp_test_mockKeyId123';
+          const rzpAmount = rzpOrderRes.data.amount;
+          const rzpCurrency = rzpOrderRes.data.currency || 'INR';
+
+          setPendingOrderInfo({ orderData, randomPickupCode });
+          const html = generateRazorpayHtml(
+            rzpKey,
+            rzpAmount,
+            rzpCurrency,
+            rzpOrderId,
+            name,
+            mobile,
+            user?.email || ''
           );
+          setPaymentHtml(html);
+          setShowPaymentModal(true);
         }
       }
     } catch (error: any) {
@@ -330,10 +392,6 @@ export default function CheckoutScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
@@ -343,7 +401,7 @@ export default function CheckoutScreen() {
           <View style={{ width: 24 }} />
         </View>
 
-        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         
         {/* Toggle mode */}
         <View style={styles.toggleContainer}>
@@ -506,7 +564,7 @@ export default function CheckoutScreen() {
           <Text style={styles.sectionTitle}>Pricing Summary</Text>
           <View style={styles.priceRow}>
             <Text style={styles.priceLabel}>Items Subtotal</Text>
-            <Text style={styles.priceVal}>₹{getSubtotal().toLocaleString('en-IN')}</Text>
+            <Text style={styles.priceVal}>₹{getItemsBaseTotal().toLocaleString('en-IN')}</Text>
           </View>
           {discountPercent > 0 && (
             <View style={styles.priceRow}>
@@ -519,9 +577,15 @@ export default function CheckoutScreen() {
             <Text style={styles.priceVal}>{getShippingCharge() === 0 ? 'FREE' : `₹${getShippingCharge()}`}</Text>
           </View>
           <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>GST (3% included)</Text>
+            <Text style={styles.priceLabel}>GST (3%)</Text>
             <Text style={styles.priceVal}>₹{getGST().toLocaleString('en-IN')}</Text>
           </View>
+          {paymentMethod === 'Razorpay' && (
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Gateway Charges (2%)</Text>
+              <Text style={styles.priceVal}>₹{getGatewayCharge().toLocaleString('en-IN')}</Text>
+            </View>
+          )}
           <View style={styles.divider} />
           <View style={styles.priceRow}>
             <Text style={styles.grandTotalLabel}>Grand Total</Text>
@@ -548,7 +612,46 @@ export default function CheckoutScreen() {
         </TouchableOpacity>
 
       </ScrollView>
-      </KeyboardAvoidingView>
+
+      {/* Razorpay WebView Modal */}
+      <Modal
+        visible={showPaymentModal}
+        animationType="slide"
+        onRequestClose={() => {
+          setShowPaymentModal(false);
+          setPlacingOrder(false);
+          Alert.alert("Payment Cancelled", "Payment process was cancelled.");
+        }}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+          <View style={{ height: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', paddingHorizontal: 16 }}>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1C1C1E' }}>Secure Payment Gateway</Text>
+            <TouchableOpacity 
+              onPress={() => {
+                setShowPaymentModal(false);
+                setPlacingOrder(false);
+                Alert.alert("Payment Cancelled", "Payment process was cancelled.");
+              }}
+              style={{ padding: 4 }}
+            >
+              <Ionicons name="close" size={24} color="#1C1C1E" />
+            </TouchableOpacity>
+          </View>
+          <WebView
+            originWhitelist={['*']}
+            source={{ html: paymentHtml }}
+            onMessage={handleWebViewMessage}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            cacheEnabled={true}
+            cacheMode="LOAD_CACHE_ELSE_NETWORK"
+            androidHardwareAccelerationDisabled={false}
+            scalesPageToFit={true}
+            style={{ flex: 1 }}
+          />
+        </SafeAreaView>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -645,3 +748,112 @@ const styles = StyleSheet.create({
     fontWeight: 'bold'
   }
 });
+
+const generateRazorpayHtml = (key: string, amount: number, currency: string, orderId: string, name: string, contact: string, email: string) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="preconnect" href="https://checkout.razorpay.com" crossorigin>
+      <link rel="dns-prefetch" href="https://checkout.razorpay.com">
+      <style>
+        body {
+          margin: 0;
+          padding: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          background-color: #ffffff;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .loader-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+        .loader {
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #D4AF37;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .message {
+          margin-top: 20px;
+          font-size: 15px;
+          font-weight: 500;
+          color: #1C1C1E;
+        }
+      </style>
+      <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    </head>
+    <body>
+      <div class="loader-container">
+        <div class="loader"></div>
+        <div class="message" id="msg">Initializing secure payment...</div>
+      </div>
+
+      <script>
+        const options = {
+          key: "${key}",
+          amount: ${amount},
+          currency: "${currency}",
+          name: "Brahmani Jewellers",
+          description: "Luxury Jewellery Purchase",
+          order_id: "${orderId}",
+          handler: function (response) {
+            document.getElementById('msg').innerText = "Payment successful! Verifying transaction...";
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              status: 'success',
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature
+            }));
+          },
+          prefill: {
+            name: "${name}",
+            contact: "${contact}",
+            email: "${email}"
+          },
+          theme: {
+            color: "#1C1C1E"
+          },
+          modal: {
+            ondismiss: function () {
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                status: 'cancelled'
+              }));
+            }
+          }
+        };
+
+        window.onload = function() {
+          try {
+            const rzp = new Razorpay(options);
+            rzp.on('payment.failed', function (response){
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                status: 'failed',
+                error: response.error
+              }));
+            });
+            rzp.open();
+          } catch (err) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              status: 'error',
+              message: err.message
+            }));
+          }
+        };
+      </script>
+    </body>
+    </html>
+  `;
+};

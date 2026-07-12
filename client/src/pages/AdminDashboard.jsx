@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut, Tag, Upload, Trash2, TrendingUp, Image as ImageIcon, CheckCircle, AlertCircle, User, MessageSquare, Lock, X, Mail, Star, Menu, ShoppingBag, Gift, Home } from 'lucide-react';
 
 const AdminDashboard = () => {
-  const [rates, setRates] = useState({ isManual: true, goldImpFine: '', silverFine: '', manualGold24K: '', manualGold22K: '', manualGold18K: '', manualSilver90: '', freeDeliveryKmLimit: '', deliveryChargePerKm: '', codEnabled: true });
+  const [rates, setRates] = useState({ isManual: true, goldImpFine: '', silverFine: '', manualGold24K: '', manualGold22K: '', manualGold18K: '', manualSilver90: '', freeDeliveryKmLimit: '', deliveryChargePerKm: '', codEnabled: true, latestAppVersion: '', apkDownloadUrl: '' });
   const [gallery, setGallery] = useState([]);
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -116,7 +116,9 @@ const AdminDashboard = () => {
         manualSilver90: rateRes.data.silver90 || '',
         freeDeliveryKmLimit: rateRes.data.freeDeliveryKmLimit ?? 10,
         deliveryChargePerKm: rateRes.data.deliveryChargePerKm ?? 15,
-        codEnabled: rateRes.data.codEnabled ?? true
+        codEnabled: rateRes.data.codEnabled ?? true,
+        latestAppVersion: rateRes.data.latestAppVersion || '',
+        apkDownloadUrl: rateRes.data.apkDownloadUrl || ''
       });
       
       if (galleryRes.data) setGallery(galleryRes.data);
@@ -282,6 +284,26 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error(err);
       setStatus({ type: 'error', message: err.response?.data?.message || 'Failed to update tracking details.' });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    }
+  };
+
+  const handleSelfDelivery = async (orderId) => {
+    setLoading(true);
+    try {
+      await api.put(`/admin/orders/${orderId}`, { 
+        deliveryPartner: 'Store Staff', 
+        trackingId: 'Delivered by Shop Person', 
+        expectedDelivery: 'Today',
+        status: 'Shipped'
+      }, config);
+      setStatus({ type: 'success', message: 'Assigned to Store Staff for Delivery!' });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Failed to assign self-delivery.' });
     } finally {
       setLoading(false);
       setTimeout(() => setStatus({ type: '', message: '' }), 3000);
@@ -868,6 +890,32 @@ const AdminDashboard = () => {
                         Enable Cash on Delivery (COD) Payment
                       </label>
                     </div>
+ 
+                    <div className="space-y-4 bg-cream p-4 rounded border border-ochre/20">
+                      <p className="text-xs text-coffee/70 font-bold mb-2">APP UPDATE SETTINGS (FOR DIRECT APK DISTRIBUTIONS)</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-xs text-coffee/70 uppercase tracking-widest">Latest App Version</label>
+                          <input
+                            type="text"
+                            value={rates.latestAppVersion}
+                            onChange={(e) => setRates({ ...rates, latestAppVersion: e.target.value })}
+                            className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
+                            placeholder="e.g. 1.1.0"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs text-coffee/70 uppercase tracking-widest">APK Download Link</label>
+                          <input
+                            type="text"
+                            value={rates.apkDownloadUrl}
+                            onChange={(e) => setRates({ ...rates, apkDownloadUrl: e.target.value })}
+                            className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
+                            placeholder="e.g. https://..."
+                          />
+                        </div>
+                      </div>
+                    </div>
 
                     <button disabled={loading} className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 transition-all rounded-sm">
                       {loading ? 'Processing...' : 'Save Market Prices'}
@@ -1383,13 +1431,22 @@ const AdminDashboard = () => {
                                 )}
                               </div>
                             ) : (
-                              <button
-                                onClick={() => handleShipDelhivery(order._id)}
-                                disabled={loading}
-                                className="mt-1 px-3 py-1 bg-ochre text-cream text-[10px] font-bold uppercase tracking-wider hover:bg-ochre/90 transition-all rounded-sm disabled:opacity-50 shadow-sm"
-                              >
-                                Ship Delhivery
-                              </button>
+                              <div className="flex flex-col gap-1.5 mt-1">
+                                <button
+                                  onClick={() => handleShipDelhivery(order._id)}
+                                  disabled={loading}
+                                  className="w-full px-3 py-1 bg-ochre text-cream text-[10px] font-bold uppercase tracking-wider hover:bg-ochre/90 transition-all rounded-sm disabled:opacity-50 shadow-sm text-center"
+                                >
+                                  Ship Delhivery
+                                </button>
+                                <button
+                                  onClick={() => handleSelfDelivery(order._id)}
+                                  disabled={loading}
+                                  className="w-full px-3 py-1 bg-coffee text-cream text-[10px] font-bold uppercase tracking-wider hover:bg-coffee/90 transition-all rounded-sm disabled:opacity-50 shadow-sm text-center"
+                                >
+                                  Self Delivery 🚗
+                                </button>
+                              </div>
                             )}
 
                             {/* Manual Tracking inputs */}

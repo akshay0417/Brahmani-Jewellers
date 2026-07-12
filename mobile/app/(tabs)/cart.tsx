@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert, Platform } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert, Platform } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import Reanimated, { SlideOutRight, LinearTransition } from 'react-native-reanimated';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 
 const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
 
@@ -13,14 +14,17 @@ export default function CartScreen() {
   const { user, refreshCartCount } = useAuth();
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
+  const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    if (user && user.token) {
-      fetchCart();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      if (user && user.token) {
+        fetchCart();
+      } else {
+        setLoading(false);
+      }
+    }, [user])
+  );
 
   const fetchCart = async () => {
     try {
@@ -62,7 +66,7 @@ export default function CartScreen() {
   if (!user) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}><Text style={styles.title}>Shopping Cart</Text></View>
+        <View style={[styles.header, { paddingTop: 12 }]}><Text style={styles.title}>Shopping Cart</Text></View>
         <View style={styles.container}>
           <FontAwesome name="lock" size={64} color="rgba(61, 43, 31, 0.2)" />
           <Text style={styles.emptyText}>Please login to view your cart</Text>
@@ -85,7 +89,7 @@ export default function CartScreen() {
   if (!cart || cart.items.length === 0) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}><Text style={styles.title}>Shopping Cart</Text></View>
+        <View style={[styles.header, { paddingTop: 12 }]}><Text style={styles.title}>Shopping Cart</Text></View>
         <View style={styles.container}>
           <FontAwesome name="shopping-bag" size={64} color="rgba(61, 43, 31, 0.2)" />
           <Text style={styles.emptyText}>Your cart is currently empty</Text>
@@ -97,13 +101,13 @@ export default function CartScreen() {
     );
   }
 
-  const total = cart.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const total = cart.items.reduce((sum, item) => sum + (item.product ? (item.product.price * item.quantity) : 0), 0);
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}><Text style={styles.title}>Shopping Cart</Text></View>
+      <View style={[styles.header, { paddingTop: 12 }]}><Text style={styles.title}>Shopping Cart</Text></View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContainer}>
-        {cart.items.map((item) => (
+        {cart.items.filter(item => item.product).map((item) => (
           <Reanimated.View 
             layout={LinearTransition}
             exiting={SlideOutRight.duration(250)}
@@ -124,7 +128,7 @@ export default function CartScreen() {
           </Reanimated.View>
         ))}
       </ScrollView>
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) + 70 }]}>
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total Amount:</Text>
           <Text style={styles.totalValue}>₹{total.toLocaleString('en-IN')}</Text>
