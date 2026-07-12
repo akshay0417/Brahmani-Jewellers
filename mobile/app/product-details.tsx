@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Platform, Linking, Share, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Platform, Linking, Dimensions } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { cacheDirectory, downloadAsync } from 'expo-file-system';
+import RNShare from 'react-native-share';
 
 const { width } = Dimensions.get('window');
 const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
@@ -162,14 +164,28 @@ export default function ProductDetailsScreen() {
       if (computedPrice > 0) {
         shareMessage += `Price: ₹${computedPrice.toLocaleString('en-IN')}\n`;
       }
-      shareMessage += `\nView image: ${imageUrl}`;
 
-      await Share.share({
-        message: shareMessage,
-        title: name || 'Brahmani Jewellers Item',
-      });
+      // Download the remote image to a temporary file locally
+      const filename = imageUrl.split('/').pop() || 'share-image.jpg';
+      const localUri = `${cacheDirectory}${Date.now()}-${filename}`;
+      
+      const downloadResult = await downloadAsync(imageUrl, localUri);
+      
+      if (downloadResult.status === 200) {
+        await RNShare.open({
+          title: name || 'Brahmani Jewellers Item',
+          message: shareMessage,
+          url: downloadResult.uri,
+          type: 'image/jpeg',
+        });
+      } else {
+        throw new Error('Image download failed');
+      }
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      if (error && error.message && error.message.includes('User cancelled')) {
+        return;
+      }
+      Alert.alert('Error', error.message || 'Failed to share product');
     }
   };
 
