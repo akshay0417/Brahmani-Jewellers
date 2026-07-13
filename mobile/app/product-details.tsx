@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { cacheDirectory, downloadAsync } from 'expo-file-system';
+import { cacheDirectory, downloadAsync, readAsStringAsync, deleteAsync } from 'expo-file-system';
 import RNShare from 'react-native-share';
 
 const { width } = Dimensions.get('window');
@@ -172,12 +172,20 @@ export default function ProductDetailsScreen() {
       const downloadResult = await downloadAsync(imageUrl, localUri);
       
       if (downloadResult.status === 200) {
+        // Read file as base64 string
+        const base64Data = await readAsStringAsync(downloadResult.uri, {
+          encoding: 'base64'
+        });
+        
         await RNShare.open({
           title: name || 'Brahmani Jewellers Item',
           message: shareMessage,
-          url: downloadResult.uri,
+          url: `data:image/jpeg;base64,${base64Data}`,
           type: 'image/jpeg',
         });
+        
+        // Clean up cached file
+        await deleteAsync(downloadResult.uri, { idempotent: true });
       } else {
         throw new Error('Image download failed');
       }
