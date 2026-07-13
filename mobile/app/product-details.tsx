@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { cacheDirectory, downloadAsync, readAsStringAsync, deleteAsync } from 'expo-file-system';
+import { cacheDirectory, downloadAsync, readAsStringAsync, deleteAsync } from 'expo-file-system/legacy';
 import RNShare from 'react-native-share';
 
 const { width } = Dimensions.get('window');
