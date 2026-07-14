@@ -482,7 +482,7 @@ export default function CheckoutScreen() {
               onChangeText={setMobile}
             />
             <TextInput
-              placeholder="Shipping Address (Flat, Street, Area)"
+              placeholder="Full Address (House No., Society, Road, Area)"
               placeholderTextColor="rgba(28,28,30,0.3)"
               style={styles.textInput}
               value={address}

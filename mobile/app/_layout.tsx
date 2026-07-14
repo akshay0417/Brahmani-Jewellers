@@ -200,12 +200,12 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <ThemeProvider value={DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
+        <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal' }} />
-          <Stack.Screen name="register" options={{ headerShown: false, presentation: 'modal' }} />
-          <Stack.Screen name="checkout" options={{ headerShown: false, presentation: 'card' }} />
-          <Stack.Screen name="product-details" options={{ headerShown: false, presentation: 'card' }} />
+          <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="register" options={{ headerShown: false, presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="checkout" options={{ headerShown: false, presentation: 'card', animation: 'slide_from_right' }} />
+          <Stack.Screen name="product-details" options={{ headerShown: false, presentation: 'card', animation: 'slide_from_right' }} />
         </Stack>
         <StatusBar style="dark" />
       </ThemeProvider>
