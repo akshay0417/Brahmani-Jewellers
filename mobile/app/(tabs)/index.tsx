@@ -448,23 +448,33 @@ export default function HomeScreen() {
         onRequestClose={() => setIsDrawerOpen(false)}
       >
         <View style={styles.drawerOverlay}>
-          {/* Backdrop click to close */}
-          <Pressable style={styles.drawerBackdrop} onPress={() => setIsDrawerOpen(false)} />
-          
           {/* Drawer Content */}
           <View style={styles.drawerContent}>
             <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
               <View style={[styles.drawerHeader, { paddingTop: Math.max(insets.top, 16) }]}>
-                <View style={styles.drawerBrandRow}>
-                  <Image source={require('../../assets/images/logo.png')} style={styles.drawerLogo} />
-                  <View>
-                    <Text style={styles.drawerBrandName}>Brahmani</Text>
-                    <Text style={styles.drawerBrandSub}>JEWELLERS</Text>
-                  </View>
-                </View>
-                <TouchableOpacity onPress={() => setIsDrawerOpen(false)} style={styles.closeBtn}>
+                {/* Absolute close button */}
+                <TouchableOpacity 
+                  onPress={() => setIsDrawerOpen(false)} 
+                  style={styles.closeBtnAbsolute}
+                  activeOpacity={0.7}
+                >
                   <Ionicons name="close" size={28} color="#3D2B1F" />
                 </TouchableOpacity>
+
+                {/* Centered Brand Column */}
+                <View style={styles.drawerCenteredBrand}>
+                  <Image 
+                    source={require('../../assets/images/logo.png')} 
+                    style={styles.drawerCenteredLogo} 
+                  />
+                  <Text style={styles.drawerBrandNameCentered}>BRAHMANI</Text>
+                  <Text style={styles.drawerBrandSubCentered}>JEWELLERS</Text>
+                  <View style={styles.sinceDividerRow}>
+                    <View style={styles.sinceLine} />
+                    <Text style={styles.sinceText}>SINCE 1991</Text>
+                    <View style={styles.sinceLine} />
+                  </View>
+                </View>
               </View>
 
               <ScrollView style={styles.drawerScroll} showsVerticalScrollIndicator={false}>
@@ -1226,53 +1236,77 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   drawerBackdrop: {
-    width: '20%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    width: 0,
+    height: 0,
   },
   drawerContent: {
-    width: '80%',
+    width: '100%',
     height: '100%',
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: -2, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 16,
   },
   drawerSafeArea: {
     flex: 1,
   },
   drawerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingBottom: 24,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
+    borderBottomColor: '#F2F2F7',
     backgroundColor: '#FAF9F6',
-  },
-  drawerBrandRow: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
   },
-  drawerLogo: {
-    width: 44,
-    height: 44,
+  closeBtnAbsolute: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 44 : 20,
+    right: 20,
+    zIndex: 10,
+    padding: 6,
+  },
+  drawerCenteredBrand: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  drawerCenteredLogo: {
+    width: 60,
+    height: 60,
     resizeMode: 'contain',
+    marginBottom: 10,
   },
-  drawerBrandName: {
+  drawerBrandNameCentered: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#1C1C1E',
+    color: '#3D2B1F',
+    letterSpacing: 2,
+    textAlign: 'center',
   },
-  drawerBrandSub: {
-    fontSize: 11,
+  drawerBrandSubCentered: {
+    fontSize: 12,
     color: '#D4AF37',
-    letterSpacing: 2.5,
+    letterSpacing: 4,
     fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  sinceDividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    gap: 8,
+  },
+  sinceLine: {
+    width: 40,
+    height: 1,
+    backgroundColor: '#D4AF37',
+    opacity: 0.5,
+  },
+  sinceText: {
+    fontSize: 10,
+    color: '#8E8E93',
+    fontWeight: '600',
+    letterSpacing: 1.5,
   },
   closeBtn: {
     padding: 4,

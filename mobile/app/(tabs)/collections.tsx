@@ -394,12 +394,12 @@ export default function CollectionsScreen() {
                           
                           {activeTab === 'shop' ? (
                             <TouchableOpacity style={styles.listAddButton} onPress={() => addToCart(item._id)}>
-                              <Ionicons name="cart-outline" size={14} color="#FFFFFF" />
+                              <Ionicons name="cart-outline" size={16} color="#FFFFFF" />
                               <Text style={styles.listAddButtonText}>Add</Text>
                             </TouchableOpacity>
                           ) : (
                             <TouchableOpacity style={styles.listWhatsAppButton} onPress={() => initiateWhatsAppInquiry(item)}>
-                              <FontAwesome name="whatsapp" size={12} color="#FFFFFF" />
+                              <FontAwesome name="whatsapp" size={14} color="#FFFFFF" />
                               <Text style={styles.listAddButtonText}>Inquire</Text>
                             </TouchableOpacity>
                           )}
@@ -477,7 +477,7 @@ export default function CollectionsScreen() {
                           </Text>
                           
                           <TouchableOpacity style={styles.listWhatsAppButton} onPress={() => initiateWhatsAppInquiry(item)}>
-                            <FontAwesome name="whatsapp" size={12} color="#FFFFFF" />
+                            <FontAwesome name="whatsapp" size={14} color="#FFFFFF" />
                             <Text style={styles.listAddButtonText}>Inquire</Text>
                           </TouchableOpacity>
                         </View>
@@ -671,7 +671,7 @@ export default function CollectionsScreen() {
                               </Text>
                               
                               <TouchableOpacity style={styles.listAddButton} onPress={() => addToCart(item._id)}>
-                                <Ionicons name="cart-outline" size={14} color="#FFFFFF" />
+                                <Ionicons name="cart-outline" size={16} color="#FFFFFF" />
                                 <Text style={styles.listAddButtonText}>Add</Text>
                               </TouchableOpacity>
                             </View>
@@ -1126,23 +1126,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#3D2B1F',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 8,
+    gap: 6,
   },
   listWhatsAppButton: {
     backgroundColor: '#25D366',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 8,
+    gap: 6,
   },
   listAddButtonText: {
     color: '#FFFFFF',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 'bold',
   },
 
