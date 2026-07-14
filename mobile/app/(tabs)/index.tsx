@@ -105,6 +105,7 @@ const CATEGORIES = [
 
 export default function HomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [rates, setRates] = useState({ gold22K: 66000, gold24K: 72000, gold18K: 54000, silver: 85000, lastUpdated: new Date() });
   const [orders, setOrders] = useState([]);
   const [loadingRates, setLoadingRates] = useState(false);
@@ -452,7 +453,7 @@ export default function HomeScreen() {
           {/* Drawer Content */}
           <View style={styles.drawerContent}>
             <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-              <View style={styles.drawerHeader}>
+              <View style={[styles.drawerHeader, { paddingTop: Math.max(insets.top, 16) }]}>
                 <View style={styles.drawerBrandRow}>
                   <Image source={require('../../assets/images/logo.png')} style={styles.drawerLogo} />
                   <View>
