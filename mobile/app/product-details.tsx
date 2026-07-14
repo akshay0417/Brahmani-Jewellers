@@ -94,6 +94,10 @@ export default function ProductDetailsScreen() {
   const computedPrice = calculatePrice();
 
   const addToCart = async () => {
+    if (targetPage === 'collection') {
+      Alert.alert("Not for Sale", "This item is part of our Catalogue/Collection and is not available for online purchase. Please inquire via WhatsApp.");
+      return;
+    }
     if (!user || !user.token) {
       Alert.alert("Login Required", "Please login to add items to cart");
       router.push('/login');
@@ -442,15 +446,27 @@ export default function ProductDetailsScreen() {
           <ActivityIndicator size="small" color="#D4AF37" style={{ paddingVertical: 14 }} />
         ) : (
           <View style={styles.shopActionRow}>
-            <TouchableOpacity style={styles.getQuoteButton} onPress={initiateWhatsAppInquiry}>
-              <FontAwesome name="whatsapp" size={20} color="#D4AF37" style={{ marginRight: 6 }} />
-              <Text style={styles.getQuoteButtonText}>GET QUOTE</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.cartButton} onPress={addToCart}>
-              <Ionicons name="cart-outline" size={20} color="#FFFFFF" style={{ marginRight: 6 }} />
-              <Text style={styles.cartButtonText}>ADD TO CART</Text>
-            </TouchableOpacity>
+            {targetPage === 'collection' ? (
+              <TouchableOpacity 
+                style={[styles.getQuoteButton, { marginRight: 0, backgroundColor: '#FFFFFF' }]} 
+                onPress={initiateWhatsAppInquiry}
+              >
+                <FontAwesome name="whatsapp" size={20} color="#D4AF37" style={{ marginRight: 6 }} />
+                <Text style={styles.getQuoteButtonText}>INQUIRE ON WHATSAPP</Text>
+              </TouchableOpacity>
+            ) : (
+              <>
+                <TouchableOpacity style={styles.getQuoteButton} onPress={initiateWhatsAppInquiry}>
+                  <FontAwesome name="whatsapp" size={20} color="#D4AF37" style={{ marginRight: 6 }} />
+                  <Text style={styles.getQuoteButtonText}>GET QUOTE</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.cartButton} onPress={addToCart}>
+                  <Ionicons name="cart-outline" size={20} color="#FFFFFF" style={{ marginRight: 6 }} />
+                  <Text style={styles.cartButtonText}>ADD TO CART</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         )}
       </View>
