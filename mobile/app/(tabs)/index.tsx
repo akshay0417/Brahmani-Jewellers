@@ -118,6 +118,7 @@ export default function HomeScreen() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showReturnPolicy, setShowReturnPolicy] = useState(false);
 
   const { user, logout, cartCount, refreshCartCount } = useAuth();
 
@@ -467,40 +468,19 @@ export default function HomeScreen() {
               </View>
 
               <ScrollView style={styles.drawerScroll} showsVerticalScrollIndicator={false}>
-                {/* 1. MY PROFILE */}
+                {/* 1. Home */}
                 <TouchableOpacity 
                   style={styles.sidebarLink} 
                   onPress={() => {
-                    if (!user) {
-                      Alert.alert("Login Required", "Please login to view your profile details.");
-                      setIsDrawerOpen(false);
-                      router.push('/login');
-                    } else {
-                      setActiveSection(activeSection === 'profile' ? null : 'profile');
-                    }
+                    setIsDrawerOpen(false);
                   }}
                 >
-                  <Ionicons name="person-circle-outline" size={22} color="#3D2B1F" />
-                  <Text style={styles.sidebarLinkText}>My Profile</Text>
-                  <Ionicons name={activeSection === 'profile' ? "chevron-up" : "chevron-down"} size={16} color="#3D2B1F" />
+                  <Ionicons name="home-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarLinkText}>Home</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
                 </TouchableOpacity>
 
-                {activeSection === 'profile' && user && (
-                  <View style={styles.expandedSection}>
-                    <Text style={styles.profileDetailLabel}>Name:</Text>
-                    <Text style={styles.profileDetailValue}>{user.name}</Text>
-                    <Text style={styles.profileDetailLabel}>Email:</Text>
-                    <Text style={styles.profileDetailValue}>{user.email}</Text>
-                    {user.mobile && (
-                      <>
-                        <Text style={styles.profileDetailLabel}>Mobile:</Text>
-                        <Text style={styles.profileDetailValue}>{user.mobile}</Text>
-                      </>
-                    )}
-                  </View>
-                )}
-
-                {/* 2. SHOP NOW */}
+                {/* 2. Categories */}
                 <TouchableOpacity 
                   style={styles.sidebarLink} 
                   onPress={() => {
@@ -508,12 +488,64 @@ export default function HomeScreen() {
                     router.push('/collections');
                   }}
                 >
-                  <Ionicons name="diamond-outline" size={22} color="#3D2B1F" />
-                  <Text style={styles.sidebarLinkText}>Shop Now</Text>
-                  <Ionicons name="chevron-forward" size={16} color="#3D2B1F" />
+                  <Ionicons name="grid-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarLinkText}>Categories</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
                 </TouchableOpacity>
 
-                {/* 3. ORDER HISTORY */}
+                {/* 3. Gold Rate */}
+                <TouchableOpacity 
+                  style={styles.sidebarLink} 
+                  onPress={() => {
+                    setIsDrawerOpen(false);
+                    router.push('/invest');
+                  }}
+                >
+                  <Ionicons name="trending-up-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarLinkText}>Gold Rate</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
+                </TouchableOpacity>
+
+                {/* 4. New Arrivals */}
+                <TouchableOpacity 
+                  style={styles.sidebarLink} 
+                  onPress={() => {
+                    setIsDrawerOpen(false);
+                    router.push({ pathname: '/collections', params: { search: 'featured' } });
+                  }}
+                >
+                  <Ionicons name="diamond-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarLinkText}>New Arrivals</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
+                </TouchableOpacity>
+
+                {/* 5. Offers */}
+                <TouchableOpacity 
+                  style={styles.sidebarLink} 
+                  onPress={() => {
+                    setIsDrawerOpen(false);
+                    router.push({ pathname: '/collections', params: { search: 'offers' } });
+                  }}
+                >
+                  <Ionicons name="pricetag-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarLinkText}>Offers</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
+                </TouchableOpacity>
+
+                {/* 6. Best Sellers */}
+                <TouchableOpacity 
+                  style={styles.sidebarLink} 
+                  onPress={() => {
+                    setIsDrawerOpen(false);
+                    router.push({ pathname: '/collections', params: { search: 'best-seller' } });
+                  }}
+                >
+                  <Ionicons name="star-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarLinkText}>Best Sellers</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
+                </TouchableOpacity>
+
+                {/* 7. My Orders */}
                 <TouchableOpacity 
                   style={styles.sidebarLink} 
                   onPress={() => {
@@ -526,9 +558,9 @@ export default function HomeScreen() {
                     }
                   }}
                 >
-                  <Ionicons name="receipt-outline" size={22} color="#3D2B1F" />
-                  <Text style={styles.sidebarLinkText}>Order History</Text>
-                  <Ionicons name={activeSection === 'orders' ? "chevron-up" : "chevron-down"} size={16} color="#3D2B1F" />
+                  <Ionicons name="receipt-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarLinkText}>My Orders</Text>
+                  <Ionicons name={activeSection === 'orders' ? "chevron-up" : "chevron-down"} size={16} color="#D4AF37" />
                 </TouchableOpacity>
 
                 {activeSection === 'orders' && user && (
@@ -549,43 +581,7 @@ export default function HomeScreen() {
                   </View>
                 )}
 
-                {/* 4. BANK DETAILS */}
-                <TouchableOpacity 
-                  style={styles.sidebarLink} 
-                  onPress={() => {
-                    setIsDrawerOpen(false);
-                    setShowBankDetails(true);
-                  }}
-                >
-                  <MaterialCommunityIcons name="bank-outline" size={22} color="#3D2B1F" />
-                  <Text style={styles.sidebarLinkText}>Bank Details</Text>
-                  <Ionicons name="chevron-forward" size={16} color="#3D2B1F" />
-                </TouchableOpacity>
-
-                {/* 5. NOTIFICATION */}
-                <TouchableOpacity 
-                  style={styles.sidebarLink} 
-                  onPress={() => {
-                    setIsDrawerOpen(false);
-                    setShowNotifications(true);
-                  }}
-                >
-                  <Ionicons name="notifications-outline" size={22} color="#3D2B1F" />
-                  <Text style={styles.sidebarLinkText}>Notification</Text>
-                  <Ionicons name="chevron-forward" size={16} color="#3D2B1F" />
-                </TouchableOpacity>
-
-                {/* 6. CONTACT US */}
-                <TouchableOpacity 
-                  style={styles.sidebarLink} 
-                  onPress={initiateWhatsApp}
-                >
-                  <Ionicons name="logo-whatsapp" size={22} color="#25D366" />
-                  <Text style={styles.sidebarLinkText}>Contact Us</Text>
-                  <Ionicons name="chevron-forward" size={16} color="#3D2B1F" />
-                </TouchableOpacity>
-
-                {/* 7. ABOUT US */}
+                {/* 8. About Us */}
                 <TouchableOpacity 
                   style={styles.sidebarLink} 
                   onPress={() => {
@@ -593,53 +589,172 @@ export default function HomeScreen() {
                     router.push('/profile');
                   }}
                 >
-                  <Ionicons name="information-circle-outline" size={22} color="#3D2B1F" />
+                  <Ionicons name="logo-instagram" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
                   <Text style={styles.sidebarLinkText}>About Us</Text>
-                  <Ionicons name="chevron-forward" size={16} color="#3D2B1F" />
+                  <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
                 </TouchableOpacity>
 
-                {/* 8. LOGOUT / LOGIN */}
-                {user ? (
-                  <TouchableOpacity 
-                    style={[styles.sidebarLink, styles.logoutLink]} 
-                    onPress={() => {
-                      logout();
-                      setIsDrawerOpen(false);
-                      Alert.alert("Logged Out", "You have been logged out successfully.");
-                    }}
-                  >
-                    <Ionicons name="log-out-outline" size={22} color="#FF6B6B" />
-                    <Text style={[styles.sidebarLinkText, { color: '#FF6B6B' }]}>Logout</Text>
-                    <Ionicons name="chevron-forward" size={16} color="#FF6B6B" />
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity 
-                    style={[styles.sidebarLink, styles.loginLink]} 
-                    onPress={() => {
-                      setIsDrawerOpen(false);
-                      router.push('/login');
-                    }}
-                  >
-                    <Ionicons name="log-in-outline" size={22} color="#2ecc71" />
-                    <Text style={[styles.sidebarLinkText, { color: '#2ecc71' }]}>Login</Text>
-                    <Ionicons name="chevron-forward" size={16} color="#2ecc71" />
-                  </TouchableOpacity>
+                {/* 9. Contact Us */}
+                <TouchableOpacity 
+                  style={styles.sidebarLink} 
+                  onPress={() => {
+                    setIsDrawerOpen(false);
+                    initiateWhatsApp();
+                  }}
+                >
+                  <Ionicons name="call-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarLinkText}>Contact Us</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
+                </TouchableOpacity>
+
+                {/* 10. Terms & Conditions */}
+                <TouchableOpacity 
+                  style={styles.sidebarLink} 
+                  onPress={() => {
+                    setIsDrawerOpen(false);
+                    setShowTerms(true);
+                  }}
+                >
+                  <Ionicons name="document-text-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarLinkText}>Terms & Conditions</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
+                </TouchableOpacity>
+
+                {/* 11. Privacy Policy */}
+                <TouchableOpacity 
+                  style={styles.sidebarLink} 
+                  onPress={() => {
+                    setIsDrawerOpen(false);
+                    setShowPrivacy(true);
+                  }}
+                >
+                  <Ionicons name="shield-checkmark-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarLinkText}>Privacy Policy</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
+                </TouchableOpacity>
+
+                {/* 12. Return Policy */}
+                <TouchableOpacity 
+                  style={styles.sidebarLink} 
+                  onPress={() => {
+                    setIsDrawerOpen(false);
+                    setShowReturnPolicy(true);
+                  }}
+                >
+                  <Ionicons name="arrow-undo-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarLinkText}>Return Policy</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
+                </TouchableOpacity>
+
+                {/* 13. Settings (Expands to Profile, Notification, Bank Details, Logout/Login) */}
+                <TouchableOpacity 
+                  style={styles.sidebarLink} 
+                  onPress={() => {
+                    setActiveSection(activeSection === 'settings' ? null : 'settings');
+                  }}
+                >
+                  <Ionicons name="settings-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarLinkText}>Settings</Text>
+                  <Ionicons name={activeSection === 'settings' ? "chevron-up" : "chevron-down"} size={16} color="#D4AF37" />
+                </TouchableOpacity>
+
+                {activeSection === 'settings' && (
+                  <View style={styles.expandedSection}>
+                    {/* Profile Link */}
+                    <TouchableOpacity 
+                      style={styles.subLinkItem}
+                      onPress={() => {
+                        if (!user) {
+                          Alert.alert("Login Required", "Please login to view your profile details.");
+                          setIsDrawerOpen(false);
+                          router.push('/login');
+                        } else {
+                          setActiveSection('profile_detail');
+                        }
+                      }}
+                    >
+                      <Ionicons name="person-circle-outline" size={18} color="#3D2B1F" />
+                      <Text style={styles.subLinkLabel}>My Profile</Text>
+                    </TouchableOpacity>
+
+                    {activeSection === 'profile_detail' && user && (
+                      <View style={styles.profileEmbed}>
+                        <Text style={styles.profileDetailLabel}>Name: {user.name}</Text>
+                        <Text style={styles.profileDetailLabel}>Email: {user.email}</Text>
+                        {user.mobile && <Text style={styles.profileDetailLabel}>Mobile: {user.mobile}</Text>}
+                      </View>
+                    )}
+
+                    {/* Notifications Link */}
+                    <TouchableOpacity 
+                      style={styles.subLinkItem}
+                      onPress={() => {
+                        setIsDrawerOpen(false);
+                        setShowNotifications(true);
+                      }}
+                    >
+                      <Ionicons name="notifications-outline" size={18} color="#3D2B1F" />
+                      <Text style={styles.subLinkLabel}>Notifications</Text>
+                    </TouchableOpacity>
+
+                    {/* Bank Details Link */}
+                    <TouchableOpacity 
+                      style={styles.subLinkItem}
+                      onPress={() => {
+                        setIsDrawerOpen(false);
+                        setShowBankDetails(true);
+                      }}
+                    >
+                      <MaterialCommunityIcons name="bank-outline" size={18} color="#3D2B1F" />
+                      <Text style={styles.subLinkLabel}>Bank Details</Text>
+                    </TouchableOpacity>
+
+                    {/* Login/Logout Button */}
+                    {user ? (
+                      <TouchableOpacity 
+                        style={styles.subLinkItem}
+                        onPress={() => {
+                          logout();
+                          setIsDrawerOpen(false);
+                          Alert.alert("Logged Out", "You have been logged out successfully.");
+                        }}
+                      >
+                        <Ionicons name="log-out-outline" size={18} color="#FF6B6B" />
+                        <Text style={[styles.subLinkLabel, { color: '#FF6B6B' }]}>Logout</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity 
+                        style={styles.subLinkItem}
+                        onPress={() => {
+                          setIsDrawerOpen(false);
+                          router.push('/login');
+                        }}
+                      >
+                        <Ionicons name="log-in-outline" size={18} color="#2ecc71" />
+                        <Text style={[styles.subLinkLabel, { color: '#2ecc71' }]}>Login</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 )}
 
-                {/* Divider */}
-                <View style={styles.drawerDivider} />
-
-                {/* SHORT LEGAL LINKS */}
-                <View style={styles.legalLinksRow}>
-                  <TouchableOpacity onPress={() => { setIsDrawerOpen(false); setShowTerms(true); }}>
-                    <Text style={styles.legalLinkText}>Terms & Conditions</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.legalLinkSeparator}>|</Text>
-                  <TouchableOpacity onPress={() => { setIsDrawerOpen(false); setShowPrivacy(true); }}>
-                    <Text style={styles.legalLinkText}>Privacy Policy</Text>
-                  </TouchableOpacity>
+                {/* Follow Us Section */}
+                <View style={styles.followUsContainer}>
+                  <Text style={styles.followUsText}>Follow Us</Text>
+                  <View style={styles.socialRow}>
+                    <TouchableOpacity style={styles.socialCircle} onPress={() => Linking.openURL('https://instagram.com/brahmanijewellers_')}>
+                      <Ionicons name="logo-instagram" size={20} color="#D4AF37" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.socialCircle} onPress={() => Linking.openURL('https://facebook.com')}>
+                      <Ionicons name="logo-facebook" size={20} color="#D4AF37" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.socialCircle} onPress={() => Linking.openURL('https://wa.me/917621967577')}>
+                      <Ionicons name="logo-whatsapp" size={20} color="#D4AF37" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.socialCircle} onPress={() => Linking.openURL('https://youtube.com')}>
+                      <Ionicons name="logo-youtube" size={20} color="#D4AF37" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
-
               </ScrollView>
             </View>
           </View>
@@ -779,6 +894,40 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* RETURN POLICY MODAL */}
+      <Modal visible={showReturnPolicy} transparent={true} animationType="fade">
+        <View style={styles.modalBg}>
+          <View style={styles.modalBody}>
+            <Text style={styles.modalTitle}>Return Policy</Text>
+            <ScrollView style={{ maxHeight: 320, marginVertical: 10 }}>
+              <Text style={styles.legalBodyText}>
+                <Text style={{ fontWeight: 'bold' }}>1. Return & Exchange Policy</Text>
+                {"\n"}
+                We want you to be completely satisfied with your purchase. Our return and exchange policy is designed to be fair and transparent.
+                {"\n\n"}
+                <Text style={{ fontWeight: 'bold' }}>2. Store Policy Details</Text>
+                {"\n"}
+                - Items must be returned in their original condition, unworn, and with all original tags and certifications intact.
+                {"\n"}
+                - Returns and exchanges are subject to validation by our showroom experts.
+                {"\n\n"}
+                <Text style={{ fontWeight: 'bold' }}>3. More Information</Text>
+                {"\n"}
+                For detailed terms on returns, buyback rates, and exchanges, or for any further assistance:
+                {"\n\n"}
+                <Text style={{ fontWeight: 'bold', color: '#D4AF37' }}>
+                  For more information please visit our store.
+                </Text>
+              </Text>
+            </ScrollView>
+            <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowReturnPolicy(false)}>
+              <Text style={styles.modalCloseBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       </Animated.View>
 
       <StatusBar style="dark" />
@@ -1223,9 +1372,51 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textDecorationLine: 'underline',
   },
-  legalLinkSeparator: {
-    fontSize: 11,
-    color: 'rgba(28, 28, 30, 0.3)',
+  sidebarIcon: {
+    marginRight: 4,
+  },
+  subLinkItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5EA',
+    gap: 8,
+  },
+  subLinkLabel: {
+    fontSize: 13,
+    color: '#3D2B1F',
+    fontWeight: '600',
+  },
+  profileEmbed: {
+    paddingVertical: 8,
+    paddingLeft: 12,
+  },
+  followUsContainer: {
+    marginTop: 24,
+    alignItems: 'center',
+    paddingBottom: 24,
+  },
+  followUsText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#3D2B1F',
+    marginBottom: 12,
+  },
+  socialRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  socialCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1.5,
+    borderColor: '#D4AF37',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
 
   // Modal styling
