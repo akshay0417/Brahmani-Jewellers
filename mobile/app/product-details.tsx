@@ -199,11 +199,56 @@ export default function ProductDetailsScreen() {
           shared = true;
         }
       } catch (nativeShareError) {
-        console.log("react-native-share not available, falling back to built-in Share:", nativeShareError);
+        console.log("react-native-share not available, trying expo-sharing fallback:", nativeShareError);
+        
+        try {
+          const Sharing = require('expo-sharing');
+          const isSharingAvailable = await Sharing.isAvailableAsync();
+          if (isSharingAvailable) {
+            // Download the remote image to a temporary file locally
+            const filename = imageUrl.split('/').pop() || 'share-image.jpg';
+            const localUri = `${cacheDirectory}${Date.now()}-${filename}`;
+            const downloadResult = await downloadAsync(imageUrl, localUri);
+            
+            if (downloadResult.status === 200) {
+              // Copy details to Clipboard automatically
+              const { Clipboard } = require('react-native');
+              Clipboard.setString(shareMessage);
+              
+              // Alert user
+              Alert.alert(
+                "Product Info Copied 📋",
+                "Product description has been copied to your clipboard. You can paste it when sharing!",
+                [
+                  {
+                    text: "Continue",
+                    onPress: async () => {
+                      try {
+                        await Sharing.shareAsync(downloadResult.uri, {
+                          mimeType: 'image/jpeg',
+                          dialogTitle: name || 'Brahmani Jewellers',
+                          UTI: 'public.jpeg'
+                        });
+                      } catch (shareErr) {
+                        console.log("Sharing.shareAsync failed:", shareErr);
+                      } finally {
+                        // Clean up cached file
+                        await deleteAsync(downloadResult.uri, { idempotent: true });
+                      }
+                    }
+                  }
+                ]
+              );
+              shared = true;
+            }
+          }
+        } catch (expoShareError) {
+          console.log("expo-sharing failed as well:", expoShareError);
+        }
       }
 
       if (!shared) {
-        // Fallback to built-in Share for Expo Go
+        // Fallback to built-in Share for Expo Go (text only)
         await Share.share({
           message: `${shareMessage}\n${imageUrl}`,
         });
