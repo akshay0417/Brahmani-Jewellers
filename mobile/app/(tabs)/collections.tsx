@@ -1,14 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, TextInput, Platform, Linking, Modal, Share } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-import { Ionicons, FontAwesome } from '@expo/vector-icons';
+import { Ionicons, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import axios from 'axios';
 import Reanimated, { FadeInDown } from 'react-native-reanimated';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 
-// Replace with your actual backend URL for mobile testing
 const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
+
+const getSubCatIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes('ring')) return 'ring';
+  if (n.includes('chain')) return 'link-variant';
+  if (n.includes('necklace') || n.includes('set')) return 'necklace';
+  if (n.includes('earring') || n.includes('jhumka')) return 'flower';
+  if (n.includes('bracelet') || n.includes('bangle') || n.includes('kada')) return 'bracelet';
+  if (n.includes('pendant') || n.includes('mangalsutra')) return 'shield-star';
+  if (n.includes('payal') || n.includes('anklet')) return 'foot-print';
+  return 'dots-hexagon';
+};
 
 export default function CollectionsScreen() {
   const { user, refreshCartCount } = useAuth() as any;
@@ -25,6 +36,10 @@ export default function CollectionsScreen() {
   const [activeTab, setActiveTab] = useState('shop'); // 'shop' | 'collection'
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
 
+  const [shopLevel, setShopLevel] = useState<'metal' | 'subcategory' | 'products'>('metal');
+  const [selectedMetal, setSelectedMetal] = useState<'gold' | 'silver' | null>(null);
+  const [selectedShopSubCat, setSelectedShopSubCat] = useState<string | null>(null);
+
   useFocusEffect(
     useCallback(() => {
       fetchData();
@@ -33,7 +48,15 @@ export default function CollectionsScreen() {
 
   useEffect(() => {
     if (params && params.search) {
-      setSearchQuery(params.search as string);
+      const searchVal = (params.search as string).toLowerCase();
+      if (searchVal === 'gold' || searchVal === 'silver') {
+        setSelectedMetal(searchVal as 'gold' | 'silver');
+        setShopLevel('subcategory');
+        setSelectedShopSubCat(null);
+        setSearchQuery('');
+      } else {
+        setSearchQuery(params.search as string);
+      }
     }
   }, [params]);
 
@@ -168,6 +191,25 @@ export default function CollectionsScreen() {
     setSelectedSubCategory('All');
   }, [activeTab]);
 
+  const subcategoriesForMetal = React.useMemo(() => {
+    const metalItems = items.filter(item => {
+      const isShopItem = item.targetPage === 'shop' || item.targetPage === 'both' || !item.targetPage;
+      return isShopItem && item.category === selectedMetal;
+    });
+    const subCats = new Set(metalItems.map(i => i.subCategory).filter(Boolean));
+    return Array.from(subCats) as string[];
+  }, [items, selectedMetal]);
+
+  const shopFilteredItems = React.useMemo(() => {
+    return items.filter(item => {
+      const isShopItem = item.targetPage === 'shop' || item.targetPage === 'both' || !item.targetPage;
+      if (!isShopItem) return false;
+      if (selectedMetal && item.category !== selectedMetal) return false;
+      if (selectedShopSubCat && item.subCategory !== selectedShopSubCat) return false;
+      return true;
+    });
+  }, [items, selectedMetal, selectedShopSubCat]);
+
   const filteredItems = items.filter(item => {
     // 1. Tab segmentation filtering
     const isShopItem = item.targetPage === 'shop' || item.targetPage === 'both' || !item.targetPage;
@@ -177,7 +219,7 @@ export default function CollectionsScreen() {
     if (activeTab === 'collection' && !isCollectionItem) return false;
 
     // 2. SubCategory filtering (matches field or name/description keywords)
-    if (selectedSubCategory !== 'All') {
+    if (activeTab === 'collection' && selectedSubCategory !== 'All') {
       const subCatLower = selectedSubCategory.toLowerCase();
       
       // Singular forms for matching (e.g. 'earrings' matching 'earring')
@@ -255,7 +297,7 @@ export default function CollectionsScreen() {
         </View>
 
         {/* Subcategory Pills Container */}
-        {uniqueSubCategories.length > 1 && (
+        {activeTab === 'collection' && uniqueSubCategories.length > 1 && (
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false} 
@@ -285,88 +327,353 @@ export default function CollectionsScreen() {
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        {filteredItems.length === 0 ? (
-          <View style={styles.noResultsContainer}>
-            <Ionicons name="search-outline" size={48} color="rgba(28, 28, 30, 0.2)" />
-            <Text style={styles.noResultsText}>No designs match your search query</Text>
-          </View>
-        ) : (
-          <View style={styles.listContainer}>
-            {filteredItems.map((item, index) => {
-              const computedPrice = calculatePrice(item);
-              return (
-                <Reanimated.View 
-                  entering={FadeInDown.duration(350).delay(Math.min(index * 35, 250))}
-                  key={item._id} 
-                  style={styles.listItemCard}
-                >
-                  <TouchableOpacity 
-                    style={styles.listItemContent}
-                    onPress={() => navigateToDetails(item)} 
-                    activeOpacity={0.8}
+        {searchQuery.length > 0 ? (
+          filteredItems.length === 0 ? (
+            <View style={styles.noResultsContainer}>
+              <Ionicons name="search-outline" size={48} color="rgba(28, 28, 30, 0.2)" />
+              <Text style={styles.noResultsText}>No designs match your search query</Text>
+            </View>
+          ) : (
+            <View style={styles.listContainer}>
+              {filteredItems.map((item, index) => {
+                const computedPrice = calculatePrice(item);
+                return (
+                  <Reanimated.View 
+                    entering={FadeInDown.duration(350).delay(Math.min(index * 35, 250))}
+                    key={item._id} 
+                    style={styles.listItemCard}
                   >
-                    <Image source={{ uri: item.imageUrl }} style={styles.listImage} />
-                    
-                    <View style={styles.listDetailsContainer}>
-                      {/* Top Row: Category and Status Badge */}
-                      <View style={styles.listHeaderRow}>
-                        <Text style={styles.listCategoryText}>
-                          {(item.subCategory || item.category || 'Jewellery').toUpperCase()}
+                    <TouchableOpacity 
+                      style={styles.listItemContent}
+                      onPress={() => navigateToDetails(item)} 
+                      activeOpacity={0.8}
+                    >
+                      <Image source={{ uri: item.imageUrl }} style={styles.listImage} />
+                      
+                      <View style={styles.listDetailsContainer}>
+                        {/* Top Row: Category and Status Badge */}
+                        <View style={styles.listHeaderRow}>
+                          <Text style={styles.listCategoryText}>
+                            {(item.subCategory || item.category || 'Jewellery').toUpperCase()}
+                          </Text>
+                          <View style={styles.statusBadge}>
+                            <Text style={styles.statusBadgeText}>Ready Stock</Text>
+                          </View>
+                        </View>
+
+                        {/* Tag Number & Purity */}
+                        <Text style={styles.listTagText}>
+                          {item.tagNumber || 'N/A'} - {item.purity || '916'}
                         </Text>
-                        <View style={styles.statusBadge}>
-                          <Text style={styles.statusBadgeText}>Ready Stock</Text>
+
+                        {/* Design / SubCategory */}
+                        <Text style={styles.listInfoText}>
+                          Design : {item.name || item.subCategory || 'N/A'}
+                        </Text>
+
+                        {/* Size */}
+                        <Text style={styles.listInfoText}>
+                          Size : {item.size || 'N/A'}
+                        </Text>
+
+                        {/* Weight Badges (Gr Wt & Nt Wt) */}
+                        <View style={styles.weightBadgesRow}>
+                          <View style={styles.weightBadge}>
+                            <Text style={styles.weightBadgeText}>Gr Wt : {parseFloat(item.weight || 0).toFixed(3)}</Text>
+                          </View>
+                          <View style={styles.weightBadge}>
+                            <Text style={styles.weightBadgeText}>Nt Wt : {parseFloat(item.netWeight || item.weight || 0).toFixed(3)}</Text>
+                          </View>
+                        </View>
+
+                        {/* Action buttons or price */}
+                        <View style={styles.listActionRow}>
+                          <Text style={styles.listPriceText}>
+                            {computedPrice > 0 ? `₹${computedPrice.toLocaleString('en-IN')}` : 'Price on Request'}
+                          </Text>
+                          
+                          {activeTab === 'shop' ? (
+                            <TouchableOpacity style={styles.listAddButton} onPress={() => addToCart(item._id)}>
+                              <Ionicons name="cart-outline" size={14} color="#FFFFFF" />
+                              <Text style={styles.listAddButtonText}>Add</Text>
+                            </TouchableOpacity>
+                          ) : (
+                            <TouchableOpacity style={styles.listWhatsAppButton} onPress={() => initiateWhatsAppInquiry(item)}>
+                              <FontAwesome name="whatsapp" size={12} color="#FFFFFF" />
+                              <Text style={styles.listAddButtonText}>Inquire</Text>
+                            </TouchableOpacity>
+                          )}
                         </View>
                       </View>
-
-                      {/* Tag Number & Purity */}
-                      <Text style={styles.listTagText}>
-                        {item.tagNumber || 'N/A'} - {item.purity || '916'}
-                      </Text>
-
-                      {/* Design / SubCategory */}
-                      <Text style={styles.listInfoText}>
-                        Design : {item.name || item.subCategory || 'N/A'}
-                      </Text>
-
-                      {/* Size */}
-                      <Text style={styles.listInfoText}>
-                        Size : {item.size || 'N/A'}
-                      </Text>
-
-                      {/* Weight Badges (Gr Wt & Nt Wt) */}
-                      <View style={styles.weightBadgesRow}>
-                        <View style={styles.weightBadge}>
-                          <Text style={styles.weightBadgeText}>Gr Wt : {parseFloat(item.weight || 0).toFixed(3)}</Text>
+                    </TouchableOpacity>
+                  </Reanimated.View>
+                );
+              })}
+            </View>
+          )
+        ) : activeTab === 'collection' ? (
+          filteredItems.length === 0 ? (
+            <View style={styles.noResultsContainer}>
+              <Ionicons name="search-outline" size={48} color="rgba(28, 28, 30, 0.2)" />
+              <Text style={styles.noResultsText}>No designs match your search query</Text>
+            </View>
+          ) : (
+            <View style={styles.listContainer}>
+              {filteredItems.map((item, index) => {
+                const computedPrice = calculatePrice(item);
+                return (
+                  <Reanimated.View 
+                    entering={FadeInDown.duration(350).delay(Math.min(index * 35, 250))}
+                    key={item._id} 
+                    style={styles.listItemCard}
+                  >
+                    <TouchableOpacity 
+                      style={styles.listItemContent}
+                      onPress={() => navigateToDetails(item)} 
+                      activeOpacity={0.8}
+                    >
+                      <Image source={{ uri: item.imageUrl }} style={styles.listImage} />
+                      
+                      <View style={styles.listDetailsContainer}>
+                        {/* Top Row: Category and Status Badge */}
+                        <View style={styles.listHeaderRow}>
+                          <Text style={styles.listCategoryText}>
+                            {(item.subCategory || item.category || 'Jewellery').toUpperCase()}
+                          </Text>
+                          <View style={styles.statusBadge}>
+                            <Text style={styles.statusBadgeText}>Ready Stock</Text>
+                          </View>
                         </View>
-                        <View style={styles.weightBadge}>
-                          <Text style={styles.weightBadgeText}>Nt Wt : {parseFloat(item.netWeight || item.weight || 0).toFixed(3)}</Text>
-                        </View>
-                      </View>
 
-                      {/* Action buttons or price */}
-                      <View style={styles.listActionRow}>
-                        <Text style={styles.listPriceText}>
-                          {computedPrice > 0 ? `₹${computedPrice.toLocaleString('en-IN')}` : 'Price on Request'}
+                        {/* Tag Number & Purity */}
+                        <Text style={styles.listTagText}>
+                          {item.tagNumber || 'N/A'} - {item.purity || '916'}
                         </Text>
-                        
-                        {activeTab === 'shop' ? (
-                          <TouchableOpacity style={styles.listAddButton} onPress={() => addToCart(item._id)}>
-                            <Ionicons name="cart-outline" size={14} color="#FFFFFF" />
-                            <Text style={styles.listAddButtonText}>Add</Text>
-                          </TouchableOpacity>
-                        ) : (
+
+                        {/* Design / SubCategory */}
+                        <Text style={styles.listInfoText}>
+                          Design : {item.name || item.subCategory || 'N/A'}
+                        </Text>
+
+                        {/* Size */}
+                        <Text style={styles.listInfoText}>
+                          Size : {item.size || 'N/A'}
+                        </Text>
+
+                        {/* Weight Badges (Gr Wt & Nt Wt) */}
+                        <View style={styles.weightBadgesRow}>
+                          <View style={styles.weightBadge}>
+                            <Text style={styles.weightBadgeText}>Gr Wt : {parseFloat(item.weight || 0).toFixed(3)}</Text>
+                          </View>
+                          <View style={styles.weightBadge}>
+                            <Text style={styles.weightBadgeText}>Nt Wt : {parseFloat(item.netWeight || item.weight || 0).toFixed(3)}</Text>
+                          </View>
+                        </View>
+
+                        {/* Action buttons or price */}
+                        <View style={styles.listActionRow}>
+                          <Text style={styles.listPriceText}>
+                            {computedPrice > 0 ? `₹${computedPrice.toLocaleString('en-IN')}` : 'Price on Request'}
+                          </Text>
+                          
                           <TouchableOpacity style={styles.listWhatsAppButton} onPress={() => initiateWhatsAppInquiry(item)}>
                             <FontAwesome name="whatsapp" size={12} color="#FFFFFF" />
                             <Text style={styles.listAddButtonText}>Inquire</Text>
                           </TouchableOpacity>
-                        )}
+                        </View>
                       </View>
-                    </View>
-                  </TouchableOpacity>
-                </Reanimated.View>
-              );
-            })}
-          </View>
+                    </TouchableOpacity>
+                  </Reanimated.View>
+                );
+              })}
+            </View>
+          )
+        ) : (
+          /* Active Tab is 'shop', and no active search query */
+          shopLevel === 'metal' ? (
+            <View style={styles.metalSelectionContainer}>
+              <TouchableOpacity 
+                style={styles.metalCardGold}
+                activeOpacity={0.9}
+                onPress={() => {
+                  setSelectedMetal('gold');
+                  setShopLevel('subcategory');
+                }}
+              >
+                <View style={styles.metalCardOverlay}>
+                  <Ionicons name="diamond-outline" size={32} color="#FFFFFF" style={styles.metalCardIcon} />
+                  <Text style={styles.metalCardTitle}>GOLD JEWELLERY</Text>
+                  <Text style={styles.metalCardSubtitle}>Explore Premium 22K & 24K Gold Ornaments</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.metalCardSilver}
+                activeOpacity={0.9}
+                onPress={() => {
+                  setSelectedMetal('silver');
+                  setShopLevel('subcategory');
+                }}
+              >
+                <View style={styles.metalCardOverlay}>
+                  <Ionicons name="sparkles-outline" size={32} color="#FFFFFF" style={styles.metalCardIcon} />
+                  <Text style={styles.metalCardTitle}>SILVER JEWELLERY</Text>
+                  <Text style={styles.metalCardSubtitle}>Explore Certified 92.5 Sterling Silver Articles</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          ) : shopLevel === 'subcategory' ? (
+            <View style={styles.subCatViewContainer}>
+              <View style={styles.shopNavigationHeader}>
+                <TouchableOpacity 
+                  style={styles.shopBackButton}
+                  onPress={() => {
+                    setShopLevel('metal');
+                    setSelectedMetal(null);
+                  }}
+                >
+                  <Ionicons name="arrow-back-outline" size={15} color="#3D2B1F" />
+                  <Text style={styles.shopBackText}>Back</Text>
+                </TouchableOpacity>
+                <Text style={styles.shopNavigationTitle}>
+                  {selectedMetal === 'gold' ? 'Gold Categories' : 'Silver Categories'}
+                </Text>
+              </View>
+
+              {subcategoriesForMetal.length === 0 ? (
+                <View style={styles.noResultsContainer}>
+                  <Ionicons name="cube-outline" size={48} color="rgba(28, 28, 30, 0.2)" />
+                  <Text style={styles.noResultsText}>No designs available in this section</Text>
+                </View>
+              ) : (
+                <View style={styles.subCatGrid}>
+                  {subcategoriesForMetal.map((subCat) => {
+                    const count = items.filter(item => 
+                      item.category === selectedMetal && 
+                      item.subCategory === subCat &&
+                      (item.targetPage === 'shop' || item.targetPage === 'both' || !item.targetPage)
+                    ).length;
+
+                    return (
+                      <TouchableOpacity
+                        key={subCat}
+                        style={styles.subCatGridCard}
+                        onPress={() => {
+                          setSelectedShopSubCat(subCat);
+                          setShopLevel('products');
+                        }}
+                      >
+                        <View style={styles.subCatGridIconBg}>
+                          <MaterialCommunityIcons 
+                            name={getSubCatIcon(subCat) as any} 
+                            size={22} 
+                            color="#D4AF37" 
+                          />
+                        </View>
+                        <Text style={styles.subCatGridLabel}>{subCat}</Text>
+                        <Text style={styles.subCatGridCount}>{count} {count === 1 ? 'Design' : 'Designs'}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+          ) : (
+            <View style={styles.productsViewContainer}>
+              <View style={styles.shopNavigationHeader}>
+                <TouchableOpacity 
+                  style={styles.shopBackButton}
+                  onPress={() => {
+                    setShopLevel('subcategory');
+                    setSelectedShopSubCat(null);
+                  }}
+                >
+                  <Ionicons name="arrow-back-outline" size={15} color="#3D2B1F" />
+                  <Text style={styles.shopBackText}>Categories</Text>
+                </TouchableOpacity>
+                <Text style={styles.shopNavigationTitle}>
+                  {selectedShopSubCat} ({shopFilteredItems.length})
+                </Text>
+              </View>
+
+              {shopFilteredItems.length === 0 ? (
+                <View style={styles.noResultsContainer}>
+                  <Ionicons name="search-outline" size={48} color="rgba(28, 28, 30, 0.2)" />
+                  <Text style={styles.noResultsText}>No designs in this category</Text>
+                </View>
+              ) : (
+                <View style={styles.listContainer}>
+                  {shopFilteredItems.map((item, index) => {
+                    const computedPrice = calculatePrice(item);
+                    return (
+                      <Reanimated.View 
+                        entering={FadeInDown.duration(350).delay(Math.min(index * 35, 250))}
+                        key={item._id} 
+                        style={styles.listItemCard}
+                      >
+                        <TouchableOpacity 
+                          style={styles.listItemContent}
+                          onPress={() => navigateToDetails(item)} 
+                          activeOpacity={0.8}
+                        >
+                          <Image source={{ uri: item.imageUrl }} style={styles.listImage} />
+                          
+                          <View style={styles.listDetailsContainer}>
+                            {/* Top Row: Category and Status Badge */}
+                            <View style={styles.listHeaderRow}>
+                              <Text style={styles.listCategoryText}>
+                                {(item.subCategory || item.category || 'Jewellery').toUpperCase()}
+                              </Text>
+                              <View style={styles.statusBadge}>
+                                <Text style={styles.statusBadgeText}>Ready Stock</Text>
+                              </View>
+                            </View>
+
+                            {/* Tag Number & Purity */}
+                            <Text style={styles.listTagText}>
+                              {item.tagNumber || 'N/A'} - {item.purity || '916'}
+                            </Text>
+
+                            {/* Design / SubCategory */}
+                            <Text style={styles.listInfoText}>
+                              Design : {item.name || item.subCategory || 'N/A'}
+                            </Text>
+
+                            {/* Size */}
+                            <Text style={styles.listInfoText}>
+                              Size : {item.size || 'N/A'}
+                            </Text>
+
+                            {/* Weight Badges (Gr Wt & Nt Wt) */}
+                            <View style={styles.weightBadgesRow}>
+                              <View style={styles.weightBadge}>
+                                <Text style={styles.weightBadgeText}>Gr Wt : {parseFloat(item.weight || 0).toFixed(3)}</Text>
+                              </View>
+                              <View style={styles.weightBadge}>
+                                <Text style={styles.weightBadgeText}>Nt Wt : {parseFloat(item.netWeight || item.weight || 0).toFixed(3)}</Text>
+                              </View>
+                            </View>
+
+                            {/* Action buttons or price */}
+                            <View style={styles.listActionRow}>
+                              <Text style={styles.listPriceText}>
+                                {computedPrice > 0 ? `₹${computedPrice.toLocaleString('en-IN')}` : 'Price on Request'}
+                              </Text>
+                              
+                              <TouchableOpacity style={styles.listAddButton} onPress={() => addToCart(item._id)}>
+                                <Ionicons name="cart-outline" size={14} color="#FFFFFF" />
+                                <Text style={styles.listAddButtonText}>Add</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        </TouchableOpacity>
+                      </Reanimated.View>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+          )
         )}
       </ScrollView>
 
@@ -827,5 +1134,123 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 11,
     fontWeight: 'bold',
+  },
+
+  metalSelectionContainer: {
+    gap: 16,
+    paddingVertical: 8,
+  },
+  metalCardGold: {
+    height: 140,
+    borderRadius: 12,
+    backgroundColor: '#3D2B1F', // Dark coffee base
+    borderWidth: 1.5,
+    borderColor: '#D4AF37', // Gold border
+    overflow: 'hidden',
+  },
+  metalCardSilver: {
+    height: 140,
+    borderRadius: 12,
+    backgroundColor: '#1C1C1E', // Dark grey base
+    borderWidth: 1.5,
+    borderColor: '#AEAEB2', // Silver border
+    overflow: 'hidden',
+  },
+  metalCardOverlay: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+  },
+  metalCardIcon: {
+    marginBottom: 8,
+  },
+  metalCardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    letterSpacing: 1.5,
+  },
+  metalCardSubtitle: {
+    fontSize: 12,
+    color: '#E5E5EA',
+    marginTop: 4,
+    opacity: 0.8,
+  },
+  subCatViewContainer: {
+    flex: 1,
+  },
+  shopNavigationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5EA',
+    marginBottom: 16,
+  },
+  shopBackButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    backgroundColor: '#F2F2F7',
+  },
+  shopBackText: {
+    fontSize: 12,
+    color: '#3D2B1F',
+    fontWeight: '600',
+  },
+  shopNavigationTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#3D2B1F',
+  },
+  subCatGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    justifyContent: 'space-between',
+  },
+  subCatGridCard: {
+    width: '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  subCatGridIconBg: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FAF9F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.2)',
+  },
+  subCatGridLabel: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+    marginBottom: 4,
+  },
+  subCatGridCount: {
+    fontSize: 11,
+    color: '#8E8E93',
+  },
+  productsViewContainer: {
+    flex: 1,
   }
 });
