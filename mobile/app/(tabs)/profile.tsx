@@ -319,7 +319,7 @@ export default function ProfileScreen() {
               >
                 <MaterialCommunityIcons name="security" size={24} color="#EBA938" />
                 <Text style={[styles.menuRowText, { fontWeight: 'bold' }]}>Admin Control Panel</Text>
-                <Ionicons name={activeSection === 'admin' ? "chevron-up" : "chevron-down"} size={18} color="#3D2B1F" />
+                <Ionicons name={activeSection === 'admin' ? "chevron-up" : "chevron-down"} size={18} color="#D4AF37" />
               </TouchableOpacity>
 
               {activeSection === 'admin' && (
@@ -570,7 +570,7 @@ export default function ProfileScreen() {
           >
           <Ionicons name="person-circle-outline" size={24} color="#EBA938" />
           <Text style={styles.menuRowText}>My Profile Details</Text>
-          <Ionicons name={activeSection === 'profile' ? "chevron-up" : "chevron-down"} size={18} color="#3D2B1F" />
+          <Ionicons name={activeSection === 'profile' ? "chevron-up" : "chevron-down"} size={18} color="#D4AF37" />
         </TouchableOpacity>
 
         {activeSection === 'profile' && (
@@ -597,7 +597,7 @@ export default function ProfileScreen() {
         >
           <Ionicons name="receipt-outline" size={24} color="#EBA938" />
           <Text style={styles.menuRowText}>Order History</Text>
-          <Ionicons name={activeSection === 'orders' ? "chevron-up" : "chevron-down"} size={18} color="#3D2B1F" />
+          <Ionicons name={activeSection === 'orders' ? "chevron-up" : "chevron-down"} size={18} color="#D4AF37" />
         </TouchableOpacity>
 
         {activeSection === 'orders' && (
@@ -630,7 +630,7 @@ export default function ProfileScreen() {
         >
           <Ionicons name="information-circle-outline" size={24} color="#EBA938" />
           <Text style={styles.menuRowText}>About Brahmani Jewellers</Text>
-          <Ionicons name={activeSection === 'about' ? "chevron-up" : "chevron-down"} size={18} color="#3D2B1F" />
+          <Ionicons name={activeSection === 'about' ? "chevron-up" : "chevron-down"} size={18} color="#D4AF37" />
         </TouchableOpacity>
 
         {activeSection === 'about' && (
@@ -650,21 +650,21 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.menuRow} onPress={() => setShowBankDetails(true)}>
           <MaterialCommunityIcons name="bank-outline" size={24} color="#EBA938" />
           <Text style={styles.menuRowText}>Bank Details</Text>
-          <Ionicons name="chevron-forward" size={18} color="#3D2B1F" />
+          <Ionicons name="chevron-forward" size={18} color="#D4AF37" />
         </TouchableOpacity>
 
         {/* NOTIFICATION */}
         <TouchableOpacity style={styles.menuRow} onPress={() => setShowNotifications(true)}>
           <Ionicons name="notifications-outline" size={24} color="#EBA938" />
           <Text style={styles.menuRowText}>Notification</Text>
-          <Ionicons name="chevron-forward" size={18} color="#3D2B1F" />
+          <Ionicons name="chevron-forward" size={18} color="#D4AF37" />
         </TouchableOpacity>
 
         {/* CONTACT US */}
         <TouchableOpacity style={styles.menuRow} onPress={initiateWhatsApp}>
           <Ionicons name="logo-whatsapp" size={24} color="#25D366" />
           <Text style={styles.menuRowText}>Contact Us (WhatsApp)</Text>
-          <Ionicons name="chevron-forward" size={18} color="#3D2B1F" />
+          <Ionicons name="chevron-forward" size={18} color="#D4AF37" />
         </TouchableOpacity>
 
         {/* LOGOUT */}
@@ -875,6 +875,6 @@ const styles = StyleSheet.create({
   adminStatusBadge: { backgroundColor: '#1C1C1E', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
   adminStatusText: { color: '#FFFFFF', fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase' },
   adminOrderTotal: { fontSize: 14, fontWeight: 'bold', color: '#1C1C1E' },
-  selfDeliveryBadge: { backgroundColor: '#3D2B1F', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, marginLeft: 8 },
+  selfDeliveryBadge: { backgroundColor: '#D4AF37', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, marginLeft: 8 },
   selfDeliveryText: { color: '#EBA938', fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase' }
 });

@@ -122,7 +122,7 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
           <View style={styles.topBar}>
             <TouchableOpacity style={styles.backArrow} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={28} color="#3D2B1F" />
+              <Ionicons name="arrow-back" size={28} color="#D4AF37" />
             </TouchableOpacity>
           </View>
           <View style={styles.container}>
@@ -173,7 +173,7 @@ export default function LoginScreen() {
                       placeholderTextColor="#A0A0A0"
                     />
                     <TouchableOpacity style={styles.eyeIconContainer} onPress={() => setShowPassword(!showPassword)}>
-                      <Ionicons name={showPassword ? "eye" : "eye-off"} size={22} color="#3D2B1F" />
+                      <Ionicons name={showPassword ? "eye" : "eye-off"} size={22} color="#D4AF37" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -216,7 +216,7 @@ export default function LoginScreen() {
               </TouchableOpacity>
               
               <View style={{ marginTop: 24, alignItems: 'center' }}>
-                <Text style={{ color: '#3D2B1F' }}>Don&apos;t have an account?</Text>
+                <Text style={{ color: '#D4AF37' }}>Don&apos;t have an account?</Text>
                 <Link href="/register" asChild>
                   <TouchableOpacity style={{ marginTop: 8 }}>
                     <Text style={{ color: '#EBA938', fontWeight: 'bold', fontSize: 16 }}>Create Account</Text>
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
     fontStyle: 'italic',
     textTransform: 'uppercase',
-    color: '#3D2B1F', // coffee
+    color: '#D4AF37', // coffee
     marginBottom: 8,
   },
   subtitle: {
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#E5E5EA', // Light border
-    shadowColor: '#3D2B1F',
+    shadowColor: '#D4AF37',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3D2B1F',
+    color: '#D4AF37',
     marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     fontSize: 16,
-    color: '#3D2B1F',
+    color: '#D4AF37',
   },
   passwordInputWrapper: {
     flexDirection: 'row',
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     fontSize: 16,
-    color: '#3D2B1F',
+    color: '#D4AF37',
   },
   eyeIconContainer: {
     paddingHorizontal: 14,
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   backButtonText: {
-    color: '#3D2B1F',
+    color: '#D4AF37',
     fontWeight: '500',
     fontSize: 16,
   },
@@ -401,18 +401,18 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderWidth: 1.5,
-    borderColor: '#3D2B1F',
+    borderColor: '#D4AF37',
     borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#FFF6E6',
   },
   checkboxActive: {
-    backgroundColor: '#3D2B1F',
+    backgroundColor: '#D4AF37',
   },
   checkboxText: {
     fontSize: 14,
-    color: '#3D2B1F',
+    color: '#D4AF37',
     fontWeight: '500',
   },
   checkboxForgotPasswordRow: {
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
     maxWidth: 320,
     borderWidth: 1,
     borderColor: '#E5E5EA',
-    shadowColor: '#3D2B1F',
+    shadowColor: '#D4AF37',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-    color: '#3D2B1F',
+    color: '#D4AF37',
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     fontSize: 18,
-    color: '#3D2B1F',
+    color: '#D4AF37',
     textAlign: 'center',
     letterSpacing: 8,
     marginBottom: 16,
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelLinkText: {
-    color: '#3D2B1F',
+    color: '#D4AF37',
     fontWeight: '500',
     fontSize: 14,
   },
@@ -500,8 +500,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   segmentButtonActive: {
-    backgroundColor: '#3D2B1F',
-    shadowColor: '#3D2B1F',
+    backgroundColor: '#D4AF37',
+    shadowColor: '#D4AF37',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,

@@ -501,9 +501,9 @@ export default function CollectionsScreen() {
                 }}
               >
                 <View style={styles.metalCardOverlay}>
-                  <Ionicons name="diamond-outline" size={32} color="#FFFFFF" style={styles.metalCardIcon} />
-                  <Text style={styles.metalCardTitle}>GOLD JEWELLERY</Text>
-                  <Text style={styles.metalCardSubtitle}>Explore Premium 22K & 24K Gold Ornaments</Text>
+                  <Ionicons name="diamond-outline" size={32} color="#D4AF37" style={styles.metalCardIcon} />
+                  <Text style={styles.metalCardTitleGold}>GOLD JEWELLERY</Text>
+                  <Text style={styles.metalCardSubtitleGold}>Explore Premium 22K & 24K Gold Ornaments</Text>
                 </View>
               </TouchableOpacity>
 
@@ -516,9 +516,9 @@ export default function CollectionsScreen() {
                 }}
               >
                 <View style={styles.metalCardOverlay}>
-                  <Ionicons name="sparkles-outline" size={32} color="#FFFFFF" style={styles.metalCardIcon} />
-                  <Text style={styles.metalCardTitle}>SILVER JEWELLERY</Text>
-                  <Text style={styles.metalCardSubtitle}>Explore Certified 92.5 Sterling Silver Articles</Text>
+                  <Ionicons name="sparkles-outline" size={32} color="#8E8E93" style={styles.metalCardIcon} />
+                  <Text style={styles.metalCardTitleSilver}>SILVER JEWELLERY</Text>
+                  <Text style={styles.metalCardSubtitleSilver}>Explore Certified 92.5 Sterling Silver Articles</Text>
                 </View>
               </TouchableOpacity>
             </View>
@@ -532,7 +532,7 @@ export default function CollectionsScreen() {
                     setSelectedMetal(null);
                   }}
                 >
-                  <Ionicons name="arrow-back-outline" size={15} color="#3D2B1F" />
+                  <Ionicons name="arrow-back-outline" size={15} color="#1C1C1E" />
                   <Text style={styles.shopBackText}>Back</Text>
                 </TouchableOpacity>
                 <Text style={styles.shopNavigationTitle}>
@@ -598,7 +598,7 @@ export default function CollectionsScreen() {
                     setSelectedShopSubCat(null);
                   }}
                 >
-                  <Ionicons name="arrow-back-outline" size={15} color="#3D2B1F" />
+                  <Ionicons name="arrow-back-outline" size={15} color="#1C1C1E" />
                   <Text style={styles.shopBackText}>Categories</Text>
                 </TouchableOpacity>
                 <Text style={styles.shopNavigationTitle}>
@@ -1069,7 +1069,7 @@ const styles = StyleSheet.create({
   listCategoryText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#3D2B1F',
+    color: '#D4AF37',
   },
   statusBadge: {
     backgroundColor: '#E8F5E9',
@@ -1123,7 +1123,7 @@ const styles = StyleSheet.create({
     color: '#D4AF37',
   },
   listAddButton: {
-    backgroundColor: '#3D2B1F',
+    backgroundColor: '#D4AF37',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
@@ -1153,37 +1153,48 @@ const styles = StyleSheet.create({
   metalCardGold: {
     height: 140,
     borderRadius: 12,
-    backgroundColor: '#3D2B1F', // Dark coffee base
+    backgroundColor: '#FAF9F6',
     borderWidth: 1.5,
-    borderColor: '#D4AF37', // Gold border
+    borderColor: '#D4AF37',
     overflow: 'hidden',
   },
   metalCardSilver: {
     height: 140,
     borderRadius: 12,
-    backgroundColor: '#1C1C1E', // Dark grey base
+    backgroundColor: '#FAF9F6',
     borderWidth: 1.5,
-    borderColor: '#AEAEB2', // Silver border
+    borderColor: '#AEAEB2',
     overflow: 'hidden',
   },
   metalCardOverlay: {
     flex: 1,
     padding: 20,
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.1)',
   },
   metalCardIcon: {
     marginBottom: 8,
   },
-  metalCardTitle: {
+  metalCardTitleGold: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#D4AF37',
     letterSpacing: 1.5,
   },
-  metalCardSubtitle: {
+  metalCardSubtitleGold: {
     fontSize: 12,
-    color: '#E5E5EA',
+    color: '#1C1C1E',
+    marginTop: 4,
+    opacity: 0.8,
+  },
+  metalCardTitleSilver: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#8E8E93',
+    letterSpacing: 1.5,
+  },
+  metalCardSubtitleSilver: {
+    fontSize: 12,
+    color: '#1C1C1E',
     marginTop: 4,
     opacity: 0.8,
   },
@@ -1210,13 +1221,13 @@ const styles = StyleSheet.create({
   },
   shopBackText: {
     fontSize: 12,
-    color: '#3D2B1F',
+    color: '#1C1C1E',
     fontWeight: '600',
   },
   shopNavigationTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#3D2B1F',
+    color: '#1C1C1E',
   },
   subCatGrid: {
     flexDirection: 'row',

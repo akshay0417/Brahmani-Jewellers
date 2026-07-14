@@ -39,12 +39,12 @@ export default function ForgotPasswordScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.topBar}>
         <TouchableOpacity style={styles.backArrow} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={28} color="#3D2B1F" />
+          <Ionicons name="arrow-back" size={28} color="#D4AF37" />
         </TouchableOpacity>
       </View>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Ionicons name="shield-checkmark" size={64} color="#3D2B1F" style={{ marginBottom: 16 }} />
+          <Ionicons name="shield-checkmark" size={64} color="#D4AF37" style={{ marginBottom: 16 }} />
           <Text style={styles.title}>Forgot Password</Text>
           <Text style={styles.subtitle}>Enter your email to reset password</Text>
         </View>
@@ -53,7 +53,7 @@ export default function ForgotPasswordScreen() {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Email Address</Text>
             <View style={styles.inputWrapper}>
-              <Ionicons name="mail-outline" size={20} color="#3D2B1F" style={styles.inputIcon} />
+              <Ionicons name="mail-outline" size={20} color="#D4AF37" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Enter email address"
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#3D2B1F', // coffee
+    color: '#D4AF37', // coffee
     marginBottom: 8,
   },
   subtitle: {
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#3D2B1F',
+    color: '#D4AF37',
     marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -155,10 +155,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#3D2B1F',
+    color: '#D4AF37',
   },
   button: {
-    backgroundColor: '#3D2B1F', // coffee
+    backgroundColor: '#D4AF37', // coffee
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   backButtonText: {
-    color: '#3D2B1F',
+    color: '#D4AF37',
     fontWeight: '600',
     fontSize: 15,
   }

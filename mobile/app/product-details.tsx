@@ -288,7 +288,7 @@ export default function ProductDetailsScreen() {
               <Ionicons 
                 name={isFavorite ? "heart" : "heart-outline"} 
                 size={18} 
-                color={isFavorite ? "#FF3B30" : "#3D2B1F"} 
+                color={isFavorite ? "#FF3B30" : "#D4AF37"} 
               />
             </View>
             <Text style={styles.circularLabel}>Favorite</Text>
@@ -303,7 +303,7 @@ export default function ProductDetailsScreen() {
 
           <TouchableOpacity style={styles.circularBtn} onPress={shareProduct}>
             <View style={styles.circularIconBg}>
-              <Ionicons name="share-social-outline" size={18} color="#3D2B1F" />
+              <Ionicons name="share-social-outline" size={18} color="#D4AF37" />
             </View>
             <Text style={styles.circularLabel}>Share</Text>
           </TouchableOpacity>
@@ -398,7 +398,7 @@ export default function ProductDetailsScreen() {
         ) : (
           <View style={styles.shopActionRow}>
             <TouchableOpacity style={styles.getQuoteButton} onPress={initiateWhatsAppInquiry}>
-              <FontAwesome name="whatsapp" size={20} color="#3D2B1F" style={{ marginRight: 6 }} />
+              <FontAwesome name="whatsapp" size={20} color="#D4AF37" style={{ marginRight: 6 }} />
               <Text style={styles.getQuoteButtonText}>GET QUOTE</Text>
             </TouchableOpacity>
             
@@ -722,13 +722,13 @@ const styles = StyleSheet.create({
   circularLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#3D2B1F',
+    color: '#D4AF37',
   },
   getQuoteButton: {
     flex: 1.1,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#3D2B1F',
+    borderColor: '#D4AF37',
     borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
@@ -736,7 +736,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   getQuoteButtonText: {
-    color: '#3D2B1F',
+    color: '#D4AF37',
     fontWeight: 'bold',
     fontSize: 15,
   },

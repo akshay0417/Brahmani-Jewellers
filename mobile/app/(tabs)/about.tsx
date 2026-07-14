@@ -38,13 +38,13 @@ export default function AboutScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFF6E6' },
-  header: { padding: 20, backgroundColor: '#3D2B1F', alignItems: 'center' },
+  header: { padding: 20, backgroundColor: '#D4AF37', alignItems: 'center' },
   title: { fontSize: 24, fontWeight: 'bold', color: '#EBA938', letterSpacing: 1, marginTop: 20 },
   container: { padding: 20 },
   card: { backgroundColor: '#FCF0DA', borderRadius: 16, padding: 24, borderWidth: 1, borderColor: 'rgba(235, 169, 56, 0.2)' },
-  logoText: { fontSize: 28, fontWeight: 'bold', color: '#3D2B1F', marginBottom: 16, textAlign: 'center' },
-  desc: { fontSize: 16, color: '#3D2B1F', lineHeight: 24, marginBottom: 16, textAlign: 'center' },
+  logoText: { fontSize: 28, fontWeight: 'bold', color: '#D4AF37', marginBottom: 16, textAlign: 'center' },
+  desc: { fontSize: 16, color: '#D4AF37', lineHeight: 24, marginBottom: 16, textAlign: 'center' },
   contactBox: { marginTop: 24, paddingTop: 24, borderTopWidth: 1, borderTopColor: 'rgba(61, 43, 31, 0.1)' },
-  contactTitle: { fontSize: 18, fontWeight: 'bold', color: '#3D2B1F', marginBottom: 12 },
-  contactText: { fontSize: 16, color: '#3D2B1F', marginBottom: 8 }
+  contactTitle: { fontSize: 18, fontWeight: 'bold', color: '#D4AF37', marginBottom: 12 },
+  contactText: { fontSize: 16, color: '#D4AF37', marginBottom: 8 }
 });

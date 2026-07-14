@@ -274,7 +274,7 @@ export default function HomeScreen() {
           <View style={styles.headerTop}>
             <View style={styles.headerLeft}>
               <TouchableOpacity onPress={() => setIsDrawerOpen(true)} style={styles.menuBtn}>
-                <FontAwesome name="navicon" size={26} color="#3D2B1F" />
+                <FontAwesome name="navicon" size={26} color="#D4AF37" />
               </TouchableOpacity>
               
               <View style={styles.greetingContainer}>
@@ -294,10 +294,10 @@ export default function HomeScreen() {
                 <FontAwesome name="whatsapp" size={28} color="#25D366" />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setShowNotifications(true)} style={styles.headerIconBtn}>
-                <Ionicons name="notifications-outline" size={28} color="#3D2B1F" />
+                <Ionicons name="notifications-outline" size={28} color="#D4AF37" />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => router.push('/cart')} style={styles.cartIconBtn}>
-                <Ionicons name="cart-outline" size={28} color="#3D2B1F" />
+                <Ionicons name="cart-outline" size={28} color="#D4AF37" />
                 {cartCount > 0 && (
                   <View style={styles.badgeContainer}>
                     <Text style={styles.badgeText}>{cartCount}</Text>
@@ -310,7 +310,7 @@ export default function HomeScreen() {
 
         {/* Search Bar */}
         <View style={styles.searchBarContainer}>
-          <Ionicons name="search-outline" size={20} color="#3D2B1F" style={styles.searchIcon} />
+          <Ionicons name="search-outline" size={20} color="#D4AF37" style={styles.searchIcon} />
           <TextInput
             placeholder="Search gold rings, silver chains..."
             placeholderTextColor="rgba(61, 43, 31, 0.4)"
@@ -442,7 +442,7 @@ export default function HomeScreen() {
 
       {/* Slide-out Sidebar Drawer Modal */}
       <Modal
-        animationType="none"
+        animationType="slide"
         transparent={true}
         visible={isDrawerOpen}
         onRequestClose={() => setIsDrawerOpen(false)}
@@ -458,7 +458,7 @@ export default function HomeScreen() {
                   style={styles.closeBtnAbsolute}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="close" size={28} color="#3D2B1F" />
+                  <Ionicons name="close" size={28} color="#D4AF37" />
                 </TouchableOpacity>
 
                 {/* Centered Brand Column */}
@@ -485,7 +485,7 @@ export default function HomeScreen() {
                     setIsDrawerOpen(false);
                   }}
                 >
-                  <Ionicons name="home-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Ionicons name="home-outline" size={20} color="#D4AF37" style={styles.sidebarIcon} />
                   <Text style={styles.sidebarLinkText}>Home</Text>
                   <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
                 </TouchableOpacity>
@@ -498,7 +498,7 @@ export default function HomeScreen() {
                     router.push('/collections');
                   }}
                 >
-                  <Ionicons name="grid-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Ionicons name="grid-outline" size={20} color="#D4AF37" style={styles.sidebarIcon} />
                   <Text style={styles.sidebarLinkText}>Categories</Text>
                   <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
                 </TouchableOpacity>
@@ -511,7 +511,7 @@ export default function HomeScreen() {
                     router.push('/invest');
                   }}
                 >
-                  <Ionicons name="trending-up-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Ionicons name="trending-up-outline" size={20} color="#D4AF37" style={styles.sidebarIcon} />
                   <Text style={styles.sidebarLinkText}>Gold Rate</Text>
                   <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
                 </TouchableOpacity>
@@ -524,7 +524,7 @@ export default function HomeScreen() {
                     router.push({ pathname: '/collections', params: { search: 'featured' } });
                   }}
                 >
-                  <Ionicons name="diamond-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Ionicons name="diamond-outline" size={20} color="#D4AF37" style={styles.sidebarIcon} />
                   <Text style={styles.sidebarLinkText}>New Arrivals</Text>
                   <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
                 </TouchableOpacity>
@@ -537,7 +537,7 @@ export default function HomeScreen() {
                     router.push({ pathname: '/collections', params: { search: 'offers' } });
                   }}
                 >
-                  <Ionicons name="pricetag-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Ionicons name="pricetag-outline" size={20} color="#D4AF37" style={styles.sidebarIcon} />
                   <Text style={styles.sidebarLinkText}>Offers</Text>
                   <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
                 </TouchableOpacity>
@@ -550,7 +550,7 @@ export default function HomeScreen() {
                     router.push({ pathname: '/collections', params: { search: 'best-seller' } });
                   }}
                 >
-                  <Ionicons name="star-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Ionicons name="star-outline" size={20} color="#D4AF37" style={styles.sidebarIcon} />
                   <Text style={styles.sidebarLinkText}>Best Sellers</Text>
                   <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
                 </TouchableOpacity>
@@ -568,7 +568,7 @@ export default function HomeScreen() {
                     }
                   }}
                 >
-                  <Ionicons name="receipt-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Ionicons name="receipt-outline" size={20} color="#D4AF37" style={styles.sidebarIcon} />
                   <Text style={styles.sidebarLinkText}>My Orders</Text>
                   <Ionicons name={activeSection === 'orders' ? "chevron-up" : "chevron-down"} size={16} color="#D4AF37" />
                 </TouchableOpacity>
@@ -599,7 +599,7 @@ export default function HomeScreen() {
                     router.push('/profile');
                   }}
                 >
-                  <Ionicons name="logo-instagram" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Ionicons name="logo-instagram" size={20} color="#D4AF37" style={styles.sidebarIcon} />
                   <Text style={styles.sidebarLinkText}>About Us</Text>
                   <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
                 </TouchableOpacity>
@@ -612,7 +612,7 @@ export default function HomeScreen() {
                     initiateWhatsApp();
                   }}
                 >
-                  <Ionicons name="call-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Ionicons name="call-outline" size={20} color="#D4AF37" style={styles.sidebarIcon} />
                   <Text style={styles.sidebarLinkText}>Contact Us</Text>
                   <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
                 </TouchableOpacity>
@@ -625,7 +625,7 @@ export default function HomeScreen() {
                     setShowTerms(true);
                   }}
                 >
-                  <Ionicons name="document-text-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Ionicons name="document-text-outline" size={20} color="#D4AF37" style={styles.sidebarIcon} />
                   <Text style={styles.sidebarLinkText}>Terms & Conditions</Text>
                   <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
                 </TouchableOpacity>
@@ -638,7 +638,7 @@ export default function HomeScreen() {
                     setShowPrivacy(true);
                   }}
                 >
-                  <Ionicons name="shield-checkmark-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Ionicons name="shield-checkmark-outline" size={20} color="#D4AF37" style={styles.sidebarIcon} />
                   <Text style={styles.sidebarLinkText}>Privacy Policy</Text>
                   <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
                 </TouchableOpacity>
@@ -651,7 +651,7 @@ export default function HomeScreen() {
                     setShowReturnPolicy(true);
                   }}
                 >
-                  <Ionicons name="arrow-undo-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Ionicons name="arrow-undo-outline" size={20} color="#D4AF37" style={styles.sidebarIcon} />
                   <Text style={styles.sidebarLinkText}>Return Policy</Text>
                   <Ionicons name="chevron-forward" size={16} color="#D4AF37" />
                 </TouchableOpacity>
@@ -663,7 +663,7 @@ export default function HomeScreen() {
                     setActiveSection(activeSection === 'settings' ? null : 'settings');
                   }}
                 >
-                  <Ionicons name="settings-outline" size={20} color="#3D2B1F" style={styles.sidebarIcon} />
+                  <Ionicons name="settings-outline" size={20} color="#D4AF37" style={styles.sidebarIcon} />
                   <Text style={styles.sidebarLinkText}>Settings</Text>
                   <Ionicons name={activeSection === 'settings' ? "chevron-up" : "chevron-down"} size={16} color="#D4AF37" />
                 </TouchableOpacity>
@@ -683,7 +683,7 @@ export default function HomeScreen() {
                         }
                       }}
                     >
-                      <Ionicons name="person-circle-outline" size={18} color="#3D2B1F" />
+                      <Ionicons name="person-circle-outline" size={18} color="#D4AF37" />
                       <Text style={styles.subLinkLabel}>My Profile</Text>
                     </TouchableOpacity>
 
@@ -703,7 +703,7 @@ export default function HomeScreen() {
                         setShowNotifications(true);
                       }}
                     >
-                      <Ionicons name="notifications-outline" size={18} color="#3D2B1F" />
+                      <Ionicons name="notifications-outline" size={18} color="#D4AF37" />
                       <Text style={styles.subLinkLabel}>Notifications</Text>
                     </TouchableOpacity>
 
@@ -715,7 +715,7 @@ export default function HomeScreen() {
                         setShowBankDetails(true);
                       }}
                     >
-                      <MaterialCommunityIcons name="bank-outline" size={18} color="#3D2B1F" />
+                      <MaterialCommunityIcons name="bank-outline" size={18} color="#D4AF37" />
                       <Text style={styles.subLinkLabel}>Bank Details</Text>
                     </TouchableOpacity>
 
@@ -1277,7 +1277,7 @@ const styles = StyleSheet.create({
   drawerBrandNameCentered: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#3D2B1F',
+    color: '#D4AF37',
     letterSpacing: 2,
     textAlign: 'center',
   },
@@ -1419,7 +1419,7 @@ const styles = StyleSheet.create({
   },
   subLinkLabel: {
     fontSize: 13,
-    color: '#3D2B1F',
+    color: '#D4AF37',
     fontWeight: '600',
   },
   profileEmbed: {
@@ -1434,7 +1434,7 @@ const styles = StyleSheet.create({
   followUsText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#3D2B1F',
+    color: '#D4AF37',
     marginBottom: 12,
   },
   socialRow: {

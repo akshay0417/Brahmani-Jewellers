@@ -178,7 +178,7 @@ export default function RegisterScreen() {
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <View style={styles.topBar}>
             <TouchableOpacity style={styles.backArrow} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={28} color="#3D2B1F" />
+              <Ionicons name="arrow-back" size={28} color="#D4AF37" />
             </TouchableOpacity>
           </View>
           <View style={styles.header}>
@@ -238,7 +238,7 @@ export default function RegisterScreen() {
             <View style={styles.inputContainer}>
               <Text style={styles.label}>State *</Text>
               <TouchableOpacity style={styles.input} onPress={() => setShowStatePicker(true)}>
-                <Text style={{ color: state ? '#3D2B1F' : '#A0A0A0', fontSize: 16 }}>
+                <Text style={{ color: state ? '#D4AF37' : '#A0A0A0', fontSize: 16 }}>
                   {state || (loadingStates ? 'Loading States...' : 'Select State')}
                 </Text>
               </TouchableOpacity>
@@ -250,7 +250,7 @@ export default function RegisterScreen() {
                 if (!state) alert('Please select a state first');
                 else setShowCityPicker(true);
               }}>
-                <Text style={{ color: city ? '#3D2B1F' : '#A0A0A0', fontSize: 16 }}>
+                <Text style={{ color: city ? '#D4AF37' : '#A0A0A0', fontSize: 16 }}>
                   {city || (loadingCities ? 'Loading Cities...' : 'Select City')}
                 </Text>
               </TouchableOpacity>
@@ -268,7 +268,7 @@ export default function RegisterScreen() {
                   placeholderTextColor="#A0A0A0"
                 />
                 <TouchableOpacity style={styles.eyeIconContainer} onPress={() => setShowPassword(!showPassword)}>
-                  <Ionicons name={showPassword ? "eye" : "eye-off"} size={22} color="#3D2B1F" />
+                  <Ionicons name={showPassword ? "eye" : "eye-off"} size={22} color="#D4AF37" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
     fontStyle: 'italic',
     textTransform: 'uppercase',
-    color: '#3D2B1F', // coffee
+    color: '#D4AF37', // coffee
     marginBottom: 8,
   },
   subtitle: {
@@ -504,15 +504,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#E5E5EA', // Light border
-    shadowColor: '#3D2B1F',
+    shadowColor: '#D4AF37',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 2,
   },
   inputContainer: { marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: '600', color: '#3D2B1F', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
-  input: { backgroundColor: '#FAF9F6', borderWidth: 1, borderColor: 'rgba(61, 43, 31, 0.15)', borderRadius: 8, padding: 14, color: '#3D2B1F', justifyContent: 'center' },
+  label: { fontSize: 14, fontWeight: '600', color: '#D4AF37', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
+  input: { backgroundColor: '#FAF9F6', borderWidth: 1, borderColor: 'rgba(61, 43, 31, 0.15)', borderRadius: 8, padding: 14, color: '#D4AF37', justifyContent: 'center' },
   passwordInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 14,
     fontSize: 16,
-    color: '#3D2B1F',
+    color: '#D4AF37',
   },
   eyeIconContainer: {
     paddingHorizontal: 14,
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.7 },
   buttonText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16, letterSpacing: 1 },
   backButton: { marginTop: 16, alignItems: 'center', padding: 12 },
-  backButtonText: { color: '#3D2B1F', fontWeight: '500', fontSize: 16 },
+  backButtonText: { color: '#D4AF37', fontWeight: '500', fontSize: 16 },
   
   // Checkbox Styles
   checkboxRow: {
@@ -549,14 +549,14 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderWidth: 1.5,
-    borderColor: '#3D2B1F',
+    borderColor: '#D4AF37',
     borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#FFF6E6',
   },
   checkboxActive: {
-    backgroundColor: '#3D2B1F',
+    backgroundColor: '#D4AF37',
   },
   checkboxLabelContainer: {
     flexDirection: 'row',
@@ -566,7 +566,7 @@ const styles = StyleSheet.create({
   },
   checkboxText: {
     fontSize: 12,
-    color: '#3D2B1F',
+    color: '#D4AF37',
   },
   checkboxLink: {
     fontSize: 12,
@@ -576,17 +576,17 @@ const styles = StyleSheet.create({
   },
   legalBodyText: {
     fontSize: 13,
-    color: '#3D2B1F',
+    color: '#D4AF37',
     lineHeight: 18,
   },
 
   // Modal Styles
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
   modalContent: { backgroundColor: '#FFF6E6', borderRadius: 16, maxHeight: '80%', padding: 20 },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#3D2B1F', marginBottom: 16, textAlign: 'center' },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#D4AF37', marginBottom: 16, textAlign: 'center' },
   modalItem: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: 'rgba(61, 43, 31, 0.1)' },
-  modalItemText: { fontSize: 16, color: '#3D2B1F' },
-  modalCloseButton: { marginTop: 16, backgroundColor: '#3D2B1F', padding: 14, borderRadius: 8, alignItems: 'center' },
+  modalItemText: { fontSize: 16, color: '#D4AF37' },
+  modalCloseButton: { marginTop: 16, backgroundColor: '#D4AF37', padding: 14, borderRadius: 8, alignItems: 'center' },
   modalCloseText: { color: '#FFF6E6', fontWeight: 'bold' },
 
   // Message Banners
@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-    color: '#3D2B1F',
+    color: '#D4AF37',
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     fontSize: 18,
-    color: '#3D2B1F',
+    color: '#D4AF37',
     textAlign: 'center',
     letterSpacing: 8,
     marginBottom: 16,
