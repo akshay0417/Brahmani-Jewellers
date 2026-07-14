@@ -4,8 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { cacheDirectory, downloadAsync, readAsStringAsync, deleteAsync } from 'expo-file-system/legacy';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
+import { cacheDirectory, downloadAsync, readAsStringAsync, deleteAsync } from 'expo-file-system';
 // RNShare is imported dynamically below to prevent Expo Go crashes
 
 const { width } = Dimensions.get('window');
