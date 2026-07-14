@@ -548,11 +548,14 @@ export default function CollectionsScreen() {
               ) : (
                 <View style={styles.subCatGrid}>
                   {subcategoriesForMetal.map((subCat) => {
-                    const count = items.filter(item => 
+                    const matchedItems = items.filter(item => 
                       item.category === selectedMetal && 
                       item.subCategory === subCat &&
                       (item.targetPage === 'shop' || item.targetPage === 'both' || !item.targetPage)
-                    ).length;
+                    );
+                    const count = matchedItems.length;
+                    const firstItem = matchedItems.find(item => item.imageUrl);
+                    const subCatPhoto = firstItem ? firstItem.imageUrl : null;
 
                     return (
                       <TouchableOpacity
@@ -564,11 +567,18 @@ export default function CollectionsScreen() {
                         }}
                       >
                         <View style={styles.subCatGridIconBg}>
-                          <MaterialCommunityIcons 
-                            name={getSubCatIcon(subCat) as any} 
-                            size={22} 
-                            color="#D4AF37" 
-                          />
+                          {subCatPhoto ? (
+                            <Image 
+                              source={{ uri: subCatPhoto }} 
+                              style={styles.subCatGridImage} 
+                            />
+                          ) : (
+                            <MaterialCommunityIcons 
+                              name={getSubCatIcon(subCat) as any} 
+                              size={22} 
+                              color="#D4AF37" 
+                            />
+                          )}
                         </View>
                         <Text style={styles.subCatGridLabel}>{subCat}</Text>
                         <Text style={styles.subCatGridCount}>{count} {count === 1 ? 'Design' : 'Designs'}</Text>
@@ -1230,15 +1240,21 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   subCatGridIconBg: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: '#FAF9F6',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
     borderWidth: 1,
     borderColor: 'rgba(212, 175, 55, 0.2)',
+    overflow: 'hidden',
+  },
+  subCatGridImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   subCatGridLabel: {
     fontSize: 13,

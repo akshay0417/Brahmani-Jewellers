@@ -1110,19 +1110,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   drawerLogo: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
     resizeMode: 'contain',
   },
   drawerBrandName: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#1C1C1E',
   },
   drawerBrandSub: {
-    fontSize: 8,
+    fontSize: 11,
     color: '#D4AF37',
-    letterSpacing: 2,
+    letterSpacing: 2.5,
     fontWeight: 'bold',
   },
   closeBtn: {
