@@ -119,7 +119,7 @@ const Shop = () => {
     window.open(whatsappUrl, '_blank');
   };
 
-  const shopCategories = ['all', 'gold', 'silver', 'antique', 'rudraksha'];
+  const shopCategories = ['all', 'gold', 'silver', 'best-seller', 'offers'];
   const filteredItems = items.filter(item => {
     if (filter !== 'all' && item.category !== filter) return false;
     if (subFilter && item.subCategory !== subFilter) return false;
@@ -211,7 +211,7 @@ const Shop = () => {
                   onClick={() => { setFilter(cat); setSubFilter(''); }} 
                   className={`px-10 py-3 rounded-full border border-ochre/20 text-xs font-bold uppercase tracking-widest transition-all duration-300 ${filter === cat && !subFilter ? 'bg-ochre text-coffee border-ochre shadow-lg' : 'text-coffee hover:bg-ochre/10'}`}
                 >
-                  {cat}
+                  {cat === 'best-seller' ? 'Best Sellers' : cat === 'offers' ? 'Offers' : cat}
                 </button>
                 
                 {isGoldOrSilver && subCats.length > 0 && (

@@ -64,6 +64,16 @@ app.listen(PORT, async () => {
   
   const connected = await connectWithFallback();
   if (connected) {
+    // Run category migrations
+    try {
+      const Gallery = require('./models/Gallery');
+      await Gallery.updateMany({ category: 'rudraksha' }, { $set: { category: 'best-seller' } });
+      await Gallery.updateMany({ category: 'antique' }, { $set: { category: 'offers' } });
+      console.log('[DB MIGRATION] Category migration check completed. (rudraksha -> best-seller, antique -> offers)');
+    } catch (migErr) {
+      console.error('[DB MIGRATION ERROR] Migration query failed:', migErr);
+    }
+
     // Create default admin if not exists
     try {
       const adminExists = await User.findOne({ role: 'admin' });

@@ -108,7 +108,7 @@ const Gallery = () => {
 
         {/* Filters */}
         <div className="flex justify-center gap-6 mb-16 flex-wrap">
-          {['all', 'gold', 'silver', 'rudraksha', 'antique'].map((cat) => {
+          {['all', 'gold', 'silver', 'best-seller', 'offers'].map((cat) => {
             const isGoldOrSilver = cat === 'gold' || cat === 'silver';
             const subCats = isGoldOrSilver ? [...new Set(items.filter(i => i.category === cat && i.subCategory && (i.targetPage === 'collection' || i.targetPage === 'both' || !i.targetPage)).map(i => i.subCategory))] : [];
 
@@ -118,7 +118,7 @@ const Gallery = () => {
                   onClick={() => { setFilter(cat); setSubFilter(''); }}
                   className={`uppercase tracking-[0.2em] text-sm font-bold transition-all duration-300 ${filter === cat && !subFilter ? 'text-ochre border-b-2 border-ochre pb-1' : 'text-coffee/50 hover:text-coffee'}`}
                 >
-                  {cat}
+                  {cat === 'best-seller' ? 'Best Sellers' : cat === 'offers' ? 'Offers' : cat}
                 </button>
                 
                 {isGoldOrSilver && subCats.length > 0 && (

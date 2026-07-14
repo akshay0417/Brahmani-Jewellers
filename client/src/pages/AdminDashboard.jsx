@@ -1046,7 +1046,7 @@ const AdminDashboard = () => {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Select Category</label>
+                            <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Select Category</label>
                         <select
                           value={category}
                           onChange={(e) => setCategory(e.target.value)}
@@ -1054,8 +1054,8 @@ const AdminDashboard = () => {
                         >
                           <option value="gold">Gold Jewellery</option>
                           <option value="silver">Silver Jewellery</option>
-                          <option value="rudraksha">Rudraksha</option>
-                          <option value="antique">Antique Items</option>
+                          <option value="best-seller">Best Sellers</option>
+                          <option value="offers">Offers</option>
                         </select>
                       </div>
                       <div className="space-y-2">
@@ -2382,8 +2382,8 @@ const AdminDashboard = () => {
                   <select value={editingItem.category || 'gold'} onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre">
                     <option value="gold">Gold Jewellery</option>
                     <option value="silver">Silver Jewellery</option>
-                    <option value="rudraksha">Rudraksha</option>
-                    <option value="antique">Antique Items</option>
+                    <option value="best-seller">Best Sellers</option>
+                    <option value="offers">Offers</option>
                   </select>
                 </div>
                 <div className="space-y-2">

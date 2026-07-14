@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const GallerySchema = new mongoose.Schema({
   imageUrl: { type: String, required: true },
   targetPage: { type: String, enum: ['shop', 'collection', 'both'], default: 'both' },
-  category: { type: String, enum: ['gold', 'silver', 'rudraksha', 'antique'], required: true },
+  category: { type: String, enum: ['gold', 'silver', 'rudraksha', 'antique', 'best-seller', 'offers'], required: true },
   subCategory: { type: String }, // e.g., 'Ring', 'Chain', 'Bracelet'
   name: { type: String }, // e.g., 'Royal Heritage Necklace'
   description: { type: String }, // Optional description

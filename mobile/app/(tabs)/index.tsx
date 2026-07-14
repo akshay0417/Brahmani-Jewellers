@@ -97,10 +97,10 @@ const HERO_SLIDES = [
 ];
 
 const CATEGORIES = [
-  { id: '1', name: 'Gold', icon: 'diamond', iconType: 'FontAwesome' },
-  { id: '2', name: 'Silver', icon: 'star', iconType: 'FontAwesome' },
-  { id: '3', name: 'Rudraksha', icon: 'dots-circle', iconType: 'MaterialCommunityIcons' },
-  { id: '4', name: 'Antique', icon: 'shield', iconType: 'FontAwesome' },
+  { id: '1', name: 'Gold', icon: 'diamond', iconType: 'FontAwesome', searchValue: 'gold' },
+  { id: '2', name: 'Silver', icon: 'star', iconType: 'FontAwesome', searchValue: 'silver' },
+  { id: '3', name: 'Best Sellers', icon: 'star-circle', iconType: 'MaterialCommunityIcons', searchValue: 'best-seller' },
+  { id: '4', name: 'Offers', icon: 'percent', iconType: 'MaterialCommunityIcons', searchValue: 'offers' },
 ];
 
 export default function HomeScreen() {
@@ -339,7 +339,7 @@ export default function HomeScreen() {
               <AnimatedCategoryCard 
                 key={cat.id} 
                 style={styles.categoryCard} 
-                onPress={() => router.push({ pathname: '/collections', params: { search: cat.name.toLowerCase() } })}
+                onPress={() => router.push({ pathname: '/collections', params: { search: cat.searchValue } })}
               >
                 <View style={styles.categoryIconBg}>
                   {cat.iconType === 'MaterialCommunityIcons' ? (
