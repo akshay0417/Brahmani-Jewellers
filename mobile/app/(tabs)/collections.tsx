@@ -137,6 +137,9 @@ export default function CollectionsScreen() {
         makingCharges: item.makingCharges ? String(item.makingCharges) : '',
         otherCharges: item.otherCharges ? String(item.otherCharges) : '',
         targetPage: item.targetPage || 'shop',
+        tagNumber: item.tagNumber || '',
+        size: item.size || '',
+        netWeight: item.netWeight ? String(item.netWeight) : '',
         additionalImages: item.additionalImages ? JSON.stringify(item.additionalImages) : '[]'
       }
     });
@@ -288,57 +291,78 @@ export default function CollectionsScreen() {
             <Text style={styles.noResultsText}>No designs match your search query</Text>
           </View>
         ) : (
-          <View style={styles.grid}>
+          <View style={styles.listContainer}>
             {filteredItems.map((item, index) => {
               const computedPrice = calculatePrice(item);
               return (
                 <Reanimated.View 
                   entering={FadeInDown.duration(350).delay(Math.min(index * 35, 250))}
                   key={item._id} 
-                  style={styles.card}
+                  style={styles.listItemCard}
                 >
-                  <TouchableOpacity onPress={() => navigateToDetails(item)} activeOpacity={0.8}>
-                    <Image source={{ uri: item.imageUrl }} style={styles.image} />
+                  <TouchableOpacity 
+                    style={styles.listItemContent}
+                    onPress={() => navigateToDetails(item)} 
+                    activeOpacity={0.8}
+                  >
+                    <Image source={{ uri: item.imageUrl }} style={styles.listImage} />
                     
-                    {/* Weight tag floating on image if exists */}
-                    {item.weight && (
-                      <View style={styles.weightTag}>
-                        <Text style={styles.weightTagText}>{item.weight}g</Text>
+                    <View style={styles.listDetailsContainer}>
+                      {/* Top Row: Category and Status Badge */}
+                      <View style={styles.listHeaderRow}>
+                        <Text style={styles.listCategoryText}>
+                          {(item.subCategory || item.category || 'Jewellery').toUpperCase()}
+                        </Text>
+                        <View style={styles.statusBadge}>
+                          <Text style={styles.statusBadgeText}>Ready Stock</Text>
+                        </View>
                       </View>
-                    )}
-                  </TouchableOpacity>
 
-                  <View style={styles.cardInfo}>
-                    <TouchableOpacity onPress={() => navigateToDetails(item)} activeOpacity={0.8}>
-                      <Text style={styles.itemName} numberOfLines={1}>{item.name || `${item.category} Ornament`}</Text>
-                      
-                      <Text style={styles.itemDetails} numberOfLines={1}>
-                        {item.purity ? `${item.purity} ` : ''}
-                        {item.subCategory ? `${item.subCategory}` : `${item.category}`}
+                      {/* Tag Number & Purity */}
+                      <Text style={styles.listTagText}>
+                        {item.tagNumber || 'N/A'} - {item.purity || '916'}
                       </Text>
 
-                      {/* Weight & Price displayed directly on card */}
-                      <View style={styles.priceWeightRow}>
-                        {computedPrice > 0 ? (
-                          <Text style={styles.itemPrice}>₹{computedPrice.toLocaleString('en-IN')}</Text>
+                      {/* Design / SubCategory */}
+                      <Text style={styles.listInfoText}>
+                        Design : {item.name || item.subCategory || 'N/A'}
+                      </Text>
+
+                      {/* Size */}
+                      <Text style={styles.listInfoText}>
+                        Size : {item.size || 'N/A'}
+                      </Text>
+
+                      {/* Weight Badges (Gr Wt & Nt Wt) */}
+                      <View style={styles.weightBadgesRow}>
+                        <View style={styles.weightBadge}>
+                          <Text style={styles.weightBadgeText}>Gr Wt : {parseFloat(item.weight || 0).toFixed(3)}</Text>
+                        </View>
+                        <View style={styles.weightBadge}>
+                          <Text style={styles.weightBadgeText}>Nt Wt : {parseFloat(item.netWeight || item.weight || 0).toFixed(3)}</Text>
+                        </View>
+                      </View>
+
+                      {/* Action buttons or price */}
+                      <View style={styles.listActionRow}>
+                        <Text style={styles.listPriceText}>
+                          {computedPrice > 0 ? `₹${computedPrice.toLocaleString('en-IN')}` : 'Price on Request'}
+                        </Text>
+                        
+                        {activeTab === 'shop' ? (
+                          <TouchableOpacity style={styles.listAddButton} onPress={() => addToCart(item._id)}>
+                            <Ionicons name="cart-outline" size={14} color="#FFFFFF" />
+                            <Text style={styles.listAddButtonText}>Add</Text>
+                          </TouchableOpacity>
                         ) : (
-                          <Text style={styles.itemPrice}>Price on Request</Text>
+                          <TouchableOpacity style={styles.listWhatsAppButton} onPress={() => initiateWhatsAppInquiry(item)}>
+                            <FontAwesome name="whatsapp" size={12} color="#FFFFFF" />
+                            <Text style={styles.listAddButtonText}>Inquire</Text>
+                          </TouchableOpacity>
                         )}
                       </View>
-                    </TouchableOpacity>
-
-                    {activeTab === 'shop' ? (
-                      <TouchableOpacity style={styles.button} onPress={() => addToCart(item._id)}>
-                        <Ionicons name="add-circle-outline" size={16} color="#FFFFFF" style={{ marginRight: 4 }} />
-                        <Text style={styles.buttonText}>Add to Cart</Text>
-                      </TouchableOpacity>
-                    ) : (
-                      <TouchableOpacity style={[styles.button, styles.whatsappButton]} onPress={() => initiateWhatsAppInquiry(item)}>
-                        <FontAwesome name="whatsapp" size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
-                        <Text style={styles.buttonText}>WhatsApp Inquiry</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
+                    </View>
+                  </TouchableOpacity>
                 </Reanimated.View>
               );
             })}
@@ -688,5 +712,120 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 15,
+  },
+
+  listContainer: { width: '100%' },
+  listItemCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  listItemContent: {
+    flexDirection: 'row',
+    padding: 10,
+  },
+  listImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    backgroundColor: '#FAF9F6',
+  },
+  listDetailsContainer: {
+    flex: 1,
+    marginLeft: 12,
+    justifyContent: 'space-between',
+  },
+  listHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  listCategoryText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#3D2B1F',
+  },
+  statusBadge: {
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  statusBadgeText: {
+    color: '#2E7D32',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  listTagText: {
+    fontSize: 12,
+    color: '#8E8E93',
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  listInfoText: {
+    fontSize: 11,
+    color: '#48484A',
+    marginBottom: 1,
+  },
+  weightBadgesRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginVertical: 4,
+  },
+  weightBadge: {
+    backgroundColor: '#F2F2F7',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    borderWidth: 0.5,
+    borderColor: '#E5E5EA',
+  },
+  weightBadgeText: {
+    fontSize: 10,
+    color: '#1C1C1E',
+    fontWeight: '600',
+  },
+  listActionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  listPriceText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#D4AF37',
+  },
+  listAddButton: {
+    backgroundColor: '#3D2B1F',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    gap: 4,
+  },
+  listWhatsAppButton: {
+    backgroundColor: '#25D366',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    gap: 4,
+  },
+  listAddButtonText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: 'bold',
   }
 });

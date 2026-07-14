@@ -1514,7 +1514,7 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
     next();
   });
 }, async (req, res) => {
-  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges, isFeatured, showOnHomepage } = req.body;
+  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges, isFeatured, showOnHomepage, tagNumber, size, netWeight } = req.body;
   try {
     const primaryFile = req.files && req.files['image'] ? req.files['image'][0] : null;
     if (!primaryFile) return res.status(400).json({ message: 'No primary image uploaded' });
@@ -1589,6 +1589,9 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
       otherCharges: parseFloat(otherCharges) || 0,
       isFeatured: isFeatured === 'true' || isFeatured === true,
       showOnHomepage: showOnHomepage === 'true' || showOnHomepage === true,
+      tagNumber,
+      size,
+      netWeight: parseFloat(netWeight) || parseFloat(weight) || 0,
       additionalImages
     });
 
@@ -1609,7 +1612,7 @@ router.post('/gallery', auth, isAdmin, (req, res, next) => {
 
 // Edit Image/Details (Admin only)
 router.put('/gallery/:id', auth, isAdmin, async (req, res) => {
-  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges, isFeatured, showOnHomepage, additionalImages } = req.body;
+  const { category, subCategory, name, description, weight, purity, price, targetPage, makingCharges, otherCharges, isFeatured, showOnHomepage, additionalImages, tagNumber, size, netWeight } = req.body;
   try {
     const item = await Gallery.findById(req.params.id);
     if (!item) return res.status(404).json({ message: 'Item not found' });
@@ -1626,6 +1629,9 @@ router.put('/gallery/:id', auth, isAdmin, async (req, res) => {
     if (otherCharges !== undefined) item.otherCharges = parseFloat(otherCharges) || 0;
     if (isFeatured !== undefined) item.isFeatured = isFeatured === 'true' || isFeatured === true;
     if (showOnHomepage !== undefined) item.showOnHomepage = showOnHomepage === 'true' || showOnHomepage === true;
+    if (tagNumber !== undefined) item.tagNumber = tagNumber;
+    if (size !== undefined) item.size = size;
+    if (netWeight !== undefined) item.netWeight = parseFloat(netWeight) || 0;
     if (additionalImages !== undefined) item.additionalImages = additionalImages;
 
     await item.save();

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Platform, Linking, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Platform, Linking, Dimensions, Share } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { cacheDirectory, downloadAsync, readAsStringAsync, deleteAsync } from 'expo-file-system/legacy';
-import RNShare from 'react-native-share';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
+// RNShare is imported dynamically below to prevent Expo Go crashes
 
 const { width } = Dimensions.get('window');
 const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
@@ -14,11 +15,13 @@ export default function ProductDetailsScreen() {
   const { user, refreshCartCount } = useAuth() as any;
   const router = useRouter();
   const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
 
   const [loading, setLoading] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [rates, setRates] = useState<any>({ gold22K: 66000, gold24K: 72000, gold18K: 54000, silver: 85000 });
   const [loadingRates, setLoadingRates] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   // Parse parameters passed from parent collections screen
   const id = params.id as string;
@@ -33,6 +36,9 @@ export default function ProductDetailsScreen() {
   const makingCharges = (params.makingCharges as string) || '';
   const otherCharges = (params.otherCharges as string) || '';
   const targetPage = (params.targetPage as string) || 'shop';
+  const tagNumber = (params.tagNumber as string) || '';
+  const size = (params.size as string) || '';
+  const netWeight = (params.netWeight as string) || '';
   
   let additionalImages: string[] = [];
   try {
@@ -165,29 +171,42 @@ export default function ProductDetailsScreen() {
         shareMessage += `Price: ₹${computedPrice.toLocaleString('en-IN')}\n`;
       }
 
-      // Download the remote image to a temporary file locally
-      const filename = imageUrl.split('/').pop() || 'share-image.jpg';
-      const localUri = `${cacheDirectory}${Date.now()}-${filename}`;
-      
-      const downloadResult = await downloadAsync(imageUrl, localUri);
-      
-      if (downloadResult.status === 200) {
-        // Read file as base64 string
-        const base64Data = await readAsStringAsync(downloadResult.uri, {
-          encoding: 'base64'
-        });
+      let shared = false;
+      try {
+        const RNShare = require('react-native-share').default;
         
-        await RNShare.open({
-          title: name || 'Brahmani Jewellers Item',
-          message: shareMessage,
-          url: `data:image/jpeg;base64,${base64Data}`,
-          type: 'image/jpeg',
-        });
+        // Download the remote image to a temporary file locally
+        const filename = imageUrl.split('/').pop() || 'share-image.jpg';
+        const localUri = `${cacheDirectory}${Date.now()}-${filename}`;
         
-        // Clean up cached file
-        await deleteAsync(downloadResult.uri, { idempotent: true });
-      } else {
-        throw new Error('Image download failed');
+        const downloadResult = await downloadAsync(imageUrl, localUri);
+        
+        if (downloadResult.status === 200) {
+          // Read file as base64 string
+          const base64Data = await readAsStringAsync(downloadResult.uri, {
+            encoding: 'base64'
+          });
+          
+          await RNShare.open({
+            title: name || 'Brahmani Jewellers Item',
+            message: shareMessage,
+            url: `data:image/jpeg;base64,${base64Data}`,
+            type: 'image/jpeg',
+          });
+          
+          // Clean up cached file
+          await deleteAsync(downloadResult.uri, { idempotent: true });
+          shared = true;
+        }
+      } catch (nativeShareError) {
+        console.log("react-native-share not available, falling back to built-in Share:", nativeShareError);
+      }
+
+      if (!shared) {
+        // Fallback to built-in Share for Expo Go
+        await Share.share({
+          message: `${shareMessage}\n${imageUrl}`,
+        });
       }
     } catch (error: any) {
       if (error && error.message && error.message.includes('User cancelled')) {
@@ -255,6 +274,41 @@ export default function ProductDetailsScreen() {
           )}
         </View>
 
+        {/* Circular Action Buttons */}
+        <View style={styles.circularActionBar}>
+          <TouchableOpacity style={styles.circularBtn} onPress={() => Linking.openURL('tel:+917621967577')}>
+            <View style={styles.circularIconBg}>
+              <FontAwesome name="phone" size={18} color="#D4AF37" />
+            </View>
+            <Text style={styles.circularLabel}>Call</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.circularBtn} onPress={() => setIsFavorite(!isFavorite)}>
+            <View style={styles.circularIconBg}>
+              <Ionicons 
+                name={isFavorite ? "heart" : "heart-outline"} 
+                size={18} 
+                color={isFavorite ? "#FF3B30" : "#3D2B1F"} 
+              />
+            </View>
+            <Text style={styles.circularLabel}>Favorite</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.circularBtn} onPress={initiateWhatsAppInquiry}>
+            <View style={styles.circularIconBg}>
+              <FontAwesome name="whatsapp" size={18} color="#25D366" />
+            </View>
+            <Text style={styles.circularLabel}>Whatsapp</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.circularBtn} onPress={shareProduct}>
+            <View style={styles.circularIconBg}>
+              <Ionicons name="share-social-outline" size={18} color="#3D2B1F" />
+            </View>
+            <Text style={styles.circularLabel}>Share</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Content Body */}
         <View style={styles.contentBody}>
           {/* Title and Badges */}
@@ -290,51 +344,41 @@ export default function ProductDetailsScreen() {
             )}
           </View>
 
-          {/* Hallmark Trust Banner */}
-          <View style={styles.trustBanner}>
-            <MaterialCommunityIcons name="certificate" size={24} color="#D4AF37" />
-            <View style={styles.trustTextContainer}>
-              <Text style={styles.trustTitle}>100% Certified Purity</Text>
-              <Text style={styles.trustSubtitle}>BIS Hallmarked Jewellery, buy with complete confidence.</Text>
-            </View>
-          </View>
-
           {/* Specifications Table */}
           <View style={styles.sectionCard}>
             <Text style={styles.sectionHeader}>Specifications</Text>
             
             <View style={styles.tableRow}>
-              <Text style={styles.tableLabel}>Metal Type</Text>
-              <Text style={styles.tableValue}>{category.toUpperCase()}</Text>
+              <Text style={styles.tableLabel}>Product No.</Text>
+              <Text style={styles.tableValue}>{tagNumber || 'N/A'}</Text>
+            </View>
+
+            <View style={styles.tableRow}>
+              <Text style={styles.tableLabel}>Design No.</Text>
+              <Text style={styles.tableValue}>{subCategory || 'N/A'}</Text>
+            </View>
+
+            <View style={styles.tableRow}>
+              <Text style={styles.tableLabel}>Size</Text>
+              <Text style={styles.tableValue}>{size || 'N/A'}</Text>
+            </View>
+
+            <View style={styles.tableRow}>
+              <Text style={styles.tableLabel}>Purity</Text>
+              <Text style={styles.tableValue}>{purity || 'N/A'}</Text>
             </View>
 
             {weight ? (
               <View style={styles.tableRow}>
-                <Text style={styles.tableLabel}>Gross Weight</Text>
-                <Text style={styles.tableValue}>{weight} grams</Text>
+                <Text style={styles.tableLabel}>Gr. Weight</Text>
+                <Text style={styles.tableValue}>{parseFloat(weight).toFixed(3)} grams</Text>
               </View>
             ) : null}
 
-            {purity ? (
-              <View style={styles.tableRow}>
-                <Text style={styles.tableLabel}>Purity / Karat</Text>
-                <Text style={styles.tableValue}>{purity}</Text>
-              </View>
-            ) : null}
-
-            {makingCharges ? (
-              <View style={styles.tableRow}>
-                <Text style={styles.tableLabel}>Making Charges</Text>
-                <Text style={styles.tableValue}>{makingCharges}%</Text>
-              </View>
-            ) : null}
-
-            {subCategory ? (
-              <View style={styles.tableRow}>
-                <Text style={styles.tableLabel}>Subcategory</Text>
-                <Text style={styles.tableValue}>{subCategory}</Text>
-              </View>
-            ) : null}
+            <View style={styles.tableRow}>
+              <Text style={styles.tableLabel}>Net Weight</Text>
+              <Text style={styles.tableValue}>{parseFloat(netWeight || weight || 0).toFixed(3)} grams</Text>
+            </View>
           </View>
 
           {/* Description Section */}
@@ -348,26 +392,21 @@ export default function ProductDetailsScreen() {
       </ScrollView>
 
       {/* Sticky Bottom Actions */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         {loading ? (
           <ActivityIndicator size="small" color="#D4AF37" style={{ paddingVertical: 14 }} />
-        ) : targetPage === 'shop' ? (
+        ) : (
           <View style={styles.shopActionRow}>
-            <TouchableOpacity style={styles.cartButton} onPress={addToCart}>
-              <Ionicons name="cart-outline" size={20} color="#FFFFFF" style={{ marginRight: 6 }} />
-              <Text style={styles.cartButtonText}>Add To Cart</Text>
+            <TouchableOpacity style={styles.getQuoteButton} onPress={initiateWhatsAppInquiry}>
+              <FontAwesome name="whatsapp" size={20} color="#3D2B1F" style={{ marginRight: 6 }} />
+              <Text style={styles.getQuoteButtonText}>GET QUOTE</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.buyButton} onPress={buyNow}>
-              <Ionicons name="flash-outline" size={20} color="#1C1C1E" style={{ marginRight: 6 }} />
-              <Text style={styles.buyButtonText}>Buy Now</Text>
+            <TouchableOpacity style={styles.cartButton} onPress={addToCart}>
+              <Ionicons name="cart-outline" size={20} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.cartButtonText}>ADD TO CART</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          <TouchableOpacity style={styles.whatsappInquiryButton} onPress={initiateWhatsAppInquiry}>
-            <FontAwesome name="whatsapp" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-            <Text style={styles.whatsappButtonText}>WhatsApp Inquiry</Text>
-          </TouchableOpacity>
         )}
       </View>
     </SafeAreaView>
@@ -652,5 +691,53 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+
+  circularActionBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F2F7',
+    backgroundColor: '#FFFFFF',
+  },
+  circularBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  circularIconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F2F2F7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  circularLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#3D2B1F',
+  },
+  getQuoteButton: {
+    flex: 1.1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#3D2B1F',
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+  },
+  getQuoteButtonText: {
+    color: '#3D2B1F',
+    fontWeight: 'bold',
+    fontSize: 15,
   },
 });

@@ -14,6 +14,9 @@ const GallerySchema = new mongoose.Schema({
   price: { type: Number }, // Fallback fixed price if not calculated
   isFeatured: { type: Boolean, default: false }, // Highlight on home page
   showOnHomepage: { type: Boolean, default: false }, // Show on home page
+  tagNumber: { type: String }, // e.g., 'ERG00003' or 'LRG00002'
+  size: { type: String }, // e.g., '18', '2.4'
+  netWeight: { type: Number }, // numeric net weight in grams
   additionalImages: [{ type: String }], // Supplementary images
   createdAt: { type: Date, default: Date.now }
 });

@@ -55,6 +55,9 @@ const AdminDashboard = () => {
   const [isFeatured, setIsFeatured] = useState(false);
   const [showOnHomepage, setShowOnHomepage] = useState(false);
   const [additionalImagesFiles, setAdditionalImagesFiles] = useState([]);
+  const [tagNumber, setTagNumber] = useState('');
+  const [size, setSize] = useState('');
+  const [netWeight, setNetWeight] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '' });
@@ -367,6 +370,9 @@ const AdminDashboard = () => {
     formData.append('otherCharges', otherCharges);
     formData.append('isFeatured', isFeatured);
     formData.append('showOnHomepage', showOnHomepage);
+    formData.append('tagNumber', tagNumber);
+    formData.append('size', size);
+    formData.append('netWeight', netWeight);
     
     // Append additional images
     if (additionalImagesFiles.length > 0) {
@@ -388,6 +394,9 @@ const AdminDashboard = () => {
       setIsFeatured(false);
       setShowOnHomepage(false);
       setPrice('');
+      setTagNumber('');
+      setSize('');
+      setNetWeight('');
       fetchData();
       setStatus({ type: 'success', message: 'Image uploaded successfully!' });
     } catch (err) {
@@ -1161,6 +1170,39 @@ const AdminDashboard = () => {
                         />
                       </div>
                     </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Tag/Product Number</label>
+                        <input
+                          type="text"
+                          value={tagNumber}
+                          onChange={(e) => setTagNumber(e.target.value)}
+                          className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                          placeholder="e.g. ERG00003"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Size</label>
+                        <input
+                          type="text"
+                          value={size}
+                          onChange={(e) => setSize(e.target.value)}
+                          className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                          placeholder="e.g. 18"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs text-coffee/70 uppercase tracking-widest transition-colors duration-300">Net Weight (Grams)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={netWeight}
+                          onChange={(e) => setNetWeight(e.target.value)}
+                          className="w-full bg-cream border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                          placeholder="e.g. 10.5"
+                        />
+                      </div>
+                    </div>
                     <div className="flex flex-col gap-3 pt-2">
                       <div className="flex items-center gap-3">
                         <input 
@@ -1322,7 +1364,7 @@ const AdminDashboard = () => {
                           )}
                         </div>
                         <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-cream-alt/90 text-coffee text-[10px] uppercase font-bold tracking-wider rounded-sm shadow-sm backdrop-blur-sm">
-                          {item.category} {item.weight && `| ${item.weight}`} {item.purity && `| ${item.purity}`} {item.price && `| ₹${item.price}`}
+                          {item.tagNumber ? `${item.tagNumber} | ` : ''}{item.category} {item.weight && `| ${item.weight}g`} {item.purity && `| ${item.purity}`} {item.size && `| SZ: ${item.size}`} {item.price && `| ₹${item.price}`}
                         </div>
                       </div>
                     ))}
@@ -2395,6 +2437,18 @@ const AdminDashboard = () => {
                 <div className="space-y-2">
                   <label className="text-xs text-coffee/70 uppercase tracking-widest">Other Charges (₹)</label>
                   <input type="number" value={editingItem.otherCharges ?? ''} onChange={(e) => setEditingItem({ ...editingItem, otherCharges: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest">Tag Number</label>
+                  <input type="text" value={editingItem.tagNumber || ''} onChange={(e) => setEditingItem({ ...editingItem, tagNumber: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre" placeholder="e.g. ERG00003" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest">Size</label>
+                  <input type="text" value={editingItem.size || ''} onChange={(e) => setEditingItem({ ...editingItem, size: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre" placeholder="e.g. 18" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-coffee/70 uppercase tracking-widest">Net Weight (Grams)</label>
+                  <input type="number" step="0.01" value={editingItem.netWeight ?? ''} onChange={(e) => setEditingItem({ ...editingItem, netWeight: e.target.value })} className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre" />
                 </div>
               </div>
 
