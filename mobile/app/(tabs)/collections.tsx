@@ -693,7 +693,7 @@ export default function CollectionsScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { padding: 16, backgroundColor: '#FAF9F6', alignItems: 'center', paddingTop: 24, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
+  header: { padding: 16, backgroundColor: '#FFFFFF', alignItems: 'center', paddingTop: 24, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
   title: { fontSize: 22, fontWeight: 'bold', color: '#1C1C1E', letterSpacing: 1, marginBottom: 12, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   searchBarContainer: {
     flexDirection: 'row',
@@ -845,7 +845,7 @@ const styles = StyleSheet.create({
   modalImageContainer: {
     width: '100%',
     height: 300,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     position: 'relative',
   },
   modalImage: {
@@ -925,7 +925,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     color: '#8E8E93',
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
@@ -994,7 +994,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   subCategoryButton: {
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E5EA',
     borderRadius: 20,
@@ -1053,7 +1053,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 8,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
   },
   listDetailsContainer: {
     flex: 1,
@@ -1153,7 +1153,7 @@ const styles = StyleSheet.create({
   metalCardGold: {
     height: 140,
     borderRadius: 12,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
     borderColor: '#D4AF37',
     overflow: 'hidden',
@@ -1161,7 +1161,7 @@ const styles = StyleSheet.create({
   metalCardSilver: {
     height: 140,
     borderRadius: 12,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
     borderColor: '#AEAEB2',
     overflow: 'hidden',
@@ -1254,7 +1254,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,

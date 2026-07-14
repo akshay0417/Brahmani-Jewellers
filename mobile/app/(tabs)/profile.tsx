@@ -803,7 +803,7 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { padding: 16, backgroundColor: '#FAF9F6', alignItems: 'center', paddingTop: 24, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
+  header: { padding: 16, backgroundColor: '#FFFFFF', alignItems: 'center', paddingTop: 24, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
   title: { fontSize: 22, fontWeight: 'bold', color: '#1C1C1E', letterSpacing: 0.5, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   container: { padding: 20, paddingBottom: 100 },
   guestContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30, backgroundColor: '#FFFFFF' },
@@ -812,7 +812,7 @@ const styles = StyleSheet.create({
   loginBtn: { backgroundColor: '#1C1C1E', paddingVertical: 16, width: '100%', borderRadius: 8, alignItems: 'center' },
   loginBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16, letterSpacing: 1 },
   
-  userCard: { flexDirection: 'row', backgroundColor: '#FAF9F6', borderRadius: 16, padding: 18, alignItems: 'center', marginBottom: 24, borderWidth: 1, borderColor: '#E5E5EA' },
+  userCard: { flexDirection: 'row', backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, alignItems: 'center', marginBottom: 24, borderWidth: 1, borderColor: '#E5E5EA' },
   avatarBg: { backgroundColor: '#D4AF37', width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
   avatarText: { color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' },
   userInfo: { marginLeft: 16 },
@@ -821,7 +821,7 @@ const styles = StyleSheet.create({
   
   menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
   menuRowText: { flex: 1, marginLeft: 16, fontSize: 16, color: '#1C1C1E', fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
-  expandedContent: { backgroundColor: '#FAF9F6', padding: 16, borderRadius: 12, marginTop: 4, marginBottom: 8, borderWidth: 1, borderColor: '#E5E5EA' },
+  expandedContent: { backgroundColor: '#FFFFFF', padding: 16, borderRadius: 12, marginTop: 4, marginBottom: 8, borderWidth: 1, borderColor: '#E5E5EA' },
   
   infoLabel: { fontSize: 11, fontWeight: 'bold', color: '#8E8E93', textTransform: 'uppercase', marginTop: 8 },
   infoValue: { fontSize: 15, color: '#1C1C1E', fontWeight: '600', marginBottom: 4, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
@@ -849,12 +849,12 @@ const styles = StyleSheet.create({
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
   modalBody: { backgroundColor: '#FFFFFF', width: '90%', borderRadius: 16, padding: 20, elevation: 8 },
   modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#1C1C1E', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', paddingBottom: 10, marginBottom: 14, textAlign: 'center' },
-  bankDetailContainer: { backgroundColor: '#FAF9F6', padding: 14, borderRadius: 10, borderWidth: 1, borderColor: '#E5E5EA' },
+  bankDetailContainer: { backgroundColor: '#FFFFFF', padding: 14, borderRadius: 10, borderWidth: 1, borderColor: '#E5E5EA' },
   bankLabel: { fontSize: 11, color: '#8E8E93', fontWeight: 'bold', textTransform: 'uppercase', marginTop: 6 },
   bankValue: { fontSize: 14, color: '#1C1C1E', fontWeight: 'bold', marginBottom: 4 },
   modalCloseBtn: { backgroundColor: '#1C1C1E', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginTop: 16 },
   modalCloseBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 14, textTransform: 'uppercase' },
-  notiBox: { flexDirection: 'row', gap: 10, backgroundColor: '#FAF9F6', padding: 12, borderRadius: 8, marginBottom: 8, alignItems: 'center', borderWidth: 1, borderColor: '#E5E5EA' },
+  notiBox: { flexDirection: 'row', gap: 10, backgroundColor: '#FFFFFF', padding: 12, borderRadius: 8, marginBottom: 8, alignItems: 'center', borderWidth: 1, borderColor: '#E5E5EA' },
   notiText: { fontSize: 13, color: '#1C1C1E', flex: 1, lineHeight: 18 },
   legalBodyText: { fontSize: 13, color: '#1C1C1E', lineHeight: 20 },
   adminSectionTitle: { fontSize: 15, fontWeight: 'bold', color: '#1C1C1E', marginTop: 12, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
@@ -865,7 +865,7 @@ const styles = StyleSheet.create({
   adminBtn: { backgroundColor: '#1C1C1E', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginTop: 10 },
   adminBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 13, letterSpacing: 1 },
   adminDivider: { height: 1, backgroundColor: '#E5E5EA', marginVertical: 16 },
-  adminOrderItem: { backgroundColor: '#FAF9F6', padding: 12, borderRadius: 10, marginBottom: 8, borderLeftWidth: 4, borderLeftColor: '#D4AF37' },
+  adminOrderItem: { backgroundColor: '#FFFFFF', padding: 12, borderRadius: 10, marginBottom: 8, borderLeftWidth: 4, borderLeftColor: '#D4AF37' },
   adminOrderHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   adminOrderId: { fontSize: 13, fontWeight: 'bold', color: '#1C1C1E' },
   adminOrderDate: { fontSize: 11, color: '#8E8E93' },

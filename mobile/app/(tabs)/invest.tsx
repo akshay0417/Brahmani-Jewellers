@@ -1181,7 +1181,7 @@ export default function InvestScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { padding: 16, backgroundColor: '#FAF9F6', alignItems: 'center', paddingTop: 24, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
+  header: { padding: 16, backgroundColor: '#FFFFFF', alignItems: 'center', paddingTop: 24, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
   title: { fontSize: 22, fontWeight: 'bold', color: '#1C1C1E', letterSpacing: 0.5, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   subtitle: { fontSize: 11, color: '#8E8E93', marginTop: 4, marginBottom: 14, fontWeight: '500' },
   
@@ -1233,9 +1233,9 @@ const styles = StyleSheet.create({
 
   inputGroup: { marginBottom: 14 },
   inputLabel: { fontSize: 12, fontWeight: '700', color: '#1C1C1E', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
-  textInput: { height: 44, borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 8, paddingHorizontal: 12, fontSize: 15, color: '#1C1C1E', backgroundColor: '#FAF9F6' },
+  textInput: { height: 44, borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 8, paddingHorizontal: 12, fontSize: 15, color: '#1C1C1E', backgroundColor: '#FFFFFF' },
   
-  breakdownBox: { backgroundColor: '#FAF9F6', borderRadius: 10, padding: 12, marginBottom: 16, borderWidth: 1, borderColor: '#E5E5EA' },
+  breakdownBox: { backgroundColor: '#FFFFFF', borderRadius: 10, padding: 12, marginBottom: 16, borderWidth: 1, borderColor: '#E5E5EA' },
   breakdownRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
   breakdownText: { fontSize: 12, color: 'rgba(28,28,30,0.5)' },
   breakdownVal: { fontSize: 12, fontWeight: 'bold', color: '#1C1C1E' },
@@ -1246,17 +1246,17 @@ const styles = StyleSheet.create({
   buyBtn: { backgroundColor: '#1C1C1E', paddingVertical: 14, borderRadius: 8, alignItems: 'center', marginBottom: 16 },
   buyBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 14, letterSpacing: 1 },
 
-  resellCard: { backgroundColor: '#FAF9F6', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)' },
+  resellCard: { backgroundColor: '#FFFFFF', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)' },
   resellCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
   resellCardTitle: { fontSize: 13, fontWeight: 'bold', color: '#1C1C1E' },
   resellCardDesc: { fontSize: 12, color: 'rgba(28,28,30,0.6)', lineHeight: 18 },
   resellUserId: { fontSize: 11, fontWeight: 'bold', color: '#D4AF37', marginTop: 10, textAlign: 'center' },
 
-  pickupStoreBox: { backgroundColor: '#FAF9F6', padding: 14, borderRadius: 10, borderWidth: 1, borderColor: '#E5E5EA', marginBottom: 14, alignItems: 'center' },
+  pickupStoreBox: { backgroundColor: '#FFFFFF', padding: 14, borderRadius: 10, borderWidth: 1, borderColor: '#E5E5EA', marginBottom: 14, alignItems: 'center' },
   pickupStoreTitle: { fontSize: 13, fontWeight: 'bold', color: '#1C1C1E', marginBottom: 4 },
   pickupStoreDesc: { fontSize: 12, color: 'rgba(28,28,30,0.6)', lineHeight: 18, textAlign: 'center' },
 
-  deliveryForm: { backgroundColor: '#FAF9F6', padding: 14, borderRadius: 10, borderWidth: 1, borderColor: '#E5E5EA', marginBottom: 14 },
+  deliveryForm: { backgroundColor: '#FFFFFF', padding: 14, borderRadius: 10, borderWidth: 1, borderColor: '#E5E5EA', marginBottom: 14 },
   formTitle: { fontSize: 13, fontWeight: 'bold', color: '#1C1C1E', marginBottom: 10 },
   formInput: { height: 40, borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 6, paddingHorizontal: 10, fontSize: 13, color: '#1C1C1E', backgroundColor: '#FFFFFF', marginBottom: 8 },
   bankText: { fontSize: 13, color: '#1C1C1E', marginBottom: 6, lineHeight: 18 },
@@ -1309,7 +1309,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -1332,7 +1332,7 @@ const styles = StyleSheet.create({
   },
   kycDetailsBox: {
     width: '100%',
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     padding: 14,
     borderWidth: 1,

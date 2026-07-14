@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
   imageGalleryContainer: {
     width: width,
     height: 320,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     position: 'relative',
   },
   galleryImage: {
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   badgeGray: {
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E5EA',
     paddingHorizontal: 10,
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
     textTransform: 'capitalize',
   },
   priceContainer: {
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
     color: '#1C1C1E',
     marginBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#FAF9F6',
+    borderBottomColor: '#FFFFFF',
     paddingBottom: 6,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
@@ -621,7 +621,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#FAF9F6',
+    borderBottomColor: '#FFFFFF',
   },
   tableLabel: {
     fontSize: 13,

@@ -686,7 +686,7 @@ export default function CheckoutScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: '#FAF9F6', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', paddingTop: 20 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', paddingTop: 20 },
   backBtn: { padding: 4 },
   title: { fontSize: 18, fontWeight: 'bold', color: '#1C1C1E', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
 
@@ -699,14 +699,14 @@ const styles = StyleSheet.create({
 
   section: { backgroundColor: '#FFFFFF', borderRadius: 14, borderWidth: 1, borderColor: '#F2F2F7', padding: 16, marginBottom: 16 },
   sectionTitle: { fontSize: 14, fontWeight: 'bold', color: '#1C1C1E', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
-  textInput: { height: 40, borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 6, paddingHorizontal: 10, fontSize: 14, color: '#1C1C1E', backgroundColor: '#FAF9F6', marginBottom: 10 },
+  textInput: { height: 40, borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 6, paddingHorizontal: 10, fontSize: 14, color: '#1C1C1E', backgroundColor: '#FFFFFF', marginBottom: 10 },
   
-  pickupStoreBox: { backgroundColor: '#FAF9F6', padding: 14, borderRadius: 10, borderWidth: 1, borderColor: '#E5E5EA', alignItems: 'center' },
+  pickupStoreBox: { backgroundColor: '#FFFFFF', padding: 14, borderRadius: 10, borderWidth: 1, borderColor: '#E5E5EA', alignItems: 'center' },
   storeName: { fontSize: 13, fontWeight: 'bold', color: '#1C1C1E', marginBottom: 4 },
   storeAddress: { fontSize: 12, color: 'rgba(28,28,30,0.6)', lineHeight: 18, textAlign: 'center' },
   pickupNote: { fontSize: 10, color: '#8E8E93', fontStyle: 'italic', marginTop: 8, lineHeight: 14 },
 
-  bankBox: { backgroundColor: '#FAF9F6', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#E5E5EA', marginTop: 8 },
+  bankBox: { backgroundColor: '#FFFFFF', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#E5E5EA', marginTop: 8 },
   bankText: { fontSize: 12, color: '#1C1C1E', marginVertical: 2 },
 
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
@@ -734,7 +734,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E5E5EA',
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     marginBottom: 6,
     gap: 6
   },

@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   input: {
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: 'rgba(61, 43, 31, 0.15)',
     borderRadius: 8,
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   passwordInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: 'rgba(61, 43, 31, 0.15)',
     borderRadius: 8,
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   otpInput: {
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: 'rgba(61, 43, 31, 0.15)',
     borderRadius: 8,
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
   },
   segmentContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     padding: 4,
     marginBottom: 20,

@@ -290,7 +290,7 @@ export default function OrdersScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { padding: 16, backgroundColor: '#FAF9F6', alignItems: 'center', paddingTop: 24, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
+  header: { padding: 16, backgroundColor: '#FFFFFF', alignItems: 'center', paddingTop: 24, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
   title: { fontSize: 22, fontWeight: 'bold', color: '#1C1C1E', letterSpacing: 0.5, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   subtitle: { fontSize: 11, color: '#8E8E93', marginTop: 4, fontWeight: '500', textAlign: 'center' },
 
@@ -337,14 +337,14 @@ const styles = StyleSheet.create({
 
   itemsContainer: { marginBottom: 12 },
   itemRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  itemImage: { width: 44, height: 44, borderRadius: 6, backgroundColor: '#FAF9F6' },
+  itemImage: { width: 44, height: 44, borderRadius: 6, backgroundColor: '#FFFFFF' },
   itemInfo: { flex: 1, marginLeft: 12 },
   itemName: { fontSize: 13, fontWeight: '600', color: '#1C1C1E', textTransform: 'capitalize' },
   itemQty: { fontSize: 10, color: '#8E8E93', marginTop: 1 },
   itemPrice: { fontSize: 13, fontWeight: 'bold', color: '#1C1C1E' },
 
   pickupBox: {
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     borderWidth: 1,
     borderColor: 'rgba(212, 175, 55, 0.2)',
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   stepperContainer: {
     marginVertical: 14,
     padding: 10,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E5E5EA',
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E5EA',
     borderRadius: 8,

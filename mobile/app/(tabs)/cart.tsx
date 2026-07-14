@@ -182,7 +182,7 @@ export default function CartScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { padding: 16, backgroundColor: '#FAF9F6', alignItems: 'center', paddingTop: 30, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
+  header: { padding: 16, backgroundColor: '#FFFFFF', alignItems: 'center', paddingTop: 30, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
   title: { fontSize: 20, fontWeight: 'bold', color: '#1C1C1E', letterSpacing: 1, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   scrollContainer: { padding: 16 },
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   qtyBtn: { backgroundColor: '#1C1C1E', width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   qtyText: { marginHorizontal: 12, fontWeight: 'bold', color: '#1C1C1E' },
   removeBtn: { padding: 10 },
-  footer: { padding: 20, backgroundColor: '#FAF9F6', borderTopWidth: 1, borderTopColor: '#E5E5EA' },
+  footer: { padding: 20, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E5E5EA' },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   totalLabel: { fontSize: 16, color: '#1C1C1E', fontWeight: '600' },
   totalValue: { fontSize: 22, fontWeight: 'bold', color: '#1C1C1E' },

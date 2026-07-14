@@ -208,7 +208,7 @@ export default function CoinsScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { padding: 16, backgroundColor: '#FAF9F6', alignItems: 'center', paddingTop: 24, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
+  header: { padding: 16, backgroundColor: '#FFFFFF', alignItems: 'center', paddingTop: 24, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
   title: { fontSize: 22, fontWeight: 'bold', color: '#1C1C1E', letterSpacing: 0.5, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   subtitle: { fontSize: 11, color: '#8E8E93', marginTop: 4, marginBottom: 14, fontWeight: '500' },
   
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     elevation: 3,
     position: 'relative',
   },
-  image: { width: '100%', height: 130, resizeMode: 'contain', backgroundColor: '#FAF9F6', marginTop: 6 },
+  image: { width: '100%', height: 130, resizeMode: 'contain', backgroundColor: '#FFFFFF', marginTop: 6 },
   weightTag: {
     position: 'absolute',
     top: 8,

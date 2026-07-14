@@ -760,9 +760,6 @@ export default function HomeScreen() {
                     <TouchableOpacity style={styles.socialCircle} onPress={() => Linking.openURL('https://wa.me/917621967577')}>
                       <Ionicons name="logo-whatsapp" size={20} color="#D4AF37" />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.socialCircle} onPress={() => Linking.openURL('https://youtube.com')}>
-                      <Ionicons name="logo-youtube" size={20} color="#D4AF37" />
-                    </TouchableOpacity>
                   </View>
                 </View>
               </ScrollView>
@@ -1123,7 +1120,7 @@ const styles = StyleSheet.create({
     width: '22%',
   },
   categoryIconBg: {
-    backgroundColor: '#FAF9F6', // Clean warm white
+    backgroundColor: '#FFFFFF', // Clean warm white
     width: 48,
     height: 48,
     borderRadius: 24,
@@ -1178,7 +1175,7 @@ const styles = StyleSheet.create({
   },
   rateBox: {
     width: '48%',
-    backgroundColor: '#FAF9F6', // Clean warm white background
+    backgroundColor: '#FFFFFF', // Clean warm white background
     padding: 10,
     borderRadius: 8,
     borderWidth: 1,
@@ -1252,7 +1249,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     borderBottomWidth: 1,
     borderBottomColor: '#F2F2F7',
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1338,7 +1335,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   expandedSection: {
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     padding: 12,
     borderRadius: 8,
     marginTop: 4,
@@ -1485,7 +1482,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   bankDetailContainer: {
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     padding: 14,
     borderRadius: 10,
     borderWidth: 1,
@@ -1520,7 +1517,7 @@ const styles = StyleSheet.create({
   notiBox: {
     flexDirection: 'row',
     gap: 10,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     padding: 12,
     borderRadius: 8,
     marginBottom: 8,
@@ -1562,7 +1559,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   quickActionIconBg: {
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -1596,7 +1593,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#FAF9F6',
+    borderColor: '#FFFFFF',
   },
   badgeText: {
     color: '#FFFFFF',
