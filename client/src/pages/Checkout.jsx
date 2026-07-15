@@ -286,114 +286,106 @@ const Checkout = () => {
 
   return (
     <div className="pt-32 pb-24 min-h-screen bg-cream px-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <h1 className="text-4xl font-serif font-bold mb-12 text-coffee text-center">
           Complete Your <span className="text-ochre">Order</span>
         </h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Shipping Form */}
-          <div className="bg-cream-alt p-8 rounded-lg border border-ochre/10 shadow-lg">
-            <h3 className="text-2xl font-serif text-coffee mb-8 flex items-center gap-3">
+        <div className="bg-cream-alt p-8 md:p-12 rounded-xl border border-ochre/10 shadow-lg">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <h3 className="text-2xl font-serif text-coffee mb-8 flex items-center gap-3 border-b border-ochre/10 pb-4">
               <MapPin className="text-ochre" /> Shipping Details
             </h3>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs uppercase tracking-widest text-coffee/60 mb-2">Recipient Name</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/40" size={18} />
-                    <input type="text" name="name" required value={formData.name} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 pl-10 rounded focus:outline-none focus:border-ochre text-coffee" placeholder="Full Name" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs uppercase tracking-widest text-coffee/60 mb-2">Mobile Number</label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/40" size={18} />
-                    <input type="tel" name="mobile" required value={formData.mobile} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 pl-10 rounded focus:outline-none focus:border-ochre text-coffee" placeholder="10-digit number" />
-                  </div>
-                </div>
-              </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs uppercase tracking-widest text-coffee/60 mb-2">Email Address (for order updates)</label>
+                <label className="block text-xs uppercase tracking-widest text-coffee/60 mb-2">Recipient Name</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/40" size={18} />
-                  <input type="email" name="email" required value={formData.email} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 pl-10 rounded focus:outline-none focus:border-ochre text-coffee" placeholder="yourname@example.com" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/40" size={18} />
+                  <input type="text" name="name" required value={formData.name} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 pl-10 rounded focus:outline-none focus:border-ochre text-coffee" placeholder="Full Name" />
                 </div>
               </div>
-
               <div>
-                <label className="block text-xs uppercase tracking-widest text-coffee/60 mb-2">Full Address</label>
-                <textarea name="address" required value={formData.address} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 rounded focus:outline-none focus:border-ochre text-coffee min-h-[100px]" placeholder="Street address, apartment, etc."></textarea>
+                <label className="block text-xs uppercase tracking-widest text-coffee/60 mb-2">Mobile Number</label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/40" size={18} />
+                  <input type="tel" name="mobile" required value={formData.mobile} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 pl-10 rounded focus:outline-none focus:border-ochre text-coffee" placeholder="10-digit number" />
+                </div>
               </div>
+            </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <input type="text" name="city" required value={formData.city} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 rounded focus:outline-none focus:border-ochre text-coffee" placeholder="City" />
-                <input type="text" name="state" required value={formData.state} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 rounded focus:outline-none focus:border-ochre text-coffee" placeholder="State" />
-                <input type="text" name="pincode" required value={formData.pincode} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 rounded focus:outline-none focus:border-ochre text-coffee" placeholder="Pincode" />
+            <div>
+              <label className="block text-xs uppercase tracking-widest text-coffee/60 mb-2">Email Address (for order updates)</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/40" size={18} />
+                <input type="email" name="email" required value={formData.email} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 pl-10 rounded focus:outline-none focus:border-ochre text-coffee" placeholder="yourname@example.com" />
               </div>
+            </div>
 
-              <h3 className="text-xl font-serif text-coffee mt-12 mb-6 flex items-center gap-3">
-                <CreditCard className="text-ochre" /> Payment Method
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {deliveryRates.codEnabled && (
-                  <label className={`flex items-center justify-center gap-2 p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'COD' ? 'border-ochre bg-ochre/10' : 'border-ochre/30 bg-cream hover:bg-ochre/5'}`}>
-                    <input type="radio" name="paymentMethod" value="COD" checked={formData.paymentMethod === 'COD'} onChange={handleChange} className="accent-ochre" />
-                    <span className="text-coffee font-medium text-sm">Cash on Delivery (COD)</span>
-                  </label>
-                )}
-                <label className={`flex items-center justify-center gap-2 p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'Card' ? 'border-ochre bg-ochre/10' : 'border-ochre/30 bg-cream hover:bg-ochre/5'}`}>
-                  <input type="radio" name="paymentMethod" value="Card" checked={formData.paymentMethod === 'Card'} onChange={handleChange} className="accent-ochre" />
-                  <span className="text-coffee font-medium text-sm">Online Payment (UPI, Card, Netbanking)</span>
+            <div>
+              <label className="block text-xs uppercase tracking-widest text-coffee/60 mb-2">Full Address</label>
+              <textarea name="address" required value={formData.address} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 rounded focus:outline-none focus:border-ochre text-coffee min-h-[100px]" placeholder="Street address, apartment, etc."></textarea>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <input type="text" name="city" required value={formData.city} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 rounded focus:outline-none focus:border-ochre text-coffee" placeholder="City" />
+              <input type="text" name="state" required value={formData.state} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 rounded focus:outline-none focus:border-ochre text-coffee" placeholder="State" />
+              <input type="text" name="pincode" required value={formData.pincode} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 rounded focus:outline-none focus:border-ochre text-coffee" placeholder="Pincode" />
+            </div>
+
+            <h3 className="text-2xl font-serif text-coffee mt-12 mb-6 flex items-center gap-3 border-b border-ochre/10 pb-4">
+              <CreditCard className="text-ochre" /> Payment Method
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {deliveryRates.codEnabled && (
+                <label className={`flex items-center justify-center gap-2 p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'COD' ? 'border-ochre bg-ochre/10' : 'border-ochre/30 bg-cream hover:bg-ochre/5'}`}>
+                  <input type="radio" name="paymentMethod" value="COD" checked={formData.paymentMethod === 'COD'} onChange={handleChange} className="accent-ochre" />
+                  <span className="text-coffee font-medium text-sm">Cash on Delivery (COD)</span>
                 </label>
-              </div>
-
-              {/* Conditional Payment Forms / Info */}
-              {formData.paymentMethod === 'Card' ? (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-cream border border-ochre/25 rounded-lg space-y-2 mt-4 shadow-inner">
-                  <div className="flex items-center gap-2 text-ochre">
-                    <CreditCard size={18} />
-                    <h4 className="text-sm font-bold uppercase tracking-wider text-coffee/80">Secure Checkout via Razorpay</h4>
-                  </div>
-                  <p className="text-xs text-coffee/60">
-                    You will be redirected to Razorpay to complete your payment securely using UPI, Cards, Netbanking, or Wallet.
-                  </p>
-                </motion.div>
-              ) : (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-cream border border-ochre/25 rounded-lg space-y-2 mt-4 shadow-inner">
-                  <div className="flex items-center gap-2 text-green-600">
-                    <CheckCircle size={18} />
-                    <h4 className="text-sm font-bold uppercase tracking-wider text-coffee/80">Cash on Delivery (COD)</h4>
-                  </div>
-                  <p className="text-xs text-coffee/60">
-                    No advance payment required. You will pay the amount in cash to our delivery executive upon receipt of your jewellery.
-                  </p>
-                </motion.div>
               )}
+              <label className={`flex items-center justify-center gap-2 p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'Card' ? 'border-ochre bg-ochre/10' : 'border-ochre/30 bg-cream hover:bg-ochre/5'}`}>
+                <input type="radio" name="paymentMethod" value="Card" checked={formData.paymentMethod === 'Card'} onChange={handleChange} className="accent-ochre" />
+                <span className="text-coffee font-medium text-sm">Online Payment (UPI, Card, Netbanking)</span>
+              </label>
+            </div>
 
-              <button type="submit" disabled={loading} className="w-full bg-coffee text-cream py-4 rounded-lg font-bold uppercase tracking-[0.2em] hover:bg-coffee/90 transition-all mt-8 shadow-xl disabled:opacity-50">
-                {loading ? 'Processing Order...' : `Confirm Order (₹${grandTotal.toLocaleString('en-IN')})`}
-              </button>
-            </form>
-          </div>
+            {/* Conditional Payment Forms / Info */}
+            {formData.paymentMethod === 'Card' ? (
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-cream border border-ochre/25 rounded-lg space-y-2 mt-4 shadow-inner">
+                <div className="flex items-center gap-2 text-ochre">
+                  <CreditCard size={18} />
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-coffee/80">Secure Checkout via Razorpay</h4>
+                </div>
+                <p className="text-xs text-coffee/60">
+                  You will be redirected to Razorpay to complete your payment securely using UPI, Cards, Netbanking, or Wallet.
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-cream border border-ochre/25 rounded-lg space-y-2 mt-4 shadow-inner">
+                <div className="flex items-center gap-2 text-green-600">
+                  <CheckCircle size={18} />
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-coffee/80">Cash on Delivery (COD)</h4>
+                </div>
+                <p className="text-xs text-coffee/60">
+                  No advance payment required. You will pay the amount in cash to our delivery executive upon receipt of your jewellery.
+                </p>
+              </motion.div>
+            )}
 
-          {/* Order Summary */}
-          <div className="space-y-8">
-            <div className="bg-cream-alt p-8 rounded-lg border border-ochre/10 shadow-lg">
-              <h3 className="text-2xl font-serif text-coffee mb-8">Order Summary</h3>
-              <div className="space-y-4 mb-8 max-h-[300px] overflow-y-auto pr-2">
+            {/* Order Summary Inline */}
+            <div className="mt-12 bg-cream p-6 md:p-8 rounded-xl border border-ochre/20 space-y-6 shadow-inner">
+              <h3 className="text-2xl font-serif text-coffee border-b border-ochre/10 pb-4">Order Summary</h3>
+              <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2">
                 {cart.items.map((item) => (
                   <div key={item.product._id} className="flex justify-between items-center text-sm">
                     <span className="text-coffee/80">{(item.product.name || item.product.category) + (item.product.weight ? ` (${item.product.weight}g)` : '')} x {item.quantity}</span>
-                    <span className="font-medium">₹{(item.product.price * item.quantity).toLocaleString('en-IN')}</span>
+                    <span className="font-medium text-coffee">₹{(item.product.price * item.quantity).toLocaleString('en-IN')}</span>
                   </div>
                 ))}
               </div>
 
               {/* Coupon Code Section */}
-              <div className="pt-6 border-t border-ochre/20 mb-6">
+              <div className="pt-6 border-t border-ochre/20">
                 <label className="block text-xs uppercase tracking-widest text-coffee/60 mb-2">Have a Coupon?</label>
                 <div className="flex gap-2">
                   <input
@@ -431,24 +423,25 @@ const Checkout = () => {
                 {couponSuccess && <p className="text-xs text-green-600 mt-1.5 font-semibold">{couponSuccess}</p>}
               </div>
 
-              <div className="pt-6 border-t border-ochre/20">
-                <div className="flex justify-between items-center mb-2">
+              {/* Price Calculation Breakdowns */}
+              <div className="pt-6 border-t border-ochre/20 space-y-3">
+                <div className="flex justify-between items-center text-sm">
                   <span className="text-coffee/60">Subtotal</span>
                   <span className="font-medium text-coffee">₹{itemsBaseTotal.toLocaleString('en-IN')}</span>
                 </div>
                 {discountAmount > 0 && (
-                  <div className="flex justify-between items-center mb-2 text-xs text-green-600 font-bold">
+                  <div className="flex justify-between items-center text-xs text-green-600 font-bold">
                     <span>Discount ({discountPercent}%)</span>
                     <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 {distance > 0 && (
-                  <div className="flex justify-between items-center mb-2 text-xs text-coffee/70">
+                  <div className="flex justify-between items-center text-xs text-coffee/70">
                     <span>Estimated Distance</span>
                     <span>{distance} km</span>
                   </div>
                 )}
-                <div className="flex justify-between items-center mb-2">
+                <div className="flex justify-between items-center text-sm">
                   <span className="text-coffee/60">Delivery</span>
                   {deliveryCharge > 0 ? (
                     <span className="font-medium text-coffee">₹{deliveryCharge.toLocaleString('en-IN')}</span>
@@ -458,17 +451,17 @@ const Checkout = () => {
                     </span>
                   )}
                 </div>
-                <div className="flex justify-between items-center mb-2">
+                <div className="flex justify-between items-center text-sm">
                   <span className="text-coffee/60">GST (3%)</span>
                   <span className="font-medium text-coffee">₹{gstAmount.toLocaleString('en-IN')}</span>
                 </div>
                 {formData.paymentMethod === 'Card' && (
-                  <div className="flex justify-between items-center mb-6">
+                  <div className="flex justify-between items-center text-sm">
                     <span className="text-coffee/60">Gateway Charges (2%)</span>
                     <span className="font-medium text-coffee">₹{gatewayCharge.toLocaleString('en-IN')}</span>
                   </div>
                 )}
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center pt-4 border-t border-ochre/20">
                   <span className="text-xl font-serif text-coffee font-bold">Grand Total</span>
                   <span className="text-2xl font-serif text-ochre font-bold">₹{grandTotal.toLocaleString('en-IN')}</span>
                 </div>
@@ -479,7 +472,12 @@ const Checkout = () => {
                 )}
               </div>
             </div>
-          </div>
+
+            {/* Submit / Confirm button at the very bottom */}
+            <button type="submit" disabled={loading} className="w-full bg-coffee text-cream py-4 rounded-lg font-bold uppercase tracking-[0.2em] hover:bg-coffee/90 transition-all mt-8 shadow-xl disabled:opacity-50">
+              {loading ? 'Processing Order...' : `Confirm Order (₹${grandTotal.toLocaleString('en-IN')})`}
+            </button>
+          </form>
         </div>
       </div>
     </div>
