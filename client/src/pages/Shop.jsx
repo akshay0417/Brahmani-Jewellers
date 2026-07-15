@@ -186,6 +186,147 @@ const Shop = () => {
     );
   };
 
+  const handleBackToShop = () => {
+    setSelectedProduct(null);
+    window.history.pushState({}, '', window.location.pathname);
+  };
+
+  if (selectedProduct) {
+    const pData = calculatePrice(selectedProduct);
+    const allImages = [selectedProduct.imageUrl, ...(selectedProduct.additionalImages || [])];
+    const isFavorite = wishlist.includes(selectedProduct._id);
+    
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="pt-32 pb-24 px-4 bg-cream min-h-screen"
+      >
+        <div className="max-w-6xl mx-auto">
+          {/* Back Button */}
+          <button 
+            onClick={handleBackToShop} 
+            className="mb-8 flex items-center gap-2 text-coffee/60 hover:text-ochre font-bold uppercase tracking-widest text-xs transition-colors"
+          >
+            ← Back to Shop
+          </button>
+          
+          <div className="flex flex-col lg:flex-row gap-12 bg-cream-alt p-8 md:p-12 rounded-2xl border border-ochre/10 shadow-xl">
+            {/* Left Side: Product Images */}
+            <div className="w-full lg:w-1/2 flex flex-col items-center">
+              <div className="w-full aspect-[4/5] bg-cream rounded-xl overflow-hidden relative flex items-center justify-center p-4 border border-ochre/15">
+                <img 
+                  src={allImages[currentImageIndex]} 
+                  alt={selectedProduct.name} 
+                  className="max-w-full max-h-full object-contain"
+                />
+                
+                {/* Wishlist Heart Icon */}
+                <div className="absolute top-4 right-4 z-20">
+                  <button 
+                    onClick={() => toggleWishlist(selectedProduct._id)} 
+                    className="p-3 bg-cream-alt/90 backdrop-blur-md rounded-full shadow-md text-coffee hover:text-ochre hover:scale-110 active:scale-95 transition-all duration-200"
+                  >
+                    <Heart 
+                      size={20} 
+                      className={`${isFavorite ? 'fill-red-500 text-red-500' : 'text-coffee/80'} transition-colors duration-200`} 
+                    />
+                  </button>
+                </div>
+                
+                {/* Left/Right Carousel Controls */}
+                {allImages.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1))}
+                      className="absolute left-4 p-2 rounded-full bg-coffee/80 text-cream border border-ochre/20 hover:bg-ochre hover:text-coffee transition-all"
+                    >
+                      <ChevronLeft size={20} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1))}
+                      className="absolute right-4 p-2 rounded-full bg-coffee/80 text-cream border border-ochre/20 hover:bg-ochre hover:text-coffee transition-all"
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                  </>
+                )}
+              </div>
+              
+              {/* Thumbnails below the image */}
+              {allImages.length > 1 && (
+                <div className="flex gap-3 mt-6 select-none flex-wrap justify-center">
+                  {allImages.map((img, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setCurrentImageIndex(idx)}
+                      className={`w-14 h-14 rounded-lg border-2 overflow-hidden transition-all ${currentImageIndex === idx ? 'border-ochre shadow-md' : 'border-coffee/10 opacity-60 hover:opacity-100'}`}
+                    >
+                      <img src={img} alt="thumb" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Right Side: Product Details */}
+            <div className="w-full lg:w-1/2 flex flex-col justify-center">
+              <span className="text-ochre tracking-[0.3em] uppercase text-xs font-bold mb-3 block">{selectedProduct.category} Collection</span>
+              <h1 className="text-4xl md:text-5xl font-serif font-bold text-coffee mb-4 leading-tight">{selectedProduct.name || 'Royal Heritage Ornament'}</h1>
+              <div className="w-16 h-1 bg-ochre mb-6"></div>
+              
+              {selectedProduct.description && <p className="text-coffee/70 mb-8 italic leading-relaxed text-base">{selectedProduct.description}</p>}
+              
+              <div className="space-y-4 mb-8">
+                <div className="flex justify-between border-b border-ochre/10 py-2"><span className="text-xs uppercase tracking-widest text-coffee/60 font-bold">Category</span><span className="text-sm font-serif text-coffee capitalize">{selectedProduct.category}</span></div>
+                {selectedProduct.subCategory && <div className="flex justify-between border-b border-ochre/10 py-2"><span className="text-xs uppercase tracking-widest text-coffee/60 font-bold">Item Type</span><span className="text-sm font-serif text-coffee capitalize">{selectedProduct.subCategory}</span></div>}
+                {selectedProduct.weight && <div className="flex justify-between border-b border-ochre/10 py-2"><span className="text-xs uppercase tracking-widest text-coffee/60 font-bold">Weight</span><span className="text-sm font-serif text-coffee">{selectedProduct.weight} Grams</span></div>}
+                {selectedProduct.purity && <div className="flex justify-between border-b border-ochre/10 py-2"><span className="text-xs uppercase tracking-widest text-coffee/60 font-bold">Purity</span><span className="text-sm font-serif text-coffee">{selectedProduct.purity}</span></div>}
+              </div>
+
+              {pData.breakdown && (
+                <div className="bg-cream p-5 rounded-xl border border-ochre/15 mb-8 space-y-3 shadow-inner">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-coffee mb-3 border-b border-ochre/10 pb-2 flex items-center justify-between">
+                    <span>Price Breakdown</span>
+                    <span className="text-[10px] text-ochre tracking-[0.1em] font-serif lowercase italic">Live Market Verified</span>
+                  </h4>
+                  <div className="flex justify-between text-sm"><span className="text-coffee/70">Metal Value</span><span className="text-coffee font-medium">₹{Math.round(pData.breakdown.basePrice).toLocaleString('en-IN')}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-coffee/70">Making Charges ({pData.breakdown.makingPercent}%)</span><span className="text-coffee font-medium">₹{Math.round(pData.breakdown.makingAmount).toLocaleString('en-IN')}</span></div>
+                  {pData.breakdown.other > 0 && <div className="flex justify-between text-sm"><span className="text-coffee/70">Other Charges</span><span className="text-coffee font-medium">₹{Math.round(pData.breakdown.other).toLocaleString('en-IN')}</span></div>}
+                  <div className="flex justify-between text-sm"><span className="text-coffee/70">GST (3%)</span><span className="text-coffee font-medium">₹{Math.round(pData.breakdown.gst).toLocaleString('en-IN')}</span></div>
+                </div>
+              )}
+
+              <div className="flex items-end gap-6 mb-10">
+                <span className="text-5xl font-bold text-coffee">₹{pData.final.toLocaleString('en-IN')}</span>
+                {pData.breakdown && <div className="px-3 py-1 bg-ochre/10 text-ochre text-[10px] font-bold uppercase tracking-widest rounded-sm border border-ochre/20 mb-1">Live Rate Verified</div>}
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button 
+                  onClick={() => addToCart(selectedProduct._id)} 
+                  className="w-full sm:w-1/2 py-4 bg-ochre text-coffee font-bold uppercase tracking-widest rounded-sm hover:bg-ochre/90 transition-all flex items-center justify-center gap-3 shadow-md"
+                >
+                  <ShoppingBag size={20} /> Add to Cart
+                </button>
+                <button 
+                  onClick={() => handleWhatsAppInquiry(selectedProduct)} 
+                  className="w-full sm:w-1/2 py-4 bg-[#25D366] text-white font-bold uppercase tracking-widest rounded-sm hover:bg-[#20ba5a] transition-all flex items-center justify-center gap-3 shadow-md"
+                >
+                  <MessageCircle size={20} /> WhatsApp Inquiry
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -237,6 +378,14 @@ const Shop = () => {
           })}
         </div>
 
+        {loading ? (
+          <div className="flex justify-center py-20"><div className="w-12 h-12 border-4 border-ochre border-t-transparent rounded-full animate-spin"></div></div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 mb-16">
+            <AnimatePresence mode="popLayout">{filteredItems.map(item => <ProductCard key={item._id} item={item} />)}</AnimatePresence>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
           {[{ icon: ShieldCheck, text: "Certified Purity" }, { icon: Truck, text: "Secure Delivery" }, { icon: ShoppingBag, text: "Luxury Packaging" }, { icon: Heart, text: "Lifetime Trust" }].map((feature, i) => (
             <div key={i} className="flex flex-col items-center justify-center p-6 bg-cream-alt rounded-xl border border-ochre/10">
@@ -245,14 +394,6 @@ const Shop = () => {
             </div>
           ))}
         </div>
-
-        {loading ? (
-          <div className="flex justify-center py-20"><div className="w-12 h-12 border-4 border-ochre border-t-transparent rounded-full animate-spin"></div></div>
-        ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-            <AnimatePresence mode="popLayout">{filteredItems.map(item => <ProductCard key={item._id} item={item} />)}</AnimatePresence>
-          </div>
-        )}
       </div>
 
       <AnimatePresence>

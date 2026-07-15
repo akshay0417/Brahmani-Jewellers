@@ -91,6 +91,130 @@ const Gallery = () => {
     return true;
   });
 
+  if (selectedItem) {
+    const allImages = [selectedItem.imageUrl, ...(selectedItem.additionalImages || [])];
+    
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="pt-32 pb-24 px-4 bg-cream min-h-screen text-coffee"
+      >
+        <div className="max-w-6xl mx-auto">
+          {/* Back Button */}
+          <button 
+            onClick={closeLightbox} 
+            className="mb-8 flex items-center gap-2 text-coffee/60 hover:text-ochre font-bold uppercase tracking-widest text-xs transition-colors"
+          >
+            ← Back to Collection
+          </button>
+          
+          <div className="flex flex-col lg:flex-row gap-12 bg-cream-alt p-8 md:p-12 rounded-2xl border border-ochre/10 shadow-xl">
+            {/* Left Side: Images */}
+            <div className="w-full lg:w-1/2 flex flex-col items-center">
+              <div 
+                className="w-full aspect-[4/5] bg-cream rounded-xl overflow-hidden relative flex items-center justify-center p-4 border border-ochre/15"
+                onMouseMove={handleMouseMove}
+                onTouchMove={handleTouchMove}
+                onClick={handleImageClick}
+              >
+                <img 
+                  src={allImages[currentImageIndex]} 
+                  alt={selectedItem.name || 'Design'} 
+                  className={`max-w-full max-h-full object-contain transition-transform duration-200 ease-out ${isZoomed ? 'cursor-zoom-out font-bold' : 'cursor-zoom-in'}`}
+                  style={{
+                    transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
+                    transform: isZoomed ? 'scale(2.5)' : 'scale(1)'
+                  }}
+                  onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1610660233042-498c4714659b?auto=format&fit=crop&w=800&q=80'; }}
+                />
+                
+                {/* Carousel Left/Right arrows */}
+                {allImages.length > 1 && !isZoomed && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1))}
+                      className="absolute left-4 p-2 rounded-full bg-coffee/80 text-cream border border-ochre/25 hover:bg-ochre hover:text-coffee transition-all"
+                    >
+                      <ChevronLeft size={20} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1))}
+                      className="absolute right-4 p-2 rounded-full bg-coffee/80 text-cream border border-ochre/25 hover:bg-ochre hover:text-coffee transition-all"
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                  </>
+                )}
+              </div>
+              
+              {/* Thumbnails below the image */}
+              {allImages.length > 1 && (
+                <div className="flex gap-3 mt-6 select-none flex-wrap justify-center">
+                  {allImages.map((img, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setCurrentImageIndex(idx)}
+                      className={`w-14 h-14 rounded-lg border-2 overflow-hidden transition-all ${currentImageIndex === idx ? 'border-ochre shadow-md' : 'border-coffee/10 opacity-60 hover:opacity-100'}`}
+                    >
+                      <img src={img} alt="thumb" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              <p className="text-coffee/50 text-xs mt-4 select-none">
+                {isZoomed ? "Move mouse or drag touch to pan. Click to zoom out." : "Click or tap image to zoom."}
+              </p>
+            </div>
+            
+            {/* Right Side: Details */}
+            <div className="w-full lg:w-1/2 flex flex-col justify-center">
+              <span className="text-ochre tracking-[0.3em] uppercase text-xs font-bold mb-3 block">{selectedItem.category} Collection</span>
+              <h1 className="text-4xl md:text-5xl font-serif font-bold text-coffee mb-4 leading-tight">{selectedItem.name || 'Royal Heritage Design'}</h1>
+              <div className="w-16 h-1 bg-ochre mb-6"></div>
+              
+              {selectedItem.description && <p className="text-coffee/75 mb-8 italic leading-relaxed text-base">{selectedItem.description}</p>}
+              
+              <div className="space-y-4 mb-8">
+                <div className="flex justify-between border-b border-ochre/10 py-2"><span className="text-xs uppercase tracking-widest text-coffee/60 font-bold">Category</span><span className="text-sm font-serif text-coffee capitalize">{selectedItem.category}</span></div>
+                {selectedItem.subCategory && <div className="flex justify-between border-b border-ochre/10 py-2"><span className="text-xs uppercase tracking-widest text-coffee/60 font-bold">Item Type</span><span className="text-sm font-serif text-coffee capitalize">{selectedItem.subCategory}</span></div>}
+                {selectedItem.weight && <div className="flex justify-between border-b border-ochre/10 py-2"><span className="text-xs uppercase tracking-widest text-coffee/60 font-bold">Weight</span><span className="text-sm font-serif text-coffee">{selectedItem.weight} Grams</span></div>}
+                {selectedItem.purity && <div className="flex justify-between border-b border-ochre/10 py-2"><span className="text-xs uppercase tracking-widest text-coffee/60 font-bold">Purity</span><span className="text-sm font-serif text-coffee">{selectedItem.purity}</span></div>}
+              </div>
+              
+              {(() => {
+                let text = `Hello Brahmani Jewellers, I am interested in this design from your collection:\n\n`;
+                text += `*Name:* ${selectedItem.name || 'Heritage Design'}\n`;
+                text += `*Category:* ${selectedItem.category}\n`;
+                if (selectedItem.subCategory) text += `*Item Type:* ${selectedItem.subCategory}\n`;
+                if (selectedItem.weight) text += `*Weight:* ${selectedItem.weight} Grams\n`;
+                if (selectedItem.purity) text += `*Purity:* ${selectedItem.purity}\n\n`;
+                text += `Image Link: ${selectedItem.imageUrl}`;
+
+                const whatsappUrl = `https://wa.me/917621967577?text=${encodeURIComponent(text)}`;
+                return (
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full md:w-fit py-4 px-8 bg-ochre text-coffee border border-ochre text-center font-bold uppercase tracking-widest text-xs rounded-lg hover:bg-ochre/90 transition-colors shadow-md block"
+                  >
+                    Inquire Design
+                  </a>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
