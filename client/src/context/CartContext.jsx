@@ -62,9 +62,9 @@ export const CartProvider = ({ children }) => {
 
         const existingItemIndex = currentCart.items.findIndex(item => item.product?._id === productId);
         if (existingItemIndex > -1) {
-          currentCart.items[existingItemIndex].quantity += quantity;
+          currentCart.items[existingItemIndex].quantity = 1; // Force quantity to exactly 1
         } else {
-          currentCart.items.push({ product, quantity });
+          currentCart.items.push({ product, quantity: 1 });
         }
 
         localStorage.setItem('guestCart', JSON.stringify(currentCart));
@@ -79,7 +79,7 @@ export const CartProvider = ({ children }) => {
     }
     setLoading(true);
     try {
-      const res = await api.post('/cart/add', { productId, quantity }, { headers: { Authorization: `Bearer ${activeToken}` } });
+      const res = await api.post('/cart/add', { productId, quantity: 1 }, { headers: { Authorization: `Bearer ${activeToken}` } });
       setCart(res.data);
       setIsCartOpen(true);
     } catch (err) {
@@ -100,7 +100,7 @@ export const CartProvider = ({ children }) => {
           if (quantity <= 0) {
             currentCart.items.splice(existingItemIndex, 1);
           } else {
-            currentCart.items[existingItemIndex].quantity = quantity;
+            currentCart.items[existingItemIndex].quantity = 1; // Force quantity to exactly 1
           }
           localStorage.setItem('guestCart', JSON.stringify(currentCart));
           setCart(currentCart);
@@ -109,7 +109,7 @@ export const CartProvider = ({ children }) => {
       return;
     }
     try {
-      const res = await api.put('/cart/update', { productId, quantity }, { headers: { Authorization: `Bearer ${activeToken}` } });
+      const res = await api.put('/cart/update', { productId, quantity: quantity <= 0 ? 0 : 1 }, { headers: { Authorization: `Bearer ${activeToken}` } });
       setCart(res.data);
     } catch (err) {
       console.error("Error updating quantity", err);

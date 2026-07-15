@@ -36,10 +36,8 @@ const Cart = () => {
                   <h3 className="text-lg font-serif text-coffee">{item.product.name || `${item.product.category} ${item.product.weight || ''}`}</h3>
                   <p className="text-ochre text-sm font-medium">₹{(item.product.price || 0).toLocaleString('en-IN')}</p>
                 </div>
-                <div className="flex items-center gap-4 bg-cream p-2 rounded-full border border-ochre/20">
-                  <button onClick={() => updateQuantity(item.product._id, item.quantity - 1)} className="p-1 hover:text-ochre transition-colors"><Minus size={16} /></button>
-                  <span className="font-medium text-coffee w-8 text-center">{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.product._id, item.quantity + 1)} className="p-1 hover:text-ochre transition-colors"><Plus size={16} /></button>
+                <div className="flex items-center gap-2 bg-cream py-2 px-4 rounded-full border border-ochre/10">
+                  <span className="text-xs text-coffee/60 uppercase tracking-wider font-bold">Qty: 1</span>
                 </div>
                 <button onClick={() => removeFromCart(item.product._id)} className="text-red-400 hover:text-red-600 transition-colors">
                   <Trash2 size={20} />

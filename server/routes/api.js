@@ -1926,7 +1926,7 @@ router.get('/cart', auth, async (req, res) => {
 
 // Add Item to Cart
 router.post('/cart/add', auth, async (req, res) => {
-  const { productId, quantity = 1 } = req.body;
+  const { productId } = req.body;
   
   if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
     return res.status(400).json({ message: 'Invalid product ID' });
@@ -1948,9 +1948,9 @@ router.post('/cart/add', auth, async (req, res) => {
 
     const itemIndex = cart.items.findIndex(p => p.product && p.product.toString() === productId);
     if (itemIndex > -1) {
-      cart.items[itemIndex].quantity += quantity;
+      cart.items[itemIndex].quantity = 1; // Force quantity to exactly 1
     } else {
-      cart.items.push({ product: productId, quantity });
+      cart.items.push({ product: productId, quantity: 1 });
     }
 
     await cart.save();
@@ -1989,7 +1989,7 @@ router.put('/cart/update', auth, async (req, res) => {
       if (quantity <= 0) {
         cart.items.splice(itemIndex, 1);
       } else {
-        cart.items[itemIndex].quantity = quantity;
+        cart.items[itemIndex].quantity = 1; // Force quantity to exactly 1
       }
       await cart.save();
     }

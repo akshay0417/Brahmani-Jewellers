@@ -234,13 +234,8 @@ const Navbar = () => {
                           <button onClick={() => removeFromCart(item.product._id)} className="text-coffee/40 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
                         </div>
                         <p className="text-ochre font-bold mb-3">₹{(item.product.price || 0).toLocaleString('en-IN')}</p>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center border border-ochre/30 rounded overflow-hidden bg-cream">
-                            <button onClick={() => updateQuantity(item.product._id, item.quantity - 1)} className="p-1.5 hover:bg-ochre/10 text-ochre"><Minus size={14} /></button>
-                            <span className="w-8 text-center text-xs font-bold text-coffee">{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.product._id, item.quantity + 1)} className="p-1.5 hover:bg-ochre/10 text-ochre"><Plus size={14} /></button>
-                          </div>
-                          <span className="text-xs text-coffee/40 uppercase font-bold tracking-widest">Quantity</span>
+                        <div className="flex items-center gap-2 bg-cream py-1.5 px-4 border border-ochre/20 rounded-full">
+                          <span className="text-xs text-coffee/60 uppercase tracking-widest font-bold">Qty: 1</span>
                         </div>
                       </div>
                     </div>
