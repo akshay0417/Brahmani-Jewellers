@@ -1453,8 +1453,8 @@ const AdminDashboard = () => {
                           </div>
                           <div>
                             <p className="text-xs text-coffee/50 font-bold uppercase">Customer</p>
-                            <p className="text-sm text-coffee font-semibold">{order.user?.name || 'Guest'} ({order.user?.mobile || 'No Mobile'})</p>
-                            <p className="text-xs text-coffee/60">{order.user?.email}</p>
+                            <p className="text-sm text-coffee font-semibold">{order.user?.name || order.shippingAddress?.name || 'Guest'} ({order.user?.mobile || order.shippingAddress?.mobile || 'No Mobile'})</p>
+                            <p className="text-xs text-coffee/60">{order.user?.email || order.shippingAddress?.email || 'No Email'}</p>
                           </div>
                           <div>
                             <p className="text-xs text-coffee/50 font-bold uppercase">Payment Method</p>

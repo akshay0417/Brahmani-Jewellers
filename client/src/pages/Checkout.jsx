@@ -3,14 +3,15 @@ import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, User, CreditCard, CheckCircle } from 'lucide-react';
+import { MapPin, Phone, User, CreditCard, CheckCircle, Mail } from 'lucide-react';
 
 const Checkout = () => {
-  const { cart, cartTotal } = useCart();
+  const { cart, cartTotal, clearCart } = useCart();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
+    email: '',
     address: '',
     city: '',
     state: '',
@@ -52,7 +53,7 @@ const Checkout = () => {
     script.async = true;
     document.body.appendChild(script);
 
-    // Retrieve logged-in user details to pre-fill name/mobile
+    // Retrieve logged-in user details to pre-fill name/mobile/email
     const storedUser = sessionStorage.getItem('user');
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
@@ -60,7 +61,8 @@ const Checkout = () => {
       setFormData(prev => ({
         ...prev,
         name: prev.name || parsedUser.name || '',
-        mobile: prev.mobile || parsedUser.mobile || ''
+        mobile: prev.mobile || parsedUser.mobile || '',
+        email: prev.email || parsedUser.email || ''
       }));
     }
 
@@ -168,6 +170,7 @@ const Checkout = () => {
       shippingAddress: {
         name: formData.name,
         mobile: formData.mobile,
+        email: formData.email,
         address: formData.address,
         city: formData.city,
         state: formData.state,
@@ -182,11 +185,13 @@ const Checkout = () => {
     };
 
     try {
+      const redirectPath = sessionStorage.getItem('token') ? '/dashboard' : '/';
       if (formData.paymentMethod !== 'Card') {
         // Direct manual checkout (placed as Unpaid/Pending)
         await api.post('/orders', orderData, config);
+        clearCart();
         setOrderSuccess(true);
-        setTimeout(() => navigate('/dashboard'), 3000);
+        setTimeout(() => navigate(redirectPath), 4000);
       } else {
         // Razorpay flow: first create a Razorpay Order in backend
         const rzpOrderRes = await api.post('/orders/razorpay-order', { totalAmount: grandTotal }, config);
@@ -206,8 +211,9 @@ const Checkout = () => {
               razorpay_signature: mockSignature
             }, config);
 
+            clearCart();
             setOrderSuccess(true);
-            setTimeout(() => navigate('/dashboard'), 3000);
+            setTimeout(() => navigate(redirectPath), 4000);
           } else {
             setLoading(false);
           }
@@ -230,8 +236,9 @@ const Checkout = () => {
                   razorpay_signature: response.razorpay_signature
                 }, config);
 
+                clearCart();
                 setOrderSuccess(true);
-                setTimeout(() => navigate('/dashboard'), 3000);
+                setTimeout(() => navigate(redirectPath), 4000);
               } catch (verifyErr) {
                 alert(verifyErr.response?.data?.message || 'Payment verification failed');
               } finally {
@@ -241,7 +248,7 @@ const Checkout = () => {
             prefill: {
               name: formData.name,
               contact: formData.mobile,
-              email: user?.email || ''
+              email: formData.email || user?.email || ''
             },
             theme: {
               color: "#b08968"
@@ -305,6 +312,14 @@ const Checkout = () => {
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/40" size={18} />
                     <input type="tel" name="mobile" required value={formData.mobile} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 pl-10 rounded focus:outline-none focus:border-ochre text-coffee" placeholder="10-digit number" />
                   </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-widest text-coffee/60 mb-2">Email Address (for order updates)</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-ochre/40" size={18} />
+                  <input type="email" name="email" required value={formData.email} onChange={handleChange} className="w-full bg-cream border border-ochre/20 p-3 pl-10 rounded focus:outline-none focus:border-ochre text-coffee" placeholder="yourname@example.com" />
                 </div>
               </div>
 

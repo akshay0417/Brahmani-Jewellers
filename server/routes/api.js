@@ -9,6 +9,7 @@ const twilio = require('twilio');
 const axios = require('axios');
 const auth = require('../middleware/auth');
 const isAdmin = require('../middleware/isAdmin');
+const optionalAuth = require('../middleware/optionalAuth');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const { createShipment } = require('../services/delhivery');
@@ -1500,6 +1501,17 @@ router.get('/gallery', async (req, res) => {
   }
 });
 
+// Get Single Gallery Item (Public)
+router.get('/gallery/:id', async (req, res) => {
+  try {
+    const item = await Gallery.findById(req.params.id);
+    if (!item) return res.status(404).json({ message: 'Product not found' });
+    res.json(item);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Upload Image (Admin only)
 router.post('/gallery', auth, isAdmin, (req, res, next) => {
   upload.fields([
@@ -2027,7 +2039,7 @@ router.delete('/cart/remove/:productId', auth, async (req, res) => {
 // --- ORDER ROUTES ---
 
 // Place a new order (COD flow)
-router.post('/orders', auth, async (req, res) => {
+router.post('/orders', optionalAuth, async (req, res) => {
   const { items, totalAmount, shippingAddress, paymentMethod, shippingCharge, distanceKm, paymentReference, couponCode, discountAmount } = req.body;
   try {
     if (!items || items.length === 0) return res.status(400).json({ message: 'No items in order' });
@@ -2058,7 +2070,9 @@ router.post('/orders', auth, async (req, res) => {
     }
 
     // Clear the cart after placing order
-    await Cart.findOneAndDelete({ user: req.user });
+    if (req.user) {
+      await Cart.findOneAndDelete({ user: req.user });
+    }
 
     // Update targetPage to 'collection' for all purchased items in the order
     try {
@@ -2070,6 +2084,37 @@ router.post('/orders', auth, async (req, res) => {
       console.error('[Gallery Auto-Hide Error]:', hideErr.message);
     }
 
+    // Send Order Confirmation Email
+    const orderEmail = shippingAddress.email || (req.user ? (await User.findById(req.user))?.email : null);
+    if (orderEmail) {
+      const orderHtml = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 40px 30px; background-color: #FFFDF9; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+          <div style="text-align: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 20px; margin-bottom: 30px;">
+            <h1 style="color: #3D2B1F; font-size: 28px; font-weight: 700; letter-spacing: 2px; margin: 0; text-transform: uppercase;">Brahmani Jewellers</h1>
+            <p style="color: #d4af37; font-size: 12px; letter-spacing: 4px; margin: 5px 0 0 0; text-transform: uppercase;">Purity & Trust Since 1992</p>
+          </div>
+          
+          <p style="font-size: 16px; margin-bottom: 10px;">Dear <strong>${shippingAddress.name}</strong>,</p>
+          <p style="font-size: 15px; color: #5C4A3E; margin-bottom: 25px;">Thank you for your order! We have received your order details and are processing them. Below is the summary of your order.</p>
+          
+          <div style="background-color: #FCF0DA; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #EBA938;">
+            <p style="margin: 0 0 10px 0; color: #3D2B1F; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Order ID: ${newOrder._id}</p>
+            <p style="margin: 0 0 5px 0; color: #5C4A3E; font-size: 14px;"><strong>Payment Method:</strong> ${newOrder.paymentMethod === 'Razorpay' ? 'Online Payment' : 'Cash on Delivery (COD)'}</p>
+            <p style="margin: 0 0 5px 0; color: #5C4A3E; font-size: 14px;"><strong>Total Amount:</strong> ₹${newOrder.totalAmount.toLocaleString('en-IN')}</p>
+            <p style="margin: 0 0 5px 0; color: #5C4A3E; font-size: 14px;"><strong>Delivery Address:</strong> ${newOrder.shippingAddress.address}, ${newOrder.shippingAddress.city}, ${newOrder.shippingAddress.state} - ${newOrder.shippingAddress.pincode}</p>
+          </div>
+          
+          <p style="font-size: 14px; color: #5C4A3E; margin-bottom: 0;">We will contact you shortly on your mobile number <strong>${newOrder.shippingAddress.mobile}</strong> to confirm shipping updates.</p>
+          
+          <div style="margin-top: 40px; border-top: 1px solid rgba(212, 175, 55, 0.2); padding-top: 25px; font-size: 13px; color: #7A695D; text-align: center;">
+            <p style="margin: 0; font-weight: bold; color: #3D2B1F;">Brahmani Jewellers Team</p>
+            <p style="margin: 5px 0 0 0;">For inquiries: <a href="mailto:info.brahmanijewellers@gmail.com" style="color: #d4af37; text-decoration: none;">info.brahmanijewellers@gmail.com</a></p>
+          </div>
+        </div>
+      `;
+      sendEmail(orderEmail, 'Order Placed Successfully - Brahmani Jewellers', orderHtml).catch(console.error);
+    }
+
     res.status(201).json({ message: 'Order placed successfully!', order: newOrder });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -2077,7 +2122,7 @@ router.post('/orders', auth, async (req, res) => {
 });
 
 // Create a Razorpay Order
-router.post('/orders/razorpay-order', auth, async (req, res) => {
+router.post('/orders/razorpay-order', optionalAuth, async (req, res) => {
   const { totalAmount } = req.body;
   try {
     if (!totalAmount || totalAmount <= 0) {
@@ -2113,7 +2158,7 @@ router.post('/orders/razorpay-order', auth, async (req, res) => {
 });
 
 // Verify Razorpay Payment and Place Order
-router.post('/orders/verify-payment', auth, async (req, res) => {
+router.post('/orders/verify-payment', optionalAuth, async (req, res) => {
   const { orderData, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
   try {
     if (!orderData || !orderData.items || orderData.items.length === 0) {
@@ -2171,7 +2216,9 @@ router.post('/orders/verify-payment', auth, async (req, res) => {
       }
 
       // Clear the cart
-      await Cart.findOneAndDelete({ user: req.user });
+      if (req.user) {
+        await Cart.findOneAndDelete({ user: req.user });
+      }
 
       // Update targetPage to 'collection' for all purchased items in the order
       try {
@@ -2181,6 +2228,37 @@ router.post('/orders/verify-payment', auth, async (req, res) => {
         console.log(`[Gallery Auto-Hide] Updated paid items to collection-only page for order ${newOrder._id}`);
       } catch (hideErr) {
         console.error('[Gallery Auto-Hide Error]:', hideErr.message);
+      }
+
+      // Send Order Confirmation Email
+      const orderEmail = orderData.shippingAddress.email || (req.user ? (await User.findById(req.user))?.email : null);
+      if (orderEmail) {
+        const orderHtml = `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #3D2B1F; max-width: 600px; margin: 0 auto; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 40px 30px; background-color: #FFFDF9; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <div style="text-align: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 20px; margin-bottom: 30px;">
+              <h1 style="color: #3D2B1F; font-size: 28px; font-weight: 700; letter-spacing: 2px; margin: 0; text-transform: uppercase;">Brahmani Jewellers</h1>
+              <p style="color: #d4af37; font-size: 12px; letter-spacing: 4px; margin: 5px 0 0 0; text-transform: uppercase;">Purity & Trust Since 1992</p>
+            </div>
+            
+            <p style="font-size: 16px; margin-bottom: 10px;">Dear <strong>${orderData.shippingAddress.name}</strong>,</p>
+            <p style="font-size: 15px; color: #5C4A3E; margin-bottom: 25px;">Thank you for your order! We have received your order details and are processing them. Below is the summary of your order.</p>
+            
+            <div style="background-color: #FCF0DA; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #EBA938;">
+              <p style="margin: 0 0 10px 0; color: #3D2B1F; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Order ID: ${newOrder._id}</p>
+              <p style="margin: 0 0 5px 0; color: #5C4A3E; font-size: 14px;"><strong>Payment Method:</strong> Online Payment</p>
+              <p style="margin: 0 0 5px 0; color: #5C4A3E; font-size: 14px;"><strong>Total Amount:</strong> ₹${newOrder.totalAmount.toLocaleString('en-IN')}</p>
+              <p style="margin: 0 0 5px 0; color: #5C4A3E; font-size: 14px;"><strong>Delivery Address:</strong> ${newOrder.shippingAddress.address}, ${newOrder.shippingAddress.city}, ${newOrder.shippingAddress.state} - ${newOrder.shippingAddress.pincode}</p>
+            </div>
+            
+            <p style="font-size: 14px; color: #5C4A3E; margin-bottom: 0;">We will contact you shortly on your mobile number <strong>${newOrder.shippingAddress.mobile}</strong> to confirm shipping updates.</p>
+            
+            <div style="margin-top: 40px; border-top: 1px solid rgba(212, 175, 55, 0.2); padding-top: 25px; font-size: 13px; color: #7A695D; text-align: center;">
+              <p style="margin: 0; font-weight: bold; color: #3D2B1F;">Brahmani Jewellers Team</p>
+              <p style="margin: 5px 0 0 0;">For inquiries: <a href="mailto:info.brahmanijewellers@gmail.com" style="color: #d4af37; text-decoration: none;">info.brahmanijewellers@gmail.com</a></p>
+            </div>
+          </div>
+        `;
+        sendEmail(orderEmail, 'Order Placed Successfully - Brahmani Jewellers', orderHtml).catch(console.error);
       }
 
       res.status(201).json({ message: 'Payment verified and order placed successfully!', order: newOrder });
@@ -2227,7 +2305,7 @@ router.put('/orders/:id/cancel', auth, async (req, res) => {
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
     // Verify ownership
-    if (order.user.toString() !== req.user) {
+    if (!order.user || order.user.toString() !== req.user) {
       return res.status(403).json({ message: 'You are not authorized to cancel this order' });
     }
 
@@ -2326,7 +2404,7 @@ router.delete('/admin/coupons/:id', auth, isAdmin, async (req, res) => {
 });
 
 // Validate Coupon (User/Public)
-router.post('/coupons/validate', auth, async (req, res) => {
+router.post('/coupons/validate', optionalAuth, async (req, res) => {
   const { code } = req.body;
   try {
     if (!code) return res.status(400).json({ message: 'Coupon code is required' });

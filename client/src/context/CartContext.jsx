@@ -40,14 +40,41 @@ export const CartProvider = ({ children }) => {
     if (token) {
       fetchCart(token);
     } else {
-      setCart({ items: [] });
+      const localCart = localStorage.getItem('guestCart');
+      if (localCart) {
+        setCart(JSON.parse(localCart));
+      } else {
+        setCart({ items: [] });
+      }
     }
   }, [token]);
 
   const addToCart = async (productId, quantity = 1) => {
     const activeToken = sessionStorage.getItem('token') || token;
     if (!activeToken) {
-      alert("Please login to add items to cart");
+      setLoading(true);
+      try {
+        const res = await api.get(`/gallery/${productId}`);
+        const product = res.data;
+
+        const localCart = localStorage.getItem('guestCart');
+        let currentCart = localCart ? JSON.parse(localCart) : { items: [] };
+
+        const existingItemIndex = currentCart.items.findIndex(item => item.product?._id === productId);
+        if (existingItemIndex > -1) {
+          currentCart.items[existingItemIndex].quantity += quantity;
+        } else {
+          currentCart.items.push({ product, quantity });
+        }
+
+        localStorage.setItem('guestCart', JSON.stringify(currentCart));
+        setCart(currentCart);
+        setIsCartOpen(true);
+      } catch (err) {
+        console.error("Error adding to guest cart", err);
+      } finally {
+        setLoading(false);
+      }
       return;
     }
     setLoading(true);
@@ -64,7 +91,23 @@ export const CartProvider = ({ children }) => {
 
   const updateQuantity = async (productId, quantity) => {
     const activeToken = sessionStorage.getItem('token') || token;
-    if (!activeToken) return;
+    if (!activeToken) {
+      const localCart = localStorage.getItem('guestCart');
+      if (localCart) {
+        let currentCart = JSON.parse(localCart);
+        const existingItemIndex = currentCart.items.findIndex(item => item.product?._id === productId);
+        if (existingItemIndex > -1) {
+          if (quantity <= 0) {
+            currentCart.items.splice(existingItemIndex, 1);
+          } else {
+            currentCart.items[existingItemIndex].quantity = quantity;
+          }
+          localStorage.setItem('guestCart', JSON.stringify(currentCart));
+          setCart(currentCart);
+        }
+      }
+      return;
+    }
     try {
       const res = await api.put('/cart/update', { productId, quantity }, { headers: { Authorization: `Bearer ${activeToken}` } });
       setCart(res.data);
@@ -75,13 +118,27 @@ export const CartProvider = ({ children }) => {
 
   const removeFromCart = async (productId) => {
     const activeToken = sessionStorage.getItem('token') || token;
-    if (!activeToken) return;
+    if (!activeToken) {
+      const localCart = localStorage.getItem('guestCart');
+      if (localCart) {
+        let currentCart = JSON.parse(localCart);
+        currentCart.items = currentCart.items.filter(item => item.product?._id !== productId);
+        localStorage.setItem('guestCart', JSON.stringify(currentCart));
+        setCart(currentCart);
+      }
+      return;
+    }
     try {
       const res = await api.delete(`/cart/remove/${productId}`, { headers: { Authorization: `Bearer ${activeToken}` } });
       setCart(res.data);
     } catch (err) {
       console.error("Error removing from cart", err);
     }
+  };
+
+  const clearCart = () => {
+    localStorage.removeItem('guestCart');
+    setCart({ items: [] });
   };
 
   const [rates, setRates] = useState(null);
@@ -145,6 +202,7 @@ export const CartProvider = ({ children }) => {
       addToCart, 
       updateQuantity, 
       removeFromCart, 
+      clearCart,
       cartCount, 
       cartTotal,
       isCartOpen,
