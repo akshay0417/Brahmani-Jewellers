@@ -64,13 +64,25 @@ export default function CartScreen() {
 
   const removeFromCart = async (productId) => {
     try {
-      const response = await axios.delete(`${API_URL}/cart/remove/${productId}`, {
-        headers: { Authorization: `Bearer ${user.token}` }
+      const response = await fetch(`${API_URL}/cart/remove/${productId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json'
+        }
       });
-      setCart(response.data);
-      refreshCartCount();
-    } catch (error) {
-      Alert.alert("Error", "Could not remove item");
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCart(data);
+        refreshCartCount();
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.message || "Failed to remove item");
+      }
+    } catch (error: any) {
+      console.error("Error removing from cart:", error);
+      Alert.alert("Error", error.message || "Could not remove item");
     }
   };
 
@@ -157,9 +169,7 @@ export default function CartScreen() {
                 <Text style={styles.itemName}>{item.product.category} Ornament</Text>
                 <Text style={styles.itemPrice}>₹{itemPrice.toLocaleString('en-IN')}</Text>
                 <View style={styles.quantityContainer}>
-                  <TouchableOpacity onPress={() => updateQuantity(item.product._id, item.quantity - 1)} style={styles.qtyBtn}><FontAwesome name="minus" size={12} color="#FFFFFF" /></TouchableOpacity>
-                  <Text style={styles.qtyText}>{item.quantity}</Text>
-                  <TouchableOpacity onPress={() => updateQuantity(item.product._id, item.quantity + 1)} style={styles.qtyBtn}><FontAwesome name="plus" size={12} color="#FFFFFF" /></TouchableOpacity>
+                  <Text style={styles.qtyStaticText}>Qty: 1</Text>
                 </View>
               </View>
               <TouchableOpacity onPress={() => removeFromCart(item.product._id)} style={styles.removeBtn}><FontAwesome name="trash" size={20} color="#FF6B6B" /></TouchableOpacity>
@@ -211,6 +221,7 @@ const styles = StyleSheet.create({
   quantityContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
   qtyBtn: { backgroundColor: '#1C1C1E', width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   qtyText: { marginHorizontal: 12, fontWeight: 'bold', color: '#1C1C1E' },
+  qtyStaticText: { fontSize: 13, color: '#8E8E93', fontWeight: 'bold', marginTop: 4 },
   removeBtn: { padding: 10 },
   footer: { padding: 20, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E5E5EA' },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },

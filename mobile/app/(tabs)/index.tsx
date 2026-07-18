@@ -477,7 +477,11 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-              <ScrollView style={styles.drawerScroll} showsVerticalScrollIndicator={false}>
+              <ScrollView 
+                style={styles.drawerScroll} 
+                contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 50 }}
+                showsVerticalScrollIndicator={false}
+              >
                 {/* 1. Home */}
                 <TouchableOpacity 
                   style={styles.sidebarLink} 
