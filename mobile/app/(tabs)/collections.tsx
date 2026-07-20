@@ -522,7 +522,7 @@ export default function CollectionsScreen() {
                 <View style={styles.metalCardOverlay}>
                   <Ionicons name="diamond-outline" size={32} color="#D4AF37" style={styles.metalCardIcon} />
                   <Text style={styles.metalCardTitleGold}>GOLD JEWELLERY</Text>
-                  <Text style={styles.metalCardSubtitleGold}>Explore Premium 22K & 24K Gold Ornaments</Text>
+                  <Text style={styles.metalCardSubtitleGold}>Explore Premium 22K Hallmarked Gold Ornaments</Text>
                 </View>
               </TouchableOpacity>
 
