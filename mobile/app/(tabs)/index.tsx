@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, ScrollView, Image, FlatList, Modal, Pressable, Alert, Linking, TextInput, Animated, Platform } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, ScrollView, Image, FlatList, Modal, Pressable, Alert, Linking, TextInput, Animated, Platform, RefreshControl } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -72,27 +72,27 @@ function AnimatedLiveRatesCard({ children, style }) {
 const HERO_SLIDES = [
   {
     id: '1',
-    image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80',
-    title: 'Timeless Rings',
-    subtitle: '100% Purity Certified',
+    image: 'https://coinbazaar.in/blog/wp-content/uploads/2026/01/Antique-gold-jewellery-trends.jpeg',
+    title: 'Antique Gold Jewellery Set',
+    subtitle: 'Heritage 22K Gold & Pearl Necklace Trends',
   },
   {
     id: '2',
-    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80',
-    title: 'Royal Necklaces',
-    subtitle: 'Classic & Modern Sets',
+    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=1000&auto=format&fit=crop&q=80',
+    title: 'Royal Gold Pearl Choker',
+    subtitle: 'Exquisite Handcrafted Pearl & Gemstone Necklace',
   },
   {
     id: '3',
-    image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&auto=format&fit=crop&q=80',
-    title: 'Fine Bracelets',
-    subtitle: 'Crafted with Passion',
+    image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=1000&auto=format&fit=crop&q=80',
+    title: 'Antique Gold Bangle & Bracelet',
+    subtitle: 'Exquisite Hand-Carved Traditional Gold Work',
   },
   {
     id: '4',
-    image: 'https://images.unsplash.com/photo-1630019852942-f89202989a59?w=800&auto=format&fit=crop&q=80',
-    title: 'Breathtaking Earrings',
-    subtitle: 'Made for Every Occasion',
+    image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=1000&auto=format&fit=crop&q=80',
+    title: 'Diamond Solitaire Gold Ring',
+    subtitle: 'High-Gloss Precious Gemstone & Fine Gold Finish',
   }
 ];
 
@@ -110,6 +110,7 @@ export default function HomeScreen() {
   const [orders, setOrders] = useState([]);
   const [loadingRates, setLoadingRates] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   
   // Drawer & Modals State
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -124,6 +125,29 @@ export default function HomeScreen() {
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [heroSlides, setHeroSlides] = useState<any[]>(HERO_SLIDES);
+  const [homeSearchQuery, setHomeSearchQuery] = useState('');
+  const [allGalleryItems, setAllGalleryItems] = useState<any[]>([]);
+
+  const fetchGalleryItems = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/gallery`);
+      if (res.data) setAllGalleryItems(res.data);
+    } catch (err) {
+      console.log('Error fetching gallery for home search:', err);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([
+      fetchRates(),
+      fetchOffers(),
+      fetchGalleryItems(),
+      user && user.token ? fetchOrders() : Promise.resolve(),
+      user && user.token ? refreshCartCount() : Promise.resolve()
+    ]);
+    setRefreshing(false);
+  };
 
   const fetchOffers = async () => {
     try {
@@ -136,7 +160,7 @@ export default function HomeScreen() {
           subtitle: offer.subtitle || '',
           link: offer.link || '',
         }));
-        setHeroSlides(mapped);
+        setHeroSlides([...mapped, ...HERO_SLIDES]);
       } else {
         setHeroSlides(HERO_SLIDES);
       }
@@ -158,6 +182,7 @@ export default function HomeScreen() {
     useCallback(() => {
       fetchRates();
       fetchOffers();
+      fetchGalleryItems();
       if (user && user.token) {
         fetchOrders();
         refreshCartCount();
@@ -268,7 +293,14 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          style={{ flex: 1 }} 
+          contentContainerStyle={styles.scrollContainer} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#D4AF37']} tintColor="#D4AF37" />
+          }
+        >
         {/* Modern Header */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
@@ -315,22 +347,78 @@ export default function HomeScreen() {
             placeholder="Search gold rings, silver chains..."
             placeholderTextColor="rgba(61, 43, 31, 0.4)"
             style={styles.searchInput}
-            onTouchStart={() => {
-              router.push('/collections');
-            }}
+            value={homeSearchQuery}
+            onChangeText={setHomeSearchQuery}
           />
+          {homeSearchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setHomeSearchQuery('')} style={{ padding: 4 }}>
+              <Ionicons name="close-circle" size={20} color="#6B1124" />
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* Carousel / Banner Slider */}
-        <FlatList
-          data={heroSlides}
-          renderItem={renderBanner}
-          keyExtractor={(item) => item.id}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          style={styles.carousel}
-        />
+        {/* Live In-Place Search Results View */}
+        {homeSearchQuery.trim().length > 0 ? (
+          <View style={styles.sectionContainer}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <Text style={styles.sectionTitle}>
+                Search Results ({allGalleryItems.filter(item => 
+                  (item.name && item.name.toLowerCase().includes(homeSearchQuery.toLowerCase())) ||
+                  (item.category && item.category.toLowerCase().includes(homeSearchQuery.toLowerCase())) ||
+                  (item.subCategory && item.subCategory.toLowerCase().includes(homeSearchQuery.toLowerCase())) ||
+                  (item.description && item.description.toLowerCase().includes(homeSearchQuery.toLowerCase()))
+                ).length})
+              </Text>
+              <TouchableOpacity onPress={() => setHomeSearchQuery('')}>
+                <Text style={{ color: '#6B1124', fontWeight: 'bold', fontSize: 13 }}>Clear (X)</Text>
+              </TouchableOpacity>
+            </View>
+
+            {(() => {
+              const matched = allGalleryItems.filter(item => 
+                (item.name && item.name.toLowerCase().includes(homeSearchQuery.toLowerCase())) ||
+                (item.category && item.category.toLowerCase().includes(homeSearchQuery.toLowerCase())) ||
+                (item.subCategory && item.subCategory.toLowerCase().includes(homeSearchQuery.toLowerCase())) ||
+                (item.description && item.description.toLowerCase().includes(homeSearchQuery.toLowerCase()))
+              );
+
+              if (matched.length === 0) {
+                return (
+                  <View style={{ padding: 30, alignItems: 'center' }}>
+                    <Text style={{ color: 'rgba(61,43,31,0.6)', fontSize: 14 }}>No jewellery items found matching "{homeSearchQuery}".</Text>
+                  </View>
+                );
+              }
+
+              return (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                  {matched.map(item => (
+                    <TouchableOpacity
+                      key={item._id}
+                      style={{ width: '48%', backgroundColor: '#FFFFFF', borderRadius: 10, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.3)' }}
+                      onPress={() => router.push({ pathname: '/product-details', params: { product: JSON.stringify(item) } })}
+                    >
+                      <Image source={{ uri: item.imageUrl }} style={{ width: '100%', height: 130, borderRadius: 8 }} resizeMode="cover" />
+                      <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#6B1124', marginTop: 6 }} numberOfLines={1}>{item.name}</Text>
+                      <Text style={{ fontSize: 11, color: 'rgba(61,43,31,0.6)', marginTop: 2 }}>{item.purity || '22K'} • {item.weight ? `${item.weight}g` : item.subCategory}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              );
+            })()}
+          </View>
+        ) : (
+          <>
+            {/* Carousel / Banner Slider */}
+            <FlatList
+              data={heroSlides}
+              renderItem={renderBanner}
+              keyExtractor={(item) => item.id}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              style={styles.carousel}
+            />
 
         {/* Categories Section */}
         <View style={styles.sectionContainer}>
@@ -438,6 +526,8 @@ export default function HomeScreen() {
           </View>
           <FontAwesome name="chevron-right" size={14} color="#FFF6E6" />
         </TouchableOpacity>
+        </>
+        )}
       </ScrollView>
 
       {/* Slide-out Sidebar Drawer Modal */}
@@ -980,7 +1070,7 @@ const styles = StyleSheet.create({
   },
   greetingText: {
     fontSize: 12,
-    color: '#D4AF37',
+    color: '#D4AF37', // Royal Gold
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -988,20 +1078,20 @@ const styles = StyleSheet.create({
   userNameText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1C1C1E',
+    color: '#6B1124', // Regal Maroon
     marginTop: 1,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   welcomeText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#1C1C1E',
+    color: '#6B1124', // Regal Maroon
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   brandTitleText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1C1C1E',
+    color: '#6B1124',
     marginTop: 1,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
@@ -1033,7 +1123,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1C1C1E',
+    color: '#6B1124',
     letterSpacing: 1,
   },
   subtitle: {
@@ -1045,7 +1135,7 @@ const styles = StyleSheet.create({
   },
   headerTagline: {
     fontSize: 9,
-    color: 'rgba(28, 28, 30, 0.4)',
+    color: 'rgba(107, 17, 36, 0.5)',
     letterSpacing: 3,
     marginTop: 6,
     textAlign: 'center',
@@ -1054,13 +1144,18 @@ const styles = StyleSheet.create({
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F2F2F7', // Soft light gray
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 46,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#E5E5EA',
+    borderColor: 'rgba(107, 17, 36, 0.2)', // Maroon tint border
+    shadowColor: '#6B1124',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   searchIcon: {
     marginRight: 10,
@@ -1068,7 +1163,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#1C1C1E',
+    color: '#6B1124',
     fontWeight: '500',
   },
   carousel: {
@@ -1092,7 +1187,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(28, 28, 30, 0.75)',
+    backgroundColor: 'rgba(74, 14, 23, 0.82)', // Deep Maroon overlay
     padding: 14,
   },
   bannerTitle: {
@@ -1111,7 +1206,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1C1C1E',
+    color: '#6B1124', // Regal Maroon
     marginBottom: 12,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
@@ -1124,38 +1219,38 @@ const styles = StyleSheet.create({
     width: '22%',
   },
   categoryIconBg: {
-    backgroundColor: '#FFFFFF', // Clean warm white
+    backgroundColor: '#FFFFFF',
     width: 48,
     height: 48,
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.25)', // Thin gold border accent
-    shadowColor: '#000',
+    borderWidth: 1.5,
+    borderColor: 'rgba(212, 175, 55, 0.4)', // Royal Gold accent border
+    shadowColor: '#6B1124',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
   },
   categoryName: {
     fontSize: 11,
-    fontWeight: '600',
-    color: '#1C1C1E',
+    fontWeight: '700',
+    color: '#6B1124',
     marginTop: 6,
     textAlign: 'center',
     width: '100%',
   },
   card: {
-    backgroundColor: '#FFFFFF', // Pure white card
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 18,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#E5E5EA', // Thin clean border
-    shadowColor: '#000',
+    borderColor: 'rgba(107, 17, 36, 0.15)', // Soft Maroon border
+    shadowColor: '#6B1124',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.06,
     shadowRadius: 10,
     elevation: 4,
   },
@@ -1168,7 +1263,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1C1C1E',
+    color: '#6B1124',
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   ratesGrid: {
@@ -1179,42 +1274,47 @@ const styles = StyleSheet.create({
   },
   rateBox: {
     width: '48%',
-    backgroundColor: '#FFFFFF', // Clean warm white background
+    backgroundColor: '#FFFDFB',
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E5E5EA',
-    borderLeftWidth: 3,
-    borderLeftColor: '#C5A059', // Subtle champagne gold highlight
+    borderColor: 'rgba(212, 175, 55, 0.25)',
+    borderLeftWidth: 3.5,
+    borderLeftColor: '#6B1124', // Regal Maroon left border
   },
   rateLabel: {
     fontSize: 11,
-    color: 'rgba(28, 28, 30, 0.5)',
+    color: '#666666',
     marginBottom: 2,
     fontWeight: '600',
   },
   rateValue: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#1C1C1E',
+    color: '#6B1124',
   },
   rateFooter: {
     fontSize: 9,
-    color: 'rgba(28, 28, 30, 0.4)',
+    color: 'rgba(107, 17, 36, 0.5)',
     textAlign: 'center',
     marginTop: 10,
     fontStyle: 'italic',
   },
   consultBanner: {
-    backgroundColor: '#1C1C1E',
+    backgroundColor: '#6B1124', // Regal Maroon
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.3)',
+    borderColor: 'rgba(212, 175, 55, 0.4)',
+    shadowColor: '#6B1124',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
   },
   consultTextContainer: {
     flex: 1,

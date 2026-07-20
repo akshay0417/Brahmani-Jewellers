@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, ScrollView, Image, Modal, Alert, Linking, TextInput, Animated, Platform } from 'react-native';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, ScrollView, Image, Modal, Alert, Linking, TextInput, Animated, Platform, RefreshControl } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -14,7 +14,20 @@ export default function ProfileScreen() {
 
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [activeSection, setActiveSection] = useState(null); // 'profile', 'orders', 'about', 'admin'
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchRatesAndBankDetails();
+    if (user && user.token) {
+      await fetchOrders();
+      if (user.role === 'admin') {
+        await fetchAdminOrders();
+      }
+    }
+    setRefreshing(false);
+  };
 
   // Modals state
   const [showBankDetails, setShowBankDetails] = useState(false);
@@ -298,7 +311,13 @@ export default function ProfileScreen() {
           <Text style={styles.title}>My Profile</Text>
         </View>
         
-        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          contentContainerStyle={styles.container} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#D4AF37']} tintColor="#D4AF37" />
+          }
+        >
           {/* User Card */}
           <View style={styles.userCard}>
             <View style={styles.avatarBg}>
@@ -804,77 +823,77 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
   header: { padding: 16, backgroundColor: '#FFFFFF', alignItems: 'center', paddingTop: 24, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
-  title: { fontSize: 22, fontWeight: 'bold', color: '#1C1C1E', letterSpacing: 0.5, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  title: { fontSize: 22, fontWeight: 'bold', color: '#6B1124', letterSpacing: 0.5, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   container: { padding: 20, paddingBottom: 100 },
   guestContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30, backgroundColor: '#FFFFFF' },
-  guestTitle: { fontSize: 22, fontWeight: 'bold', color: '#1C1C1E', marginVertical: 12, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  guestTitle: { fontSize: 22, fontWeight: 'bold', color: '#6B1124', marginVertical: 12, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   guestDesc: { fontSize: 14, color: '#8E8E93', textAlign: 'center', lineHeight: 20, marginBottom: 30 },
-  loginBtn: { backgroundColor: '#1C1C1E', paddingVertical: 16, width: '100%', borderRadius: 8, alignItems: 'center' },
+  loginBtn: { backgroundColor: '#6B1124', paddingVertical: 16, width: '100%', borderRadius: 8, alignItems: 'center' },
   loginBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16, letterSpacing: 1 },
   
-  userCard: { flexDirection: 'row', backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, alignItems: 'center', marginBottom: 24, borderWidth: 1, borderColor: '#E5E5EA' },
-  avatarBg: { backgroundColor: '#D4AF37', width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
-  avatarText: { color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' },
+  userCard: { flexDirection: 'row', backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, alignItems: 'center', marginBottom: 24, borderWidth: 1, borderColor: 'rgba(107, 17, 36, 0.15)', shadowColor: '#6B1124', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  avatarBg: { backgroundColor: '#6B1124', width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#D4AF37' },
+  avatarText: { color: '#D4AF37', fontSize: 24, fontWeight: 'bold' },
   userInfo: { marginLeft: 16 },
-  userName: { fontSize: 20, fontWeight: 'bold', color: '#1C1C1E', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  userName: { fontSize: 20, fontWeight: 'bold', color: '#6B1124', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   userEmail: { fontSize: 14, color: '#8E8E93' },
   
   menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
-  menuRowText: { flex: 1, marginLeft: 16, fontSize: 16, color: '#1C1C1E', fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
-  expandedContent: { backgroundColor: '#FFFFFF', padding: 16, borderRadius: 12, marginTop: 4, marginBottom: 8, borderWidth: 1, borderColor: '#E5E5EA' },
+  menuRowText: { flex: 1, marginLeft: 16, fontSize: 16, color: '#6B1124', fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  expandedContent: { backgroundColor: '#FFFFFF', padding: 16, borderRadius: 12, marginTop: 4, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(107, 17, 36, 0.15)' },
   
   infoLabel: { fontSize: 11, fontWeight: 'bold', color: '#8E8E93', textTransform: 'uppercase', marginTop: 8 },
-  infoValue: { fontSize: 15, color: '#1C1C1E', fontWeight: '600', marginBottom: 4, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  infoValue: { fontSize: 15, color: '#6B1124', fontWeight: '600', marginBottom: 4, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   
   noOrdersText: { fontSize: 13, color: '#8E8E93', fontStyle: 'italic', paddingVertical: 10, textAlign: 'center' },
   orderItem: { borderBottomWidth: 1, borderBottomColor: '#E5E5EA', paddingVertical: 10 },
   orderItemTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  orderId: { fontSize: 13, fontWeight: 'bold', color: '#1C1C1E' },
+  orderId: { fontSize: 13, fontWeight: 'bold', color: '#6B1124' },
   orderDate: { fontSize: 12, color: '#8E8E93' },
   orderItemBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   orderStatus: { fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase' },
-  orderTotal: { fontSize: 13, fontWeight: 'bold', color: '#1C1C1E' },
+  orderTotal: { fontSize: 13, fontWeight: 'bold', color: '#6B1124' },
   
-  aboutTitle: { fontSize: 16, fontWeight: 'bold', color: '#1C1C1E', marginBottom: 8 },
-  aboutText: { fontSize: 14, color: '#8E8E93', lineHeight: 20, marginBottom: 12 },
-  aboutContactTitle: { fontSize: 13, fontWeight: 'bold', color: '#1C1C1E', marginTop: 10, marginBottom: 6 },
-  aboutContactText: { fontSize: 13, color: '#8E8E93', marginBottom: 4 },
+  aboutTitle: { fontSize: 16, fontWeight: 'bold', color: '#6B1124', marginBottom: 8 },
+  aboutText: { fontSize: 14, color: '#666666', lineHeight: 20, marginBottom: 12 },
+  aboutContactTitle: { fontSize: 13, fontWeight: 'bold', color: '#6B1124', marginTop: 10, marginBottom: 6 },
+  aboutContactText: { fontSize: 13, color: '#666666', marginBottom: 4 },
   
   divider: { height: 1, backgroundColor: '#E5E5EA', marginVertical: 20 },
   legalRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 20 },
-  legalLink: { fontSize: 12, color: '#8E8E93', fontWeight: 'bold', textDecorationLine: 'underline' },
+  legalLink: { fontSize: 12, color: '#6B1124', fontWeight: 'bold', textDecorationLine: 'underline' },
   legalSeparator: { fontSize: 12, color: '#E5E5EA' },
 
   // Modal styles
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
   modalBody: { backgroundColor: '#FFFFFF', width: '90%', borderRadius: 16, padding: 20, elevation: 8 },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#1C1C1E', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', paddingBottom: 10, marginBottom: 14, textAlign: 'center' },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#6B1124', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', paddingBottom: 10, marginBottom: 14, textAlign: 'center' },
   bankDetailContainer: { backgroundColor: '#FFFFFF', padding: 14, borderRadius: 10, borderWidth: 1, borderColor: '#E5E5EA' },
   bankLabel: { fontSize: 11, color: '#8E8E93', fontWeight: 'bold', textTransform: 'uppercase', marginTop: 6 },
-  bankValue: { fontSize: 14, color: '#1C1C1E', fontWeight: 'bold', marginBottom: 4 },
-  modalCloseBtn: { backgroundColor: '#1C1C1E', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginTop: 16 },
+  bankValue: { fontSize: 14, color: '#6B1124', fontWeight: 'bold', marginBottom: 4 },
+  modalCloseBtn: { backgroundColor: '#6B1124', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginTop: 16 },
   modalCloseBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 14, textTransform: 'uppercase' },
   notiBox: { flexDirection: 'row', gap: 10, backgroundColor: '#FFFFFF', padding: 12, borderRadius: 8, marginBottom: 8, alignItems: 'center', borderWidth: 1, borderColor: '#E5E5EA' },
-  notiText: { fontSize: 13, color: '#1C1C1E', flex: 1, lineHeight: 18 },
-  legalBodyText: { fontSize: 13, color: '#1C1C1E', lineHeight: 20 },
-  adminSectionTitle: { fontSize: 15, fontWeight: 'bold', color: '#1C1C1E', marginTop: 12, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  notiText: { fontSize: 13, color: '#6B1124', flex: 1, lineHeight: 18 },
+  legalBodyText: { fontSize: 13, color: '#6B1124', lineHeight: 20 },
+  adminSectionTitle: { fontSize: 15, fontWeight: 'bold', color: '#6B1124', marginTop: 12, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
   adminInputRow: { flexDirection: 'row', gap: 12, marginBottom: 8 },
   adminInputCol: { flex: 1 },
   adminInputLabel: { fontSize: 11, color: '#8E8E93', fontWeight: 'bold', marginBottom: 4 },
-  adminTextInput: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: '#1C1C1E', fontWeight: 'bold' },
-  adminBtn: { backgroundColor: '#1C1C1E', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginTop: 10 },
+  adminTextInput: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: '#6B1124', fontWeight: 'bold' },
+  adminBtn: { backgroundColor: '#6B1124', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginTop: 10 },
   adminBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 13, letterSpacing: 1 },
   adminDivider: { height: 1, backgroundColor: '#E5E5EA', marginVertical: 16 },
-  adminOrderItem: { backgroundColor: '#FFFFFF', padding: 12, borderRadius: 10, marginBottom: 8, borderLeftWidth: 4, borderLeftColor: '#D4AF37' },
+  adminOrderItem: { backgroundColor: '#FFFFFF', padding: 12, borderRadius: 10, marginBottom: 8, borderLeftWidth: 4, borderLeftColor: '#6B1124' },
   adminOrderHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  adminOrderId: { fontSize: 13, fontWeight: 'bold', color: '#1C1C1E' },
+  adminOrderId: { fontSize: 13, fontWeight: 'bold', color: '#6B1124' },
   adminOrderDate: { fontSize: 11, color: '#8E8E93' },
-  adminOrderUser: { fontSize: 13, color: '#1C1C1E', fontWeight: '500' },
+  adminOrderUser: { fontSize: 13, color: '#6B1124', fontWeight: '500' },
   adminOrderPhone: { fontSize: 12, color: '#8E8E93', marginVertical: 2 },
   adminOrderFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, borderTopWidth: 1, borderTopColor: '#E5E5EA', paddingTop: 8 },
-  adminStatusBadge: { backgroundColor: '#1C1C1E', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
+  adminStatusBadge: { backgroundColor: '#6B1124', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
   adminStatusText: { color: '#FFFFFF', fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase' },
-  adminOrderTotal: { fontSize: 14, fontWeight: 'bold', color: '#1C1C1E' },
+  adminOrderTotal: { fontSize: 14, fontWeight: 'bold', color: '#6B1124' },
   selfDeliveryBadge: { backgroundColor: '#D4AF37', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, marginLeft: 8 },
-  selfDeliveryText: { color: '#EBA938', fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase' }
+  selfDeliveryText: { color: '#FFFFFF', fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase' }
 });

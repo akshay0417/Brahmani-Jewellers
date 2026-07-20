@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Platform, RefreshControl } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -19,6 +19,7 @@ export default function CoinsScreen() {
   ]);
   const [rates, setRates] = useState<any>({ gold22K: 66000, gold24K: 72000, gold18K: 54000, silver: 85000 });
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [metalFilter, setMetalFilter] = useState('all'); // 'all' | 'gold' | 'silver'
 
   useFocusEffect(
@@ -36,7 +37,7 @@ export default function CoinsScreen() {
       
       // Filter items to only show coins
       const galleryItems = itemsRes.data || [];
-      const coinItems = galleryItems.filter(item => 
+      const coinItems = galleryItems.filter((item: any) => 
         (item.subCategory && item.subCategory.toLowerCase() === 'coin') ||
         (item.name && item.name.toLowerCase().includes('coin'))
       );
@@ -55,7 +56,13 @@ export default function CoinsScreen() {
     }
   };
 
-  const calculatePrice = (item) => {
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
+
+  const calculatePrice = (item: any) => {
     if (item.price) return Math.round(Number(item.price) * 1.03);
     if (!rates || !item.weight) return 0;
 
@@ -90,10 +97,17 @@ export default function CoinsScreen() {
     return Math.round(subtotal + gst);
   };
 
-  const addToCart = async (productId) => {
+  const isValidObjectId = (str: string) => typeof str === 'string' && /^[0-9a-fA-F]{24}$/.test(str);
+
+  const addToCart = async (productId: any) => {
     if (!user || !user.token) {
       Alert.alert("Login Required", "Please login to buy gold & silver coins");
       router.push('/login');
+      return;
+    }
+
+    if (!productId || !isValidObjectId(String(productId))) {
+      Alert.alert("Preview Sample", "This coin is a demo sample. Please select a coin from live catalog.");
       return;
     }
 
@@ -108,7 +122,8 @@ export default function CoinsScreen() {
         Alert.alert("Session Expired", "Your session has expired. Please login again.");
         router.push('/login');
       } else {
-        Alert.alert("Error", "Could not add coin to cart");
+        const errMsg = error.response?.data?.message || error.message || "Could not add coin to cart";
+        Alert.alert("Error", errMsg);
       }
     }
   };
@@ -156,7 +171,14 @@ export default function CoinsScreen() {
         </View>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={{ flex: 1 }} 
+        contentContainerStyle={styles.container} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#D4AF37']} tintColor="#D4AF37" />
+        }
+      >
         {filteredCoins.length === 0 ? (
           <View style={styles.noResultsContainer}>
             <Ionicons name="gift-outline" size={48} color="rgba(28, 28, 30, 0.2)" />
@@ -209,14 +231,14 @@ export default function CoinsScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
   header: { padding: 16, backgroundColor: '#FFFFFF', alignItems: 'center', paddingTop: 24, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
-  title: { fontSize: 22, fontWeight: 'bold', color: '#1C1C1E', letterSpacing: 0.5, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
-  subtitle: { fontSize: 11, color: '#8E8E93', marginTop: 4, marginBottom: 14, fontWeight: '500' },
+  title: { fontSize: 22, fontWeight: 'bold', color: '#6B1124', letterSpacing: 0.5, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  subtitle: { fontSize: 11, color: '#D4AF37', marginTop: 4, marginBottom: 14, fontWeight: '700', letterSpacing: 1 },
   
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#E5E5EA',
+    backgroundColor: 'rgba(107, 17, 36, 0.06)',
     borderRadius: 8,
-    padding: 2,
+    padding: 3,
     width: '100%',
   },
   tabButton: {
@@ -226,12 +248,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   activeTabButton: {
-    backgroundColor: '#1C1C1E',
+    backgroundColor: '#6B1124',
+    shadowColor: '#6B1124',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   tabButtonText: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#8E8E93',
+    color: '#6B1124',
   },
   activeTabButtonText: {
     color: '#FFFFFF',
@@ -246,10 +273,10 @@ const styles = StyleSheet.create({
     marginBottom: 16, 
     overflow: 'hidden', 
     borderWidth: 1, 
-    borderColor: 'rgba(212, 175, 55, 0.25)',
-    shadowColor: '#000',
+    borderColor: 'rgba(212, 175, 55, 0.3)',
+    shadowColor: '#6B1124',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.06,
     shadowRadius: 6,
     elevation: 3,
     position: 'relative',
@@ -259,7 +286,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     left: 8,
-    backgroundColor: 'rgba(28, 28, 30, 0.8)',
+    backgroundColor: 'rgba(107, 17, 36, 0.85)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 4,
@@ -270,12 +297,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   cardInfo: { padding: 12, alignItems: 'center' },
-  coinName: { fontSize: 14, fontWeight: '700', color: '#1C1C1E', marginBottom: 2, textTransform: 'capitalize', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
-  coinDetails: { fontSize: 11, color: 'rgba(28, 28, 30, 0.5)', marginBottom: 6 },
-  coinPrice: { fontSize: 15, fontWeight: 'bold', color: '#D4AF37' },
-  gstNote: { fontSize: 9, color: 'rgba(28, 28, 30, 0.4)', marginBottom: 10, fontWeight: '600' },
+  coinName: { fontSize: 14, fontWeight: '700', color: '#6B1124', marginBottom: 2, textTransform: 'capitalize', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  coinDetails: { fontSize: 11, color: '#666666', marginBottom: 6 },
+  coinPrice: { fontSize: 15, fontWeight: 'bold', color: '#6B1124' },
+  gstNote: { fontSize: 9, color: 'rgba(107, 17, 36, 0.5)', marginBottom: 10, fontWeight: '600' },
   button: { 
-    backgroundColor: '#1C1C1E', 
+    backgroundColor: '#6B1124', 
     paddingVertical: 8, 
     width: '100%',
     borderRadius: 6, 
@@ -285,5 +312,5 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 12 },
   noResultsContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 80, width: '100%' },
-  noResultsText: { fontSize: 14, color: 'rgba(28, 28, 30, 0.5)', marginTop: 12, fontWeight: '600' }
+  noResultsText: { fontSize: 14, color: 'rgba(107, 17, 36, 0.5)', marginTop: 12, fontWeight: '600' }
 });

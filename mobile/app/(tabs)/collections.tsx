@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, TextInput, Platform, Linking, Modal, Share } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, TextInput, Platform, Linking, Modal, Share, RefreshControl } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -32,6 +32,7 @@ export default function CollectionsScreen() {
   ]);
   const [rates, setRates] = useState<any>({ gold22K: 66000, gold24K: 72000, gold18K: 54000, silver: 85000 });
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('shop'); // 'shop' | 'collection'
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
@@ -81,6 +82,14 @@ export default function CollectionsScreen() {
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
+
+  const isValidObjectId = (str: string) => typeof str === 'string' && /^[0-9a-fA-F]{24}$/.test(str);
+
   const addToCart = async (productId: any) => {
     if (!user || !user.token) {
       Alert.alert("Login Required", "Please login to add items to cart");
@@ -89,17 +98,20 @@ export default function CollectionsScreen() {
     }
 
     try {
-      await axios.post(`${API_URL}/cart/add`, { productId, quantity: 1 }, {
+      await axios.post(`${API_URL}/cart/add`, { productId: String(productId || ''), quantity: 1 }, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
-      Alert.alert("Success", "Item added to cart");
+      Alert.alert("Success 🛒", "Item added to cart successfully!");
       refreshCartCount();
     } catch (error: any) {
       if (error.response && error.response.status === 401) {
         Alert.alert("Session Expired", "Your session has expired. Please login again.");
         router.push('/login');
+      } else if (error.response?.status === 502 || error.response?.status === 503) {
+        Alert.alert("Server Waking Up", "Server is starting up. Please tap Add to Cart again in a few seconds.");
       } else {
-        Alert.alert("Error", "Could not add to cart");
+        const errMsg = error.response?.data?.message || "Could not add item to cart. Please try again.";
+        Alert.alert("Notice", errMsg);
       }
     }
   };
@@ -326,7 +338,14 @@ export default function CollectionsScreen() {
         )}
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={{ flex: 1 }} 
+        contentContainerStyle={styles.container} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#D4AF37']} tintColor="#D4AF37" />
+        }
+      >
         {searchQuery.length > 0 ? (
           filteredItems.length === 0 ? (
             <View style={styles.noResultsContainer}>
@@ -694,7 +713,7 @@ export default function CollectionsScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
   header: { padding: 16, backgroundColor: '#FFFFFF', alignItems: 'center', paddingTop: 24, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
-  title: { fontSize: 22, fontWeight: 'bold', color: '#1C1C1E', letterSpacing: 1, marginBottom: 12, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  title: { fontSize: 22, fontWeight: 'bold', color: '#6B1124', letterSpacing: 1, marginBottom: 12, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -704,18 +723,18 @@ const styles = StyleSheet.create({
     height: 40,
     width: '100%',
     borderWidth: 1,
-    borderColor: '#E5E5EA',
+    borderColor: 'rgba(107, 17, 36, 0.2)',
     marginBottom: 14,
   },
   searchIcon: { marginRight: 8 },
-  searchInput: { flex: 1, color: '#1C1C1E', fontSize: 14 },
+  searchInput: { flex: 1, color: '#6B1124', fontSize: 14 },
   
   // Tab Segments
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#E5E5EA',
+    backgroundColor: 'rgba(107, 17, 36, 0.06)',
     borderRadius: 8,
-    padding: 2,
+    padding: 3,
     width: '100%',
   },
   tabButton: {
@@ -728,17 +747,17 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   activeTabButton: {
-    backgroundColor: '#1C1C1E',
-    shadowColor: '#000',
+    backgroundColor: '#6B1124',
+    shadowColor: '#6B1124',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
   },
   tabButtonText: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#8E8E93',
+    color: '#6B1124',
   },
   activeTabButtonText: {
     color: '#FFFFFF',
@@ -753,10 +772,10 @@ const styles = StyleSheet.create({
     marginBottom: 16, 
     overflow: 'hidden', 
     borderWidth: 1, 
-    borderColor: 'rgba(212, 175, 55, 0.25)',
-    shadowColor: '#000',
+    borderColor: 'rgba(212, 175, 55, 0.3)',
+    shadowColor: '#6B1124',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.06,
     shadowRadius: 6,
     elevation: 3,
     position: 'relative',
@@ -766,7 +785,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     left: 8,
-    backgroundColor: 'rgba(28, 28, 30, 0.75)',
+    backgroundColor: 'rgba(107, 17, 36, 0.85)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 4,
@@ -777,17 +796,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   cardInfo: { padding: 12 },
-  itemName: { fontSize: 14, fontWeight: '700', color: '#1C1C1E', marginBottom: 2, textTransform: 'capitalize', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
-  itemDetails: { fontSize: 11, color: 'rgba(28, 28, 30, 0.5)', marginBottom: 6, textTransform: 'capitalize' },
+  itemName: { fontSize: 14, fontWeight: '700', color: '#6B1124', marginBottom: 2, textTransform: 'capitalize', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  itemDetails: { fontSize: 11, color: '#666666', marginBottom: 6, textTransform: 'capitalize' },
   priceWeightRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
   },
-  itemPrice: { fontSize: 14, fontWeight: 'bold', color: '#D4AF37' },
+  itemPrice: { fontSize: 14, fontWeight: 'bold', color: '#6B1124' },
   button: { 
-    backgroundColor: '#1C1C1E', 
+    backgroundColor: '#6B1124', 
     paddingVertical: 8, 
     borderRadius: 6, 
     alignItems: 'center',

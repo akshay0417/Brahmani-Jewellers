@@ -216,7 +216,7 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   splashContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF', // Premium White Background
+    backgroundColor: '#FFFFFF', // Clean White Background
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
@@ -230,13 +230,13 @@ const styles = StyleSheet.create({
   splashTitle: {
     fontSize: 38,
     fontWeight: 'bold',
-    color: '#1C1C1E', // Charcoal
+    color: '#6B1124', // Regal Maroon
     letterSpacing: 2,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   splashSubtitle: {
     fontSize: 14,
-    color: '#D4AF37', // Shiny Gold
+    color: '#D4AF37', // Royal Gold
     letterSpacing: 6,
     fontWeight: 'bold',
   },
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
   offlineTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1C1C1E',
+    color: '#6B1124', // Regal Maroon
     marginBottom: 10,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
@@ -262,20 +262,20 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   retryButton: {
-    backgroundColor: '#D4AF37',
+    backgroundColor: '#6B1124', // Regal Maroon
     paddingVertical: 14,
     paddingHorizontal: 36,
-    borderRadius: 6,
+    borderRadius: 8,
     minWidth: 160,
     alignItems: 'center',
-    shadowColor: '#D4AF37',
+    shadowColor: '#6B1124',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.25,
     shadowRadius: 6,
     elevation: 3,
   },
   retryButtonText: {
-    color: '#1C1C1E',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 14,
     letterSpacing: 2,
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
   updateTitle: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#1C1C1E',
+    color: '#6B1124', // Regal Maroon
     marginBottom: 10,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
@@ -310,20 +310,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   updateButton: {
-    backgroundColor: '#D4AF37',
+    backgroundColor: '#6B1124', // Regal Maroon
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 8,
     minWidth: 200,
     alignItems: 'center',
-    shadowColor: '#D4AF37',
+    shadowColor: '#6B1124',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 4,
   },
   updateButtonText: {
-    color: '#1C1C1E',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 15,
     letterSpacing: 2,

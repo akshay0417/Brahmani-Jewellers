@@ -7,6 +7,7 @@ const AuthContext = createContext<any>(null);
 export const AuthProvider = ({ children }: any) => {
   const [user, setUser] = useState<any>(null);
   const [cartCount, setCartCount] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const refreshCartCount = async (token = user?.token) => {
     if (!token) {
@@ -47,6 +48,8 @@ export const AuthProvider = ({ children }: any) => {
         }
       } catch (e) {
         console.error('Failed to load user session', e);
+      } finally {
+        setIsLoading(false);
       }
     };
     loadPersistedUser();
@@ -97,7 +100,7 @@ export const AuthProvider = ({ children }: any) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, cartCount, refreshCartCount }}>
+    <AuthContext.Provider value={{ user, login, logout, cartCount, refreshCartCount, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

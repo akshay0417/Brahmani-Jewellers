@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert, Platform, RefreshControl } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
@@ -14,6 +14,7 @@ export default function CartScreen() {
   const { user, refreshCartCount } = useAuth();
   const [cart, setCart] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [rates, setRates] = useState<any>(null);
   const insets = useSafeAreaInsets();
 
@@ -27,6 +28,14 @@ export default function CartScreen() {
       }
     }, [user])
   );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    if (user && user.token) {
+      await Promise.all([fetchRates(), fetchCart(), refreshCartCount()]);
+    }
+    setRefreshing(false);
+  };
 
   const fetchRates = async () => {
     try {
@@ -62,27 +71,34 @@ export default function CartScreen() {
     }
   };
 
-  const removeFromCart = async (productId) => {
+  const removeFromCart = async (productId: string) => {
     try {
-      const response = await fetch(`${API_URL}/cart/remove/${productId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${user.token}`,
-          'Content-Type': 'application/json'
-        }
+      // Optimistically update local cart state so the item disappears immediately
+      setCart((prevCart: any) => {
+        if (!prevCart || !prevCart.items) return prevCart;
+        return {
+          ...prevCart,
+          items: prevCart.items.filter((i: any) => i.product && i.product._id !== productId && i._id !== productId)
+        };
+      });
+
+      const response = await axios.delete(`${API_URL}/cart/remove/${productId}`, {
+        headers: { Authorization: `Bearer ${user.token}` }
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        setCart(data);
+      if (response.data) {
+        setCart(response.data);
         refreshCartCount();
-      } else {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.message || "Failed to remove item");
       }
     } catch (error: any) {
       console.error("Error removing from cart:", error);
-      Alert.alert("Error", error.message || "Could not remove item");
+      fetchCart(); // Re-sync cart on error
+      const status = error.response?.status;
+      if (status === 502 || status === 503) {
+        // Cold start gateway delay — item is already optimistically removed in UI, re-sync cart silently
+        return;
+      }
+      Alert.alert("Notice", error.response?.data?.message || "Could not remove item. Please try again.");
     }
   };
 
@@ -154,7 +170,13 @@ export default function CartScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={[styles.header, { paddingTop: 12 }]}><Text style={styles.title}>Shopping Cart</Text></View>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContainer}>
+      <ScrollView 
+        style={{ flex: 1 }} 
+        contentContainerStyle={styles.scrollContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#D4AF37']} tintColor="#D4AF37" />
+        }
+      >
         {cart.items.filter(item => item.product).map((item) => {
           const itemPrice = calculatePrice(item.product);
           return (
@@ -193,11 +215,11 @@ export default function CartScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
   header: { padding: 16, backgroundColor: '#FFFFFF', alignItems: 'center', paddingTop: 30, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
-  title: { fontSize: 20, fontWeight: 'bold', color: '#1C1C1E', letterSpacing: 1, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  title: { fontSize: 20, fontWeight: 'bold', color: '#6B1124', letterSpacing: 1, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   scrollContainer: { padding: 16 },
   emptyText: { fontSize: 16, color: '#8E8E93', marginTop: 16, marginBottom: 24, fontWeight: '500' },
-  button: { backgroundColor: '#1C1C1E', paddingVertical: 12, paddingHorizontal: 32, borderRadius: 8 },
+  button: { backgroundColor: '#6B1124', paddingVertical: 12, paddingHorizontal: 32, borderRadius: 8 },
   buttonText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 15 },
   cartItem: { 
     flexDirection: 'row', 
@@ -207,8 +229,8 @@ const styles = StyleSheet.create({
     marginBottom: 12, 
     alignItems: 'center', 
     borderWidth: 1, 
-    borderColor: 'rgba(212, 175, 55, 0.25)',
-    shadowColor: '#000',
+    borderColor: 'rgba(107, 17, 36, 0.15)',
+    shadowColor: '#6B1124',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 6,
@@ -216,17 +238,17 @@ const styles = StyleSheet.create({
   },
   itemImage: { width: 80, height: 80, borderRadius: 8 },
   itemDetails: { flex: 1, marginLeft: 16 },
-  itemName: { fontSize: 15, fontWeight: 'bold', color: '#1C1C1E', textTransform: 'capitalize', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
-  itemPrice: { fontSize: 14, color: '#D4AF37', fontWeight: 'bold', marginVertical: 4 },
+  itemName: { fontSize: 15, fontWeight: 'bold', color: '#6B1124', textTransform: 'capitalize', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  itemPrice: { fontSize: 14, color: '#6B1124', fontWeight: 'bold', marginVertical: 4 },
   quantityContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
-  qtyBtn: { backgroundColor: '#1C1C1E', width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  qtyText: { marginHorizontal: 12, fontWeight: 'bold', color: '#1C1C1E' },
+  qtyBtn: { backgroundColor: '#6B1124', width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  qtyText: { marginHorizontal: 12, fontWeight: 'bold', color: '#6B1124' },
   qtyStaticText: { fontSize: 13, color: '#8E8E93', fontWeight: 'bold', marginTop: 4 },
   removeBtn: { padding: 10 },
   footer: { padding: 20, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E5E5EA' },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  totalLabel: { fontSize: 16, color: '#1C1C1E', fontWeight: '600' },
-  totalValue: { fontSize: 22, fontWeight: 'bold', color: '#1C1C1E' },
-  checkoutBtn: { backgroundColor: '#1C1C1E', paddingVertical: 16, borderRadius: 8, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  totalLabel: { fontSize: 16, color: '#6B1124', fontWeight: '600' },
+  totalValue: { fontSize: 22, fontWeight: 'bold', color: '#6B1124' },
+  checkoutBtn: { backgroundColor: '#6B1124', paddingVertical: 16, borderRadius: 8, alignItems: 'center', shadowColor: '#6B1124', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 3 },
   checkoutText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 15, letterSpacing: 1 }
 });

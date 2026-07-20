@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { Animated, Text, View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Tabs } from 'expo-router';
+import { Animated, Text, View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Tabs, useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../../context/AuthContext';
 
-function TabBarButton({ iconName, isFocused, onPress }) {
+function TabBarButton({ iconName, label, isFocused, onPress }) {
   const animatedValue = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
 
   useEffect(() => {
@@ -16,60 +17,46 @@ function TabBarButton({ iconName, isFocused, onPress }) {
     }).start();
   }, [isFocused]);
 
-  // Translate active button upwards
-  const translateY = animatedValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -18],
-  });
-
-  // Scale active button up slightly
   const scale = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 1.12],
-  });
-
-  // Slide white notch cutout up/down
-  const notchTranslateY = animatedValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [30, -22],
-  });
-
-  // Scale notch cutout
-  const notchScale = animatedValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 1],
+    outputRange: [1, 1.08],
   });
 
   return (
-    <View style={styles.tabItemContainer}>
-      {/* Animated button container */}
-      <Animated.View
-        style={[
-          styles.btnContainer,
-          {
-            transform: [{ translateY: translateY }, { scale: scale }],
-          },
-        ]}
-      >
-        <TouchableOpacity
-          onPress={onPress}
-          activeOpacity={0.9}
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      style={styles.tabItemContainer}
+    >
+      <Animated.View style={[styles.btnContainer, { transform: [{ scale }] }]}>
+        <View
           style={[
-            styles.buttonCircle,
+            styles.buttonIconBg,
             {
-              backgroundColor: isFocused ? '#D4AF37' : 'transparent', // Royal Gold for active button
-              borderWidth: isFocused ? 0 : 0,
+              backgroundColor: isFocused ? 'rgba(107, 17, 36, 0.1)' : 'transparent',
             },
           ]}
         >
           <FontAwesome
             name={iconName}
-            size={20}
-            color={isFocused ? '#FFFFFF' : '#8E8E93'} // White icon when active, Warm Gray when inactive
+            size={18}
+            color={isFocused ? '#6B1124' : '#8E8E93'}
           />
-        </TouchableOpacity>
+        </View>
+        <Text
+          style={[
+            styles.tabLabel,
+            {
+              color: isFocused ? '#6B1124' : '#8E8E93',
+              fontWeight: isFocused ? '700' : '500',
+            },
+          ]}
+          numberOfLines={1}
+        >
+          {label}
+        </Text>
       </Animated.View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -81,7 +68,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
     <View style={[
       styles.tabBarContainer,
       {
-        height: 60 + Math.max(insets.bottom, 12),
+        height: 62 + Math.max(insets.bottom, 12),
         paddingBottom: Math.max(insets.bottom, 12),
       }
     ]}>
@@ -105,16 +92,29 @@ function CustomTabBar({ state, descriptors, navigation }) {
         };
 
         let iconName = 'home';
-        if (route.name === 'index') iconName = 'home';
-        else if (route.name === 'collections') iconName = 'diamond';
-        else if (route.name === 'invest') iconName = 'line-chart';
-        else if (route.name === 'coins') iconName = 'circle-o';
-        else if (route.name === 'profile') iconName = 'user';
+        let label = 'Home';
+        if (route.name === 'index') {
+          iconName = 'home';
+          label = 'Home';
+        } else if (route.name === 'collections') {
+          iconName = 'diamond';
+          label = 'Collection';
+        } else if (route.name === 'invest') {
+          iconName = 'line-chart';
+          label = 'Invest';
+        } else if (route.name === 'coins') {
+          iconName = 'circle-o';
+          label = 'Coins';
+        } else if (route.name === 'profile') {
+          iconName = 'user';
+          label = 'Profile';
+        }
 
         return (
           <TabBarButton
             key={route.key}
             iconName={iconName}
+            label={label}
             isFocused={isFocused}
             onPress={onPress}
           />
@@ -125,6 +125,26 @@ function CustomTabBar({ state, descriptors, navigation }) {
 }
 
 export default function TabLayout() {
+  const { user, isLoading } = useAuth() || {};
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace('/login');
+    }
+  }, [user, isLoading]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+        <ActivityIndicator size="large" color="#D4AF37" />
+      </View>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
   return (
     <Tabs
       tabBar={props => <CustomTabBar {...props} />}
@@ -194,7 +214,7 @@ const styles = StyleSheet.create({
   tabBarContainer: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF', // Dashboard theme base color: White
-    height: 60,
+    height: 62,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     position: 'absolute',
@@ -208,7 +228,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     borderTopWidth: 1,
     borderTopColor: '#E5E5EA',
   },
@@ -217,30 +237,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
-    position: 'relative',
   },
   btnContainer: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  buttonIconBg: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  notchCutout: {
-    position: 'absolute',
-    top: -22,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#FFFFFF', // Clean cutout blending with white tab bar background
-    alignSelf: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
+  tabLabel: {
+    fontSize: 10.5,
+    letterSpacing: 0.2,
+    marginTop: 2,
   },
 });

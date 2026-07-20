@@ -240,8 +240,24 @@ const AdminDashboard = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.post('/rates', rates, config);
-      setStatus({ type: 'success', message: 'Rates updated successfully!' });
+      const res = await api.post('/rates', rates, config);
+      if (res.data) {
+        setRates({
+          isManual: res.data.isManual ?? true,
+          goldImpFine: res.data.goldImpFine || '',
+          silverFine: res.data.silverFine || '',
+          manualGold24K: res.data.gold24K || '',
+          manualGold22K: res.data.gold22K || '',
+          manualGold18K: res.data.gold18K || '',
+          manualSilver90: res.data.silver90 || '',
+          freeDeliveryKmLimit: res.data.freeDeliveryKmLimit ?? 10,
+          deliveryChargePerKm: res.data.deliveryChargePerKm ?? 15,
+          codEnabled: res.data.codEnabled ?? true,
+          latestAppVersion: res.data.latestAppVersion || '',
+          apkDownloadUrl: res.data.apkDownloadUrl || ''
+        });
+      }
+      setStatus({ type: 'success', message: 'Rates & App Update link saved successfully!' });
     } catch (err) {
       setStatus({ type: 'error', message: 'Failed to update rates.' });
     } finally {

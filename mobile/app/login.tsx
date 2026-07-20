@@ -63,7 +63,7 @@ export default function LoginScreen() {
       if (response.ok) {
         login({ ...data.user, token: data.token }, rememberMe);
         alert('Login Successful!');
-        router.push('/');
+        router.replace('/');
       } else if (response.status === 403 && data.unverified) {
         alert('Your account is not verified yet. An OTP has been generated. Please enter it below to verify.');
         try {
@@ -106,7 +106,7 @@ export default function LoginScreen() {
         setOtp('');
         login({ ...data.user, token: data.token }, rememberMe);
         alert('Account verified and logged in successfully!');
-        router.push('/');
+        router.replace('/');
       } else {
         alert(data.message || 'Verification failed');
       }
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
     fontStyle: 'italic',
     textTransform: 'uppercase',
-    color: '#D4AF37', // coffee
+    color: '#6B1124',
     marginBottom: 8,
   },
   subtitle: {
@@ -313,27 +313,27 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 2,
-    color: 'rgba(61, 43, 31, 0.7)', // coffee/70
+    color: '#D4AF37',
   },
   form: {
-    backgroundColor: '#FFFFFF', // White form background
+    backgroundColor: '#FFFFFF',
     padding: 24,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E5EA', // Light border
-    shadowColor: '#D4AF37',
+    borderColor: 'rgba(107, 17, 36, 0.15)',
+    shadowColor: '#6B1124',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.08,
     shadowRadius: 10,
-    elevation: 2,
+    elevation: 3,
   },
   inputContainer: {
     marginBottom: 20,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#D4AF37',
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#6B1124',
     marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -341,25 +341,25 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(61, 43, 31, 0.15)',
+    borderColor: 'rgba(107, 17, 36, 0.2)',
     borderRadius: 8,
     padding: 16,
     fontSize: 16,
-    color: '#D4AF37',
+    color: '#6B1124',
   },
   passwordInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(61, 43, 31, 0.15)',
+    borderColor: 'rgba(107, 17, 36, 0.2)',
     borderRadius: 8,
   },
   passwordInput: {
     flex: 1,
     padding: 16,
     fontSize: 16,
-    color: '#D4AF37',
+    color: '#6B1124',
   },
   eyeIconContainer: {
     paddingHorizontal: 14,
@@ -368,16 +368,21 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 10,
-    backgroundColor: '#EBA938', // ochre
+    backgroundColor: '#6B1124',
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
+    shadowColor: '#6B1124',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
   },
   buttonDisabled: {
     opacity: 0.7,
   },
   buttonText: {
-    color: '#FFFFFF', // white
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 16,
     letterSpacing: 1,
@@ -388,9 +393,9 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   backButtonText: {
-    color: '#D4AF37',
-    fontWeight: '500',
-    fontSize: 16,
+    color: '#6B1124',
+    fontWeight: '600',
+    fontSize: 15,
   },
   checkboxRow: {
     flexDirection: 'row',
@@ -401,18 +406,18 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderWidth: 1.5,
-    borderColor: '#D4AF37',
+    borderColor: '#6B1124',
     borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFF6E6',
+    backgroundColor: '#FFFFFF',
   },
   checkboxActive: {
-    backgroundColor: '#D4AF37',
+    backgroundColor: '#6B1124',
   },
   checkboxText: {
     fontSize: 14,
-    color: '#D4AF37',
+    color: '#6B1124',
     fontWeight: '500',
   },
   checkboxForgotPasswordRow: {
@@ -423,13 +428,13 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   forgotPasswordText: {
-    color: '#EBA938',
+    color: '#6B1124',
     fontWeight: 'bold',
     fontSize: 14,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(61, 43, 31, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -441,8 +446,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 320,
     borderWidth: 1,
-    borderColor: '#E5E5EA',
-    shadowColor: '#D4AF37',
+    borderColor: 'rgba(107, 17, 36, 0.2)',
+    shadowColor: '#6B1124',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -452,13 +457,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-    color: '#D4AF37',
+    color: '#6B1124',
     textAlign: 'center',
     marginBottom: 8,
   },
   modalSubtitle: {
     fontSize: 13,
-    color: 'rgba(61, 43, 31, 0.7)',
+    color: '#666666',
     textAlign: 'center',
     lineHeight: 18,
     marginBottom: 20,
@@ -466,11 +471,11 @@ const styles = StyleSheet.create({
   otpInput: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(61, 43, 31, 0.15)',
+    borderColor: 'rgba(107, 17, 36, 0.3)',
     borderRadius: 8,
     padding: 16,
     fontSize: 18,
-    color: '#D4AF37',
+    color: '#6B1124',
     textAlign: 'center',
     letterSpacing: 8,
     marginBottom: 16,
@@ -480,18 +485,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelLinkText: {
-    color: '#D4AF37',
+    color: '#6B1124',
     fontWeight: '500',
     fontSize: 14,
   },
   segmentContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(107, 17, 36, 0.06)',
     borderRadius: 8,
-    padding: 4,
+    padding: 3,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(61, 43, 31, 0.1)',
+    borderColor: 'rgba(107, 17, 36, 0.15)',
   },
   segmentButton: {
     flex: 1,
@@ -500,21 +505,21 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   segmentButtonActive: {
-    backgroundColor: '#D4AF37',
-    shadowColor: '#D4AF37',
+    backgroundColor: '#6B1124',
+    shadowColor: '#6B1124',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 2,
   },
   segmentButtonText: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: 'rgba(61, 43, 31, 0.6)',
+    color: '#6B1124',
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
   segmentButtonTextActive: {
-    color: '#FFF6E6',
+    color: '#FFFFFF',
   }
 });

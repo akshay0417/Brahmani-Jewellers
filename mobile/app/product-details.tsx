@@ -93,6 +93,8 @@ export default function ProductDetailsScreen() {
 
   const computedPrice = calculatePrice();
 
+  const isValidObjectId = (str: string) => typeof str === 'string' && /^[0-9a-fA-F]{24}$/.test(str);
+
   const addToCart = async () => {
     if (targetPage === 'collection') {
       Alert.alert("Not for Sale", "This item is part of our Catalogue/Collection and is not available for online purchase. Please inquire via WhatsApp.");
@@ -106,17 +108,20 @@ export default function ProductDetailsScreen() {
 
     try {
       setLoading(true);
-      await axios.post(`${API_URL}/cart/add`, { productId: id, quantity: 1 }, {
+      await axios.post(`${API_URL}/cart/add`, { productId: String(id || ''), quantity: 1 }, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
-      Alert.alert("Success", "Item added to cart successfully!");
+      Alert.alert("Success 🛒", "Item added to cart successfully!");
       refreshCartCount();
     } catch (error: any) {
       if (error.response && error.response.status === 401) {
         Alert.alert("Session Expired", "Your session has expired. Please login again.");
         router.push('/login');
+      } else if (error.response?.status === 502 || error.response?.status === 503) {
+        Alert.alert("Server Waking Up", "Server is starting up. Please tap Add to Cart again in a few seconds.");
       } else {
-        Alert.alert("Error", "Could not add item to cart");
+        const errMsg = error.response?.data?.message || "Could not add item to cart. Please try again.";
+        Alert.alert("Notice", errMsg);
       }
     } finally {
       setLoading(false);
@@ -127,6 +132,11 @@ export default function ProductDetailsScreen() {
     if (!user || !user.token) {
       Alert.alert("Login Required", "Please login to buy items");
       router.push('/login');
+      return;
+    }
+
+    if (!id || !isValidObjectId(id)) {
+      Alert.alert("Preview Item", "This item is a catalogue preview sample and cannot be purchased online. Please select an item from live catalog.");
       return;
     }
 
@@ -142,7 +152,8 @@ export default function ProductDetailsScreen() {
         Alert.alert("Session Expired", "Your session has expired. Please login again.");
         router.push('/login');
       } else {
-        Alert.alert("Error", "Could not buy item");
+        const errMsg = error.response?.data?.message || error.message || "Could not buy item";
+        Alert.alert("Error", errMsg);
       }
     } finally {
       setLoading(false);
@@ -426,7 +437,7 @@ export default function ProductDetailsScreen() {
 
             <View style={styles.tableRow}>
               <Text style={styles.tableLabel}>Net Weight</Text>
-              <Text style={styles.tableValue}>{parseFloat(netWeight || weight || 0).toFixed(3)} grams</Text>
+              <Text style={styles.tableValue}>{parseFloat(String(netWeight || weight || 0)).toFixed(3)} grams</Text>
             </View>
           </View>
 
@@ -608,8 +619,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.15)',
+    borderColor: 'rgba(107, 17, 36, 0.15)',
     marginBottom: 20,
+    shadowColor: '#6B1124',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   priceLabel: {
     fontSize: 12,
@@ -622,7 +638,7 @@ const styles = StyleSheet.create({
   priceValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#D4AF37',
+    color: '#6B1124',
   },
   gstText: {
     fontSize: 13,
@@ -631,16 +647,16 @@ const styles = StyleSheet.create({
   },
   rateUpdateText: {
     fontSize: 10,
-    color: 'rgba(28, 28, 30, 0.4)',
+    color: 'rgba(107, 17, 36, 0.5)',
     marginTop: 8,
     fontStyle: 'italic',
   },
   trustBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(212, 175, 55, 0.05)',
+    backgroundColor: 'rgba(107, 17, 36, 0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.15)',
+    borderColor: 'rgba(212, 175, 55, 0.3)',
     borderRadius: 12,
     padding: 14,
     marginBottom: 24,
@@ -652,17 +668,17 @@ const styles = StyleSheet.create({
   trustTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#1C1C1E',
+    color: '#6B1124',
   },
   trustSubtitle: {
     fontSize: 11,
-    color: 'rgba(28, 28, 30, 0.6)',
+    color: '#666666',
     marginTop: 2,
   },
   sectionCard: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E5E5EA',
+    borderColor: 'rgba(107, 17, 36, 0.15)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
@@ -670,10 +686,10 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#1C1C1E',
+    color: '#6B1124',
     marginBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#FFFFFF',
+    borderBottomColor: '#E5E5EA',
     paddingBottom: 6,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
@@ -682,7 +698,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#FFFFFF',
+    borderBottomColor: '#F2F2F7',
   },
   tableLabel: {
     fontSize: 13,
@@ -691,7 +707,7 @@ const styles = StyleSheet.create({
   tableValue: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#1C1C1E',
+    color: '#6B1124',
     textTransform: 'capitalize',
   },
   descriptionText: {
@@ -713,7 +729,9 @@ const styles = StyleSheet.create({
   },
   cartButton: {
     flex: 1.1,
-    backgroundColor: '#1C1C1E',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#6B1124',
     borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
@@ -721,21 +739,26 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   cartButtonText: {
-    color: '#FFFFFF',
+    color: '#6B1124',
     fontWeight: 'bold',
     fontSize: 15,
   },
   buyButton: {
     flex: 1.1,
-    backgroundColor: '#D4AF37',
+    backgroundColor: '#6B1124',
     borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 14,
+    shadowColor: '#6B1124',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
   },
   buyButtonText: {
-    color: '#1C1C1E',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 15,
   },
@@ -770,11 +793,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: 'rgba(107, 17, 36, 0.06)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 6,
-    shadowColor: '#000',
+    shadowColor: '#6B1124',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -783,13 +806,13 @@ const styles = StyleSheet.create({
   circularLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#D4AF37',
+    color: '#6B1124',
   },
   getQuoteButton: {
     flex: 1.1,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D4AF37',
+    borderColor: '#6B1124',
     borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
@@ -797,7 +820,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   getQuoteButtonText: {
-    color: '#D4AF37',
+    color: '#6B1124',
     fontWeight: 'bold',
     fontSize: 15,
   },
