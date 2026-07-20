@@ -165,7 +165,40 @@ export default function CartScreen() {
     return Math.round(subtotal + gst);
   };
 
-  const total = cart.items.reduce((sum, item) => sum + (item.product ? (calculatePrice(item.product) * item.quantity) : 0), 0);
+  const validItems = (cart?.items || []).filter((item: any) => item && item.product && item.product._id);
+  const total = validItems.reduce((sum: number, item: any) => sum + (item.product ? (calculatePrice(item.product) * (item.quantity || 1)) : 0), 0);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.header, { paddingTop: 12 }]}><Text style={styles.title}>Shopping Cart</Text></View>
+        <View style={styles.container}>
+          <ActivityIndicator size="large" color="#6B1124" />
+          <Text style={{ marginTop: 12, color: 'rgba(61,43,31,0.6)', fontWeight: 'bold' }}>Loading your cart...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (validItems.length === 0) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.header, { paddingTop: 12 }]}><Text style={styles.title}>Shopping Cart</Text></View>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#D4AF37']} tintColor="#D4AF37" />
+          }
+        >
+          <FontAwesome name="shopping-basket" size={64} color="rgba(107, 17, 36, 0.2)" />
+          <Text style={styles.emptyText}>Your cart is currently empty 🛒</Text>
+          <TouchableOpacity style={styles.button} onPress={() => router.push('/collections')}>
+            <Text style={styles.buttonText}>Explore Collection</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -177,24 +210,26 @@ export default function CartScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#D4AF37']} tintColor="#D4AF37" />
         }
       >
-        {cart.items.filter(item => item.product).map((item) => {
+        {validItems.map((item: any) => {
           const itemPrice = calculatePrice(item.product);
           return (
             <Reanimated.View 
               layout={LinearTransition}
               exiting={SlideOutRight.duration(250)}
-              key={item.product._id} 
+              key={item.product._id || item._id} 
               style={styles.cartItem}
             >
               <Image source={{ uri: item.product.imageUrl }} style={styles.itemImage} />
               <View style={styles.itemDetails}>
-                <Text style={styles.itemName}>{item.product.category} Ornament</Text>
+                <Text style={styles.itemName}>{item.product.name || `${item.product.category} Ornament`}</Text>
                 <Text style={styles.itemPrice}>₹{itemPrice.toLocaleString('en-IN')}</Text>
                 <View style={styles.quantityContainer}>
-                  <Text style={styles.qtyStaticText}>Qty: 1</Text>
+                  <Text style={styles.qtyStaticText}>Qty: {item.quantity || 1}</Text>
                 </View>
               </View>
-              <TouchableOpacity onPress={() => removeFromCart(item.product._id)} style={styles.removeBtn}><FontAwesome name="trash" size={20} color="#FF6B6B" /></TouchableOpacity>
+              <TouchableOpacity onPress={() => removeFromCart(item.product._id)} style={styles.removeBtn}>
+                <FontAwesome name="trash" size={20} color="#FF6B6B" />
+              </TouchableOpacity>
             </Reanimated.View>
           );
         })}

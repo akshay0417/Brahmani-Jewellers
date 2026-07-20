@@ -20,11 +20,15 @@ export const AuthProvider = ({ children }: any) => {
       });
       if (response.ok) {
         const data = await response.json();
-        const count = data.items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
+        const validItems = (data.items || []).filter((item: any) => item && item.product && item.product._id);
+        const count = validItems.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0);
         setCartCount(count);
+      } else {
+        setCartCount(0);
       }
     } catch (e) {
       console.error('Failed to fetch cart count', e);
+      setCartCount(0);
     }
   };
 
