@@ -30,3 +30,5 @@ mobile/node_modules/
 mobile/.expo/
 mobile/android/
 mobile/ios/
+*firebase-adminsdk*.json
+scratch/
