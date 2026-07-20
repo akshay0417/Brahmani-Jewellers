@@ -373,7 +373,7 @@ const sanitizeIdentifier = (id) => {
 
 // User Registration
 router.post('/auth/register', async (req, res) => {
-  const { name, email, mobile, password, country, state, city, termsAccepted } = req.body;
+  const { name, email, mobile, password, country, state, city, dateOfBirth, termsAccepted } = req.body;
   try {
     if (!termsAccepted) {
       return res.status(400).json({ message: 'You must accept the Terms & Conditions and Privacy Policy.' });
@@ -408,6 +408,7 @@ router.post('/auth/register', async (req, res) => {
       country, 
       state, 
       city, 
+      dateOfBirth,
       isVerified: false,
       isApproved: true,
       termsAccepted: true

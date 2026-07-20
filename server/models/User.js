@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema({
   country: { type: String },
   state: { type: String },
   city: { type: String },
+  dateOfBirth: { type: String },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
   isVerified: { type: Boolean, default: false },
   isApproved: { type: Boolean, default: false },

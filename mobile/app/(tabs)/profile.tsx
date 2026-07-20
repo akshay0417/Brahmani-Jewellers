@@ -604,6 +604,12 @@ export default function ProfileScreen() {
                 <Text style={styles.infoValue}>{user.mobile}</Text>
               </>
             )}
+            {user.dateOfBirth && (
+              <>
+                <Text style={styles.infoLabel}>Date of Birth</Text>
+                <Text style={styles.infoValue}>{user.dateOfBirth}</Text>
+              </>
+            )}
             <Text style={styles.infoLabel}>Account Role</Text>
             <Text style={styles.infoValue}>{user.role || 'customer'}</Text>
           </View>

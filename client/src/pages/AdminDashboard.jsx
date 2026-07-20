@@ -1919,7 +1919,10 @@ const AdminDashboard = () => {
                       ) : (
                         users.map((u, i) => (
                           <tr key={u._id} className="border-b border-ochre/10 hover:bg-ochre/5 transition-colors">
-                            <td className="py-4 px-4 font-medium text-coffee">{u.name}</td>
+                            <td className="py-4 px-4 font-medium text-coffee">
+                              {u.name}
+                              {u.dateOfBirth && <span className="block text-[11px] text-ochre font-mono">DOB: {u.dateOfBirth}</span>}
+                            </td>
                             <td className="py-4 px-4 text-coffee/70">{u.email || '-'}</td>
                             <td className="py-4 px-4 text-coffee/70">{u.mobile || '-'}</td>
                             <td className="py-4 px-4">

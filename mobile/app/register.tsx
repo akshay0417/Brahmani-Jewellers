@@ -9,6 +9,7 @@ export default function RegisterScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [mobile, setMobile] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [state, setState] = useState('');
@@ -85,8 +86,8 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
-    if (!name || !email || !mobile || !password || !state || !city) {
-      setError('All fields are required to register!');
+    if (!name || !email || !mobile || !password || !state || !city || !dateOfBirth) {
+      setError('All fields including Date of Birth are required to register!');
       return;
     }
     if (!termsAccepted) {
@@ -101,7 +102,7 @@ export default function RegisterScreen() {
       const response = await fetch('https://brahmani-jewellers-api.onrender.com/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, mobile, password, country: 'India', state, city, termsAccepted }),
+        body: JSON.stringify({ name, email, mobile, password, country: 'India', state, city, dateOfBirth, termsAccepted }),
       });
       
       const data = await response.json();
@@ -231,6 +232,18 @@ export default function RegisterScreen() {
                 value={mobile}
                 onChangeText={setMobile}
                 keyboardType="phone-pad"
+                placeholderTextColor="#A0A0A0"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Date of Birth *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="DD/MM/YYYY (e.g. 15/08/1998)"
+                value={dateOfBirth}
+                onChangeText={setDateOfBirth}
+                keyboardType="numbers-and-punctuation"
                 placeholderTextColor="#A0A0A0"
               />
             </View>
