@@ -437,7 +437,7 @@ export default function CheckoutScreen() {
             style={[styles.toggleBtn, deliveryMode === 'Delivery' && styles.activeToggleBtn]}
             onPress={() => setDeliveryMode('Delivery')}
           >
-            <Ionicons name="truck" size={16} color={deliveryMode === 'Delivery' ? '#FFFFFF' : '#8E8E93'} />
+            <Ionicons name="truck-outline" size={16} color={deliveryMode === 'Delivery' ? '#FFFFFF' : '#8E8E93'} />
             <Text style={[styles.toggleBtnText, deliveryMode === 'Delivery' && styles.activeToggleBtnText]}>Home Delivery</Text>
           </TouchableOpacity>
           <TouchableOpacity 

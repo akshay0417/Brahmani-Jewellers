@@ -108,7 +108,7 @@ const CATEGORIES = [
   { id: '1', name: 'Gold', icon: 'diamond-outline', iconType: 'Ionicons', searchValue: 'gold' },
   { id: '2', name: 'Silver', icon: 'necklace', iconType: 'MaterialCommunityIcons', searchValue: 'silver' },
   { id: '3', name: 'Best Sellers', icon: 'trophy-outline', iconType: 'Ionicons', searchValue: 'best-seller' },
-  { id: '4', name: 'Offers', icon: 'tag-outline', iconType: 'Ionicons', searchValue: 'offers' },
+  { id: '4', name: 'Offers', icon: 'pricetag-outline', iconType: 'Ionicons', searchValue: 'offers' },
   { id: '5', name: 'Gift Items', icon: 'gift-outline', iconType: 'Ionicons', searchValue: 'gift' },
 ];
 
