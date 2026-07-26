@@ -160,7 +160,7 @@ export default function HomeScreen() {
           subtitle: offer.subtitle || '',
           link: offer.link || '',
         }));
-        setHeroSlides([...mapped, ...HERO_SLIDES]);
+        setHeroSlides(mapped);
       } else {
         setHeroSlides(HERO_SLIDES);
       }

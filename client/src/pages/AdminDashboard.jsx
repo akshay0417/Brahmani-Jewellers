@@ -2298,6 +2298,9 @@ const AdminDashboard = () => {
                           onChange={(e) => setOfferImage(e.target.files ? e.target.files[0] : null)}
                           className="w-full bg-cream-alt border border-ochre/20 p-2 rounded-sm text-coffee focus:border-ochre outline-none text-sm"
                         />
+                        <p className="text-[11px] text-ochre font-semibold leading-relaxed">
+                          ⚡ Dimensions: Please upload a landscape image with a 2:1 ratio (Recommended: 1200 x 600 px or 1000 x 500 px) for perfect fit on the mobile app screen slider.
+                        </p>
                       </div>
                       <button
                         type="submit"
