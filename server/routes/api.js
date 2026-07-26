@@ -2428,12 +2428,27 @@ router.delete('/admin/coupons/:id', auth, isAdmin, async (req, res) => {
 // Get Active Coupons (User/Public)
 router.get('/coupons/active', async (req, res) => {
   try {
-    const coupons = await Coupon.find({ 
-      isActive: true, 
-      expirationDate: { $gt: new Date() },
-      $expr: { $lt: ["$usedCount", "$maxUses"] }
-    }).sort({ discountPercent: -1 });
-    res.json(coupons);
+    const coupons = await Coupon.find({ isActive: true }).sort({ discountPercent: -1 });
+    
+    const todayStart = new Date();
+    todayStart.setUTCHours(0, 0, 0, 0);
+    const bufferLimit = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000); // 24-hour buffer for timezones
+
+    const activeCoupons = coupons.filter(c => {
+      // Expiry check
+      if (c.expirationDate && new Date(c.expirationDate) < bufferLimit) {
+        return false;
+      }
+      // Usage limit check
+      const used = c.usedCount || 0;
+      const max = c.maxUses !== undefined && c.maxUses !== null ? c.maxUses : 100;
+      if (used >= max) {
+        return false;
+      }
+      return true;
+    });
+
+    res.json(activeCoupons);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
