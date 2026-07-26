@@ -23,11 +23,7 @@ export default function OffersScreen() {
       setCoupons(response.data || []);
     } catch (error) {
       console.error('Error fetching active coupons:', error);
-      // Fallback coupons
-      setCoupons([
-        { _id: '1', code: 'WELCOME10', discountPercent: 10, expirationDate: '2026-12-31' },
-        { _id: '2', code: 'FESTIVAL5', discountPercent: 5, expirationDate: '2026-10-30' },
-      ]);
+      setCoupons([]);
     } finally {
       setLoading(false);
     }
@@ -71,7 +67,6 @@ export default function OffersScreen() {
                 <View style={styles.discountBadge}>
                   <Text style={styles.discountText}>{coupon.discountPercent}% OFF</Text>
                 </View>
-                <Text style={styles.expiryText}>Expires: {new Date(coupon.expirationDate).toLocaleDateString()}</Text>
               </View>
 
               <Text style={styles.couponDesc}>Get a flat {coupon.discountPercent}% off on the making charges or total value of your order.</Text>
