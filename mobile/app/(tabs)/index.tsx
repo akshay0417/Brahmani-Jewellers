@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, ScrollView, Image, FlatList, Modal, Pressable, Alert, Linking, TextInput, Animated, Platform, RefreshControl } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, ScrollView, Image, FlatList, Modal, Pressable, Alert, Linking, TextInput, Animated, Platform, RefreshControl, Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -10,6 +10,8 @@ import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, w
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -290,10 +292,6 @@ export default function HomeScreen() {
       style={styles.bannerSlide}
     >
       <Image source={typeof item.image === 'string' ? { uri: item.image } : item.image} style={styles.bannerImage} />
-      <View style={styles.bannerOverlay}>
-        <Text style={styles.bannerTitle}>{item.title}</Text>
-        <Text style={styles.bannerSubtitle}>{item.subtitle}</Text>
-      </View>
     </TouchableOpacity>
   );
 
@@ -423,6 +421,9 @@ export default function HomeScreen() {
               keyExtractor={(item) => item.id}
               horizontal
               pagingEnabled
+              snapToInterval={SCREEN_WIDTH - 32}
+              decelerationRate="fast"
+              snapToAlignment="center"
               showsHorizontalScrollIndicator={false}
               style={styles.carousel}
             />
@@ -1174,13 +1175,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   carousel: {
+    width: SCREEN_WIDTH - 32,
     height: 180,
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 20,
   },
   bannerSlide: {
-    width: 380,
+    width: SCREEN_WIDTH - 32,
     height: 180,
     position: 'relative',
   },
