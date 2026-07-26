@@ -2430,7 +2430,8 @@ router.get('/coupons/active', async (req, res) => {
   try {
     const coupons = await Coupon.find({ 
       isActive: true, 
-      expirationDate: { $gt: new Date() } 
+      expirationDate: { $gt: new Date() },
+      $expr: { $lt: ["$usedCount", "$maxUses"] }
     }).sort({ discountPercent: -1 });
     res.json(coupons);
   } catch (err) {

@@ -90,39 +90,6 @@ export default function OffersScreen() {
             </View>
           ))
         )}
-
-        {/* Store Specials (Option 2) */}
-        <Text style={styles.sectionTitle}>Showroom Special Offers</Text>
-        
-        <View style={styles.specialCard}>
-          <View style={styles.specialIconBg}>
-            <MaterialCommunityIcons name="necklace" size={24} color="#D4AF37" />
-          </View>
-          <View style={{ flex: 1, marginLeft: 12 }}>
-            <Text style={styles.specialTitle}>Free Making Charges on Silver</Text>
-            <Text style={styles.specialDesc}>Flat 100% off on making charges for all luxury silver ornaments & articles.</Text>
-          </View>
-        </View>
-
-        <View style={styles.specialCard}>
-          <View style={styles.specialIconBg}>
-            <FontAwesome name="truck" size={24} color="#D4AF37" />
-          </View>
-          <View style={{ flex: 1, marginLeft: 12 }}>
-            <Text style={styles.specialTitle}>Free Insured Home Delivery</Text>
-            <Text style={styles.specialDesc}>Free fully-insured delivery on all orders above ₹10,000 within Ahmedabad limit.</Text>
-          </View>
-        </View>
-
-        <View style={styles.specialCard}>
-          <View style={styles.specialIconBg}>
-            <Ionicons name="ribbon-outline" size={24} color="#D4AF37" />
-          </View>
-          <View style={{ flex: 1, marginLeft: 12 }}>
-            <Text style={styles.specialTitle}>Zero GST on Gold Coins</Text>
-            <Text style={styles.specialDesc}>Purchase certified gold coins at 0% GST during our monthly pushya nakshatra sale.</Text>
-          </View>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
