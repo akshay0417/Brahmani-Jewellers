@@ -105,11 +105,11 @@ const HERO_SLIDES = [
 ];
 
 const CATEGORIES = [
-  { id: '1', name: 'Gold', icon: 'diamond', iconType: 'FontAwesome', searchValue: 'gold' },
-  { id: '2', name: 'Silver', icon: 'star', iconType: 'FontAwesome', searchValue: 'silver' },
-  { id: '3', name: 'Best Sellers', icon: 'star-circle', iconType: 'MaterialCommunityIcons', searchValue: 'best-seller' },
-  { id: '4', name: 'Offers', icon: 'percent', iconType: 'MaterialCommunityIcons', searchValue: 'offers' },
-  { id: '5', name: 'Gift Items', icon: 'gift', iconType: 'FontAwesome', searchValue: 'gift' },
+  { id: '1', name: 'Gold', icon: 'diamond-outline', iconType: 'Ionicons', searchValue: 'gold' },
+  { id: '2', name: 'Silver', icon: 'necklace', iconType: 'MaterialCommunityIcons', searchValue: 'silver' },
+  { id: '3', name: 'Best Sellers', icon: 'trophy-outline', iconType: 'Ionicons', searchValue: 'best-seller' },
+  { id: '4', name: 'Offers', icon: 'tag-outline', iconType: 'Ionicons', searchValue: 'offers' },
+  { id: '5', name: 'Gift Items', icon: 'gift-outline', iconType: 'Ionicons', searchValue: 'gift' },
 ];
 
 export default function HomeScreen() {
@@ -441,6 +441,8 @@ export default function HomeScreen() {
                 <View style={styles.categoryIconBg}>
                   {cat.iconType === 'MaterialCommunityIcons' ? (
                     <MaterialCommunityIcons name={cat.icon as any} size={22} color="#D4AF37" />
+                  ) : cat.iconType === 'Ionicons' ? (
+                    <Ionicons name={cat.icon as any} size={22} color="#D4AF37" />
                   ) : (
                     <FontAwesome name={cat.icon} size={22} color="#D4AF37" />
                   )}
@@ -1047,12 +1049,13 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF', // Clean pearl white background
+    backgroundColor: '#FAF6EE', // Warm luxury ivory cream background
   },
   scrollContainer: {
     padding: 16,
     paddingTop: 36,
     paddingBottom: 80,
+    backgroundColor: '#FAF6EE',
   },
   header: {
     marginBottom: 16,
