@@ -136,6 +136,55 @@ export default function HomeScreen() {
   const [heroSlides, setHeroSlides] = useState<any[]>(HERO_SLIDES);
   const [homeSearchQuery, setHomeSearchQuery] = useState('');
   const [allGalleryItems, setAllGalleryItems] = useState<any[]>([]);
+  const [placeholderText, setPlaceholderText] = useState('Search gold rings...');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  useEffect(() => {
+    if (isSearchFocused) {
+      setPlaceholderText('Search jewellery...');
+      return;
+    }
+
+    const words = [
+      'Search gold rings...',
+      'Search silver chains...',
+      'Search gold pendants...',
+      'Search diamond bangles...',
+      'Search gold earrings...'
+    ];
+    let wordIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let typingTimer: any;
+
+    const tick = () => {
+      const currentWord = words[wordIndex];
+      if (!isDeleting) {
+        setPlaceholderText(currentWord.substring(0, charIndex + 1));
+        charIndex++;
+        if (charIndex === currentWord.length) {
+          isDeleting = true;
+          typingTimer = setTimeout(tick, 1800); // Hold before backspacing
+        } else {
+          typingTimer = setTimeout(tick, 90); // Typing speed
+        }
+      } else {
+        setPlaceholderText(currentWord.substring(0, charIndex - 1));
+        charIndex--;
+        if (charIndex === 0) {
+          isDeleting = false;
+          wordIndex = (wordIndex + 1) % words.length;
+          typingTimer = setTimeout(tick, 450); // Pause before next word
+        } else {
+          typingTimer = setTimeout(tick, 45); // Deleting speed
+        }
+      }
+    };
+
+    typingTimer = setTimeout(tick, 100);
+
+    return () => clearTimeout(typingTimer);
+  }, [isSearchFocused]);
 
   const fetchGalleryItems = async () => {
     try {
@@ -349,11 +398,13 @@ export default function HomeScreen() {
         <View style={styles.searchBarContainer}>
           <Ionicons name="search-outline" size={20} color="#D4AF37" style={styles.searchIcon} />
           <TextInput
-            placeholder="Search gold rings, silver chains..."
+            placeholder={placeholderText}
             placeholderTextColor="rgba(61, 43, 31, 0.4)"
             style={styles.searchInput}
             value={homeSearchQuery}
             onChangeText={setHomeSearchQuery}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
           />
           {homeSearchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setHomeSearchQuery('')} style={{ padding: 4 }}>
