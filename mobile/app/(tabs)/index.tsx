@@ -1049,13 +1049,13 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FAF6EE', // Warm luxury ivory cream background
+    backgroundColor: '#FFFFFF', // Solid white background
   },
   scrollContainer: {
     padding: 16,
     paddingTop: 36,
     paddingBottom: 80,
-    backgroundColor: '#FAF6EE',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     marginBottom: 16,
