@@ -97,21 +97,19 @@ export default function CollectionsScreen() {
       return;
     }
 
-    // Optimistically notify user and refresh cart count
-    Alert.alert("Success 🛒", "Item added to cart successfully!");
-
     try {
       await axios.post(`${API_URL}/cart/add`, { productId: String(productId || ''), quantity: 1 }, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
+      Alert.alert("Success 🛒", "Item added to cart successfully!");
       refreshCartCount();
     } catch (error: any) {
       if (error.response && error.response.status === 401) {
         Alert.alert("Session Expired", "Your session has expired. Please login again.");
         router.push('/login');
       } else {
-        // Silently retry background cart sync
-        refreshCartCount();
+        const errMsg = error.response?.data?.message || "Could not add item to cart. Please check your network connection.";
+        Alert.alert("Notice", errMsg);
       }
     }
   };

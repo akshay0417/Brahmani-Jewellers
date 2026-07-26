@@ -11,6 +11,27 @@ import axios from 'axios';
 const API_URL = 'https://brahmani-jewellers-api.onrender.com/api';
 const APP_VERSION = '1.0.0';
 
+// Register global interceptor on the default axios instance to retry 502/503 cold starts
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    const status = error.response?.status;
+
+    if ((status === 502 || status === 503 || !error.response) && originalRequest && !originalRequest._retryCount) {
+      originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
+      
+      if (originalRequest._retryCount <= 3) {
+        console.log(`[Global API Auto-Retry]: Render backend cold-start (${status}). Retry attempt ${originalRequest._retryCount}...`);
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+        return axios(originalRequest);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export default function RootLayout() {
   const [showSplash, setShowSplash] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
