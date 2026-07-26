@@ -72,28 +72,34 @@ function AnimatedLiveRatesCard({ children, style }) {
 const HERO_SLIDES = [
   {
     id: '1',
-    image: 'https://coinbazaar.in/blog/wp-content/uploads/2026/01/Antique-gold-jewellery-trends.jpeg',
-    title: 'Antique Gold Jewellery Set',
-    subtitle: 'Heritage 22K Gold & Pearl Necklace Trends',
+    image: require('../../assets/images/banner1.png'),
+    title: 'Timeless Elegance',
+    subtitle: 'Crafted for You',
   },
   {
     id: '2',
-    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=1000&auto=format&fit=crop&q=80',
-    title: 'Royal Gold Pearl Choker',
-    subtitle: 'Exquisite Handcrafted Pearl & Gemstone Necklace',
+    image: require('../../assets/images/banner2.png'),
+    title: 'Brilliance That Defines You',
+    subtitle: 'Shine with Our Finest Diamond Jewellery',
   },
   {
     id: '3',
-    image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=1000&auto=format&fit=crop&q=80',
-    title: 'Antique Gold Bangle & Bracelet',
-    subtitle: 'Exquisite Hand-Carved Traditional Gold Work',
+    image: require('../../assets/images/banner3.png'),
+    title: 'Grace in Every Sparkle',
+    subtitle: 'Elegant Pendants for Every Occasion',
   },
   {
     id: '4',
-    image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=1000&auto=format&fit=crop&q=80',
-    title: 'Diamond Solitaire Gold Ring',
-    subtitle: 'High-Gloss Precious Gemstone & Fine Gold Finish',
-  }
+    image: require('../../assets/images/banner4.png'),
+    title: 'Tradition Meets Modern Beauty',
+    subtitle: 'Exquisite Gold Bangles for Every Moment',
+  },
+  {
+    id: '5',
+    image: require('../../assets/images/banner5.png'),
+    title: 'Designed to Dazzle',
+    subtitle: 'Premium Quality Jewellery for a Lifetime',
+  },
 ];
 
 const CATEGORIES = [
@@ -101,6 +107,7 @@ const CATEGORIES = [
   { id: '2', name: 'Silver', icon: 'star', iconType: 'FontAwesome', searchValue: 'silver' },
   { id: '3', name: 'Best Sellers', icon: 'star-circle', iconType: 'MaterialCommunityIcons', searchValue: 'best-seller' },
   { id: '4', name: 'Offers', icon: 'percent', iconType: 'MaterialCommunityIcons', searchValue: 'offers' },
+  { id: '5', name: 'Gift Items', icon: 'gift', iconType: 'FontAwesome', searchValue: 'gift' },
 ];
 
 export default function HomeScreen() {
@@ -282,7 +289,7 @@ export default function HomeScreen() {
       onPress={() => handleBannerPress(item)} 
       style={styles.bannerSlide}
     >
-      <Image source={{ uri: item.image }} style={styles.bannerImage} />
+      <Image source={typeof item.image === 'string' ? { uri: item.image } : item.image} style={styles.bannerImage} />
       <View style={styles.bannerOverlay}>
         <Text style={styles.bannerTitle}>{item.title}</Text>
         <Text style={styles.bannerSubtitle}>{item.subtitle}</Text>
@@ -494,19 +501,19 @@ export default function HomeScreen() {
           ) : (
             <View style={styles.ratesGrid}>
               <View style={styles.rateBox}>
-                <Text style={styles.rateLabel}>Gold 24K (10g)</Text>
+                <Text style={styles.rateLabel}>GOLD (24K) / 10gm</Text>
                 <Text style={styles.rateValue}>₹{(rates?.gold24K || 0).toLocaleString('en-IN')}</Text>
               </View>
               <View style={styles.rateBox}>
-                <Text style={styles.rateLabel}>Gold 22K (10g)</Text>
+                <Text style={styles.rateLabel}>GOLD (22K) / 10gm</Text>
                 <Text style={styles.rateValue}>₹{(rates?.gold22K || 0).toLocaleString('en-IN')}</Text>
               </View>
               <View style={styles.rateBox}>
-                <Text style={styles.rateLabel}>Gold 18K (10g)</Text>
+                <Text style={styles.rateLabel}>GOLD (18K) / 10gm</Text>
                 <Text style={styles.rateValue}>₹{(rates?.gold18K || 0).toLocaleString('en-IN')}</Text>
               </View>
               <View style={styles.rateBox}>
-                <Text style={styles.rateLabel}>Silver (1kg)</Text>
+                <Text style={styles.rateLabel}>SILVER (999) / 1kg</Text>
                 <Text style={styles.rateValue}>₹{(rates?.silver90 || rates?.silver || 0).toLocaleString('en-IN')}</Text>
               </View>
             </View>
@@ -1216,7 +1223,7 @@ const styles = StyleSheet.create({
   },
   categoryCard: {
     alignItems: 'center',
-    width: '22%',
+    width: '18%',
   },
   categoryIconBg: {
     backgroundColor: '#FFFFFF',
