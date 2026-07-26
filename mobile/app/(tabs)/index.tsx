@@ -138,6 +138,52 @@ export default function HomeScreen() {
   const [allGalleryItems, setAllGalleryItems] = useState<any[]>([]);
   const [placeholderText, setPlaceholderText] = useState('Search gold rings...');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [unreadNotiCount, setUnreadNotiCount] = useState(0);
+  const [notificationsList, setNotificationsList] = useState<any[]>([
+    { id: '1', title: 'Welcome to Brahmani Jewellers!', body: 'Explore our royal legacy collections.', date: new Date(), type: 'gift' },
+    { id: '2', title: 'Gold Purity Assured', body: 'All items are BIS 916 Hallmark certified.', date: new Date(), type: 'cert' },
+    { id: '3', title: 'Rates Updated', body: 'Live market gold & silver rates have been refreshed.', date: new Date(), type: 'rates' }
+  ]);
+
+  useEffect(() => {
+    // Listener for notifications when the app is foregrounded
+    const subscription = Notifications.addNotificationReceivedListener(notification => {
+      const { title, body } = notification.request.content;
+      setNotificationsList(prev => [
+        {
+          id: String(Date.now()),
+          title: title || 'New Update',
+          body: body || 'You received a new update.',
+          date: new Date(),
+          type: 'info'
+        },
+        ...prev
+      ]);
+      setUnreadNotiCount(c => c + 1);
+    });
+
+    // Listener for when user interacts with/taps notification
+    const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
+      const { title, body } = response.notification.request.content;
+      setNotificationsList(prev => [
+        {
+          id: String(Date.now()),
+          title: title || 'New Update',
+          body: body || 'You received a new update.',
+          date: new Date(),
+          type: 'info'
+        },
+        ...prev
+      ]);
+      setShowNotifications(true);
+      setUnreadNotiCount(0);
+    });
+
+    return () => {
+      subscription.remove();
+      responseSubscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (isSearchFocused) {
@@ -379,8 +425,19 @@ export default function HomeScreen() {
               <TouchableOpacity onPress={initiateWhatsApp} style={styles.whatsappIconBtn}>
                 <FontAwesome name="whatsapp" size={28} color="#25D366" />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setShowNotifications(true)} style={styles.headerIconBtn}>
+              <TouchableOpacity 
+                onPress={() => {
+                  setShowNotifications(true);
+                  setUnreadNotiCount(0);
+                }} 
+                style={styles.cartIconBtn}
+              >
                 <Ionicons name="notifications-outline" size={28} color="#D4AF37" />
+                {unreadNotiCount > 0 && (
+                  <View style={styles.badgeContainer}>
+                    <Text style={styles.badgeText}>{unreadNotiCount}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
               <TouchableOpacity onPress={() => router.push('/cart')} style={styles.cartIconBtn}>
                 <Ionicons name="cart-outline" size={28} color="#D4AF37" />
@@ -952,19 +1009,25 @@ export default function HomeScreen() {
         <View style={styles.modalBg}>
           <View style={styles.modalBody}>
             <Text style={styles.modalTitle}>Notifications</Text>
-            <ScrollView style={{ maxHeight: 250, marginVertical: 10 }}>
-              <View style={styles.notiBox}>
-                <Ionicons name="gift-outline" size={20} color="#EBA938" />
-                <Text style={styles.notiText}>Welcome to Brahmani Jewellers! Explore our royal legacy collections.</Text>
-              </View>
-              <View style={styles.notiBox}>
-                <Ionicons name="checkmark-circle-outline" size={20} color="#EBA938" />
-                <Text style={styles.notiText}>Gold Purity Assured: All items are BIS 916 Hallmark certified.</Text>
-              </View>
-              <View style={styles.notiBox}>
-                <Ionicons name="time-outline" size={20} color="#EBA938" />
-                <Text style={styles.notiText}>Rates Updated: Live market gold & silver rates have been refreshed.</Text>
-              </View>
+            <ScrollView style={{ maxHeight: 300, marginVertical: 10 }}>
+              {notificationsList.map(noti => (
+                <View key={noti.id} style={[styles.notiBox, { alignItems: 'flex-start' }]}>
+                  <Ionicons 
+                    name={
+                      noti.type === 'gift' ? 'gift-outline' :
+                      noti.type === 'cert' ? 'checkmark-circle-outline' :
+                      noti.type === 'rates' ? 'time-outline' : 'notifications-outline'
+                    } 
+                    size={20} 
+                    color="#D4AF37" 
+                    style={{ marginTop: 2 }}
+                  />
+                  <View style={{ flex: 1, marginLeft: 10 }}>
+                    <Text style={{ fontWeight: 'bold', fontSize: 13, color: '#6B1124', marginBottom: 2 }}>{noti.title}</Text>
+                    <Text style={[styles.notiText, { fontSize: 12, color: '#555555' }]}>{noti.body}</Text>
+                  </View>
+                </View>
+              ))}
             </ScrollView>
             <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowNotifications(false)}>
               <Text style={styles.modalCloseBtnText}>Close</Text>
