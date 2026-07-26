@@ -36,22 +36,22 @@ const RefundPolicy = () => {
               <h2 className="text-2xl font-serif font-bold">2. Returns & Exchange Policy</h2>
             </div>
             <p className="leading-relaxed text-coffee/80">
-              We offer a <strong>7-day return and exchange policy</strong> for our products. To request a return or replacement, you must contact us within 7 days of delivery. The item must be unused, unworn, and have all original tags and packaging intact along with the original invoice.
+              Since all our luxury jewellery articles are custom handcrafted and made to order, we do not accept any returns, exchanges, or cancellations once a purchase is successfully made. <strong>All sales are strictly final.</strong> We request customers to carefully verify sizing and configurations before checking out.
             </p>
           </section>
 
           <section className="space-y-3">
             <div className="flex items-center gap-3 text-red-600">
               <XOctagon className="w-6 h-6" />
-              <h2 className="text-2xl font-serif font-bold">3. Exclusion: Damaged or Altered Pieces</h2>
+              <h2 className="text-2xl font-serif font-bold">3. Wrong or Damaged Deliveries</h2>
             </div>
             <div className="p-5 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-coffee/95 space-y-2">
-              <p className="font-semibold text-red-700">Strict Policy on Damaged Returns:</p>
+              <p className="font-semibold text-red-700">Strict Quality Checks & Reporting:</p>
               <p className="leading-relaxed text-sm">
-                If the jewellery piece is returned to us in a damaged condition, altered in any way, showing signs of wear, or missing its original security tags, it will <strong>NOT</strong> be accepted for return, exchange, or refund. 
+                We perform detailed quality checks on every shipment before dispatch. In the extremely rare event that you receive a damaged, defective, or incorrect piece, you must notify our customer support within <strong>24 hours of delivery</strong>.
               </p>
               <p className="leading-relaxed text-sm">
-                We perform detailed quality checks on every shipment before dispatch, and returned items are thoroughly inspected upon receipt.
+                An uninterrupted unboxing video proof is mandatory for our team to investigate and resolve the issue.
               </p>
             </div>
           </section>
@@ -62,11 +62,11 @@ const RefundPolicy = () => {
               <h2 className="text-2xl font-serif font-bold">4. Refund Processing</h2>
             </div>
             <p className="leading-relaxed text-coffee/80">
-              Once your returned item is received, inspected, and approved for refund:
+              In cases of approved damage replacements or order cancellations initiated by Brahmani Jewellers before shipping:
             </p>
             <ul className="list-disc pl-5 space-y-2 text-coffee/80 leading-relaxed">
               <li>The refund amount will be credited back to your original source of payment (Credit/Debit Card, Net Banking, UPI, or Wallet).</li>
-              <li>Refund processing through our payment partner (Razorpay) typically takes <strong>5 to 7 working days</strong> to reflect in your account.</li>
+              <li>Refund processing through our payment partner (Razorpay) typically takes <strong>5 to 7 working days</strong> to reflect in your bank account.</li>
             </ul>
           </section>
 

@@ -1003,22 +1003,22 @@ export default function HomeScreen() {
             <Text style={styles.modalTitle}>Return Policy</Text>
             <ScrollView style={{ maxHeight: 320, marginVertical: 10 }}>
               <Text style={styles.legalBodyText}>
-                <Text style={{ fontWeight: 'bold' }}>1. Return & Exchange Policy</Text>
+                <Text style={{ fontWeight: 'bold', color: '#B22222' }}>1. No Return & No Exchange Policy</Text>
                 {"\n"}
-                We want you to be completely satisfied with your purchase. Our return and exchange policy is designed to be fair and transparent.
+                Since all our luxury jewellery articles are custom handcrafted and made to order, we do not accept any returns, exchanges, or cancellations once a purchase is successfully made. All sales are strictly final.
                 {"\n\n"}
                 <Text style={{ fontWeight: 'bold' }}>2. Store Policy Details</Text>
                 {"\n"}
-                - Items must be returned in their original condition, unworn, and with all original tags and certifications intact.
+                - Once an item is bought, it cannot be returned or refunded.
                 {"\n"}
-                - Returns and exchanges are subject to validation by our showroom experts.
+                - We request customers to verify sizing and specifications before checking out.
                 {"\n\n"}
                 <Text style={{ fontWeight: 'bold' }}>3. More Information</Text>
                 {"\n"}
-                For detailed terms on returns, buyback rates, and exchanges, or for any further assistance:
+                For buyback terms, gold exchanges, or physical verification:
                 {"\n\n"}
                 <Text style={{ fontWeight: 'bold', color: '#D4AF37' }}>
-                  For more information please visit our store.
+                  Please visit our physical store location or contact support.
                 </Text>
               </Text>
             </ScrollView>
