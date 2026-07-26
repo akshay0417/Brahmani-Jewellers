@@ -2425,6 +2425,17 @@ router.delete('/admin/coupons/:id', auth, isAdmin, async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+// Get Active Coupons (User/Public)
+router.get('/coupons/active', async (req, res) => {
+  try {
+    const coupons = await Coupon.find({ 
+      isActive: true, 
+      expirationDate: { $gt: new Date() } 
+    }).sort({ discountPercent: -1 });
+    res.json(coupons);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
 // Validate Coupon (User/Public)

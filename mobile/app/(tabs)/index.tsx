@@ -544,7 +544,13 @@ export default function HomeScreen() {
               <AnimatedCategoryCard 
                 key={cat.id} 
                 style={styles.categoryCard} 
-                onPress={() => router.push({ pathname: '/collections', params: { search: cat.searchValue } })}
+                onPress={() => {
+                  if (cat.searchValue === 'offers') {
+                    router.push('/offers');
+                  } else {
+                    router.push({ pathname: '/collections', params: { search: cat.searchValue } });
+                  }
+                }}
               >
                 <View style={styles.categoryIconBg}>
                   {cat.iconType === 'MaterialCommunityIcons' ? (
@@ -746,7 +752,7 @@ export default function HomeScreen() {
                   style={styles.sidebarLink} 
                   onPress={() => {
                     setIsDrawerOpen(false);
-                    router.push({ pathname: '/collections', params: { search: 'offers' } });
+                    router.push('/offers');
                   }}
                 >
                   <Ionicons name="pricetag-outline" size={20} color="#D4AF37" style={styles.sidebarIcon} />
