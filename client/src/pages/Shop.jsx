@@ -23,15 +23,26 @@ const Shop = () => {
   };
 
   const handleShare = (product) => {
+    const priceData = calculatePrice(product);
+    const finalPrice = priceData.final;
     const shareUrl = `${window.location.origin}/shop?id=${product._id}`;
+    
+    let shareText = `✨ *Brahmani Jewellers* ✨\n\n`;
+    shareText += `Heritage Masterpiece: *${product.name || 'Luxury Ornament'}*\n`;
+    shareText += `Category: ${product.category}\n`;
+    if (product.weight) shareText += `Weight: ${product.weight} Grams\n`;
+    if (product.purity) shareText += `Purity: ${product.purity}\n`;
+    if (finalPrice > 0) shareText += `Price: ₹${finalPrice.toLocaleString('en-IN')} (Incl. GST)\n`;
+    shareText += `\n📷 Photo Preview: ${product.imageUrl}\n`;
+    shareText += `🔗 View Details: ${shareUrl}`;
+
     if (navigator.share) {
       navigator.share({
-        title: product.name || 'Heritage Masterpiece',
-        text: 'Check out this luxury ornament from Brahmani Jewellers:',
-        url: shareUrl
+        title: product.name || 'Brahmani Jewellers Design',
+        text: shareText
       }).catch(err => console.error("Error sharing: ", err));
     } else {
-      navigator.clipboard.writeText(shareUrl)
+      navigator.clipboard.writeText(shareText)
         .then(() => {
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
