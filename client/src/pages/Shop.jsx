@@ -14,46 +14,7 @@ const Shop = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [copied, setCopied] = useState(false);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 });
-
-  const handleMouseMove = (e) => {
-    if (!isZoomed) return;
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - left) / width) * 100;
-    const y = ((e.clientY - top) / height) * 100;
-    setZoomOrigin({ x, y });
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isZoomed) return;
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-      const x = Math.max(0, Math.min(100, ((touch.clientX - left) / width) * 100));
-      const y = Math.max(0, Math.min(100, ((touch.clientY - top) / height) * 100));
-      setZoomOrigin({ x, y });
-    }
-  };
-
-  const handleImageClick = (e) => {
-    e.stopPropagation();
-    if (isZoomed) {
-      setIsZoomed(false);
-    } else {
-      const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-      const clientX = e.clientX || (e.touches && e.touches[0]?.clientX);
-      const clientY = e.clientY || (e.touches && e.touches[0]?.clientY);
-      if (clientX && clientY) {
-        const x = ((clientX - left) / width) * 100;
-        const y = ((clientY - top) / height) * 100;
-        setZoomOrigin({ x, y });
-      } else {
-        setZoomOrigin({ x: 50, y: 50 });
-      }
-      setIsZoomed(true);
-    }
-  };
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   const handleProductSelect = (product) => {
     setSelectedProduct(product);
@@ -265,8 +226,7 @@ const Shop = () => {
 
   const handleBackToShop = () => {
     setSelectedProduct(null);
-    setIsZoomed(false);
-    setZoomOrigin({ x: 50, y: 50 });
+    setIsLightboxOpen(false);
     window.history.pushState({}, '', window.location.pathname);
   };
 
@@ -295,25 +255,19 @@ const Shop = () => {
             {/* Left Side: Product Images */}
             <div className="w-full lg:w-1/2 flex flex-col items-center">
               <div 
-                className="w-full aspect-[4/5] bg-cream rounded-xl overflow-hidden relative flex items-center justify-center p-4 border border-ochre/15"
-                onMouseMove={handleMouseMove}
-                onTouchMove={handleTouchMove}
-                onClick={handleImageClick}
+                className="w-full aspect-[4/5] bg-cream rounded-xl overflow-hidden relative flex items-center justify-center p-4 border border-ochre/15 cursor-zoom-in"
+                onClick={() => setIsLightboxOpen(true)}
               >
                 <img 
                   src={allImages[currentImageIndex]} 
                   alt={selectedProduct.name} 
-                  className={`max-w-full max-h-full object-contain transition-transform duration-200 ease-out ${isZoomed ? 'cursor-zoom-out font-bold' : 'cursor-zoom-in'}`}
-                  style={{
-                    transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
-                    transform: isZoomed ? 'scale(2.5)' : 'scale(1)'
-                  }}
+                  className="max-w-full max-h-full object-contain"
                 />
                 
                 {/* Wishlist Heart Icon */}
                 <div className="absolute top-4 right-4 z-20">
                   <button 
-                    onClick={() => toggleWishlist(selectedProduct._id)} 
+                    onClick={(e) => { e.stopPropagation(); toggleWishlist(selectedProduct._id); }} 
                     className="p-3 bg-cream-alt/90 backdrop-blur-md rounded-full shadow-md text-coffee hover:text-ochre hover:scale-110 active:scale-95 transition-all duration-200"
                   >
                     <Heart 
@@ -324,18 +278,18 @@ const Shop = () => {
                 </div>
                 
                 {/* Left/Right Carousel Controls */}
-                {allImages.length > 1 && !isZoomed && (
+                {allImages.length > 1 && (
                   <>
                     <button
                       type="button"
-                      onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1))}
+                      onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1)); }}
                       className="absolute left-4 p-2 rounded-full bg-coffee/80 text-cream border border-ochre/20 hover:bg-ochre hover:text-coffee transition-all"
                     >
                       <ChevronLeft size={20} />
                     </button>
                     <button
                       type="button"
-                      onClick={() => setCurrentImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1))}
+                      onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1)); }}
                       className="absolute right-4 p-2 rounded-full bg-coffee/80 text-cream border border-ochre/20 hover:bg-ochre hover:text-coffee transition-all"
                     >
                       <ChevronRight size={20} />
@@ -343,6 +297,7 @@ const Shop = () => {
                   </>
                 )}
               </div>
+
               
               {/* Thumbnails below the image */}
               {allImages.length > 1 && (
@@ -493,31 +448,25 @@ const Shop = () => {
 
       <AnimatePresence>
         {selectedProduct && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-coffee/95 backdrop-blur-md flex items-center justify-center p-4" onClick={() => { setSelectedProduct(null); setIsZoomed(false); }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-coffee/95 backdrop-blur-md flex items-center justify-center p-4" onClick={() => { setSelectedProduct(null); setIsLightboxOpen(false); }}>
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="bg-cream max-w-5xl w-full max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl relative flex flex-col md:flex-row scrollbar-hide" onClick={e => e.stopPropagation()}>
-              <button onClick={() => { setSelectedProduct(null); setIsZoomed(false); }} className="absolute top-6 right-6 z-10 p-2 bg-coffee/10 hover:bg-ochre hover:text-cream rounded-full transition-all"><X size={24} /></button>
+              <button onClick={() => { setSelectedProduct(null); setIsLightboxOpen(false); }} className="absolute top-6 right-6 z-10 p-2 bg-coffee/10 hover:bg-ochre hover:text-cream rounded-full transition-all"><X size={24} /></button>
               {(() => {
                 const allImages = [selectedProduct.imageUrl, ...(selectedProduct.additionalImages || [])];
                 return (
                   <div className="w-full md:w-1/2 bg-cream-alt flex flex-col items-center justify-center p-4 min-h-[40vh] relative">
                     <div 
-                      className="w-full h-full flex items-center justify-center relative overflow-hidden bg-cream rounded-xl border border-ochre/10 min-h-[40vh]"
-                      onMouseMove={handleMouseMove}
-                      onTouchMove={handleTouchMove}
-                      onClick={handleImageClick}
+                      className="w-full h-full flex items-center justify-center relative bg-cream rounded-xl border border-ochre/10 min-h-[40vh] cursor-zoom-in"
+                      onClick={() => setIsLightboxOpen(true)}
                     >
                       <img 
                         src={allImages[currentImageIndex]} 
                         alt="Product" 
-                        className={`max-w-full max-h-[50vh] object-contain transition-transform duration-200 ease-out ${isZoomed ? 'cursor-zoom-out font-bold' : 'cursor-zoom-in'}`}
-                        style={{
-                          transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
-                          transform: isZoomed ? 'scale(2.5)' : 'scale(1)'
-                        }}
+                        className="max-w-full max-h-[50vh] object-contain" 
                       />
 
                       {/* Left/Right Carousel Controls */}
-                      {allImages.length > 1 && !isZoomed && (
+                      {allImages.length > 1 && (
                         <>
                           <button
                             type="button"
@@ -618,6 +567,39 @@ const Shop = () => {
                   );
                 })()}
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Full-Screen Image Lightbox Modal */}
+      <AnimatePresence>
+        {isLightboxOpen && selectedProduct && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-coffee/95 flex flex-col items-center justify-center p-4 backdrop-blur-md"
+            onClick={() => setIsLightboxOpen(false)}
+          >
+            <button 
+              onClick={() => setIsLightboxOpen(false)} 
+              className="absolute top-6 right-6 text-cream/70 hover:text-ochre p-3 transition-colors z-[210] bg-coffee/40 rounded-full"
+            >
+              <X size={32} />
+            </button>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="max-w-4xl max-h-[85vh] w-full flex items-center justify-center relative"
+              onClick={e => e.stopPropagation()}
+            >
+              <img 
+                src={[selectedProduct.imageUrl, ...(selectedProduct.additionalImages || [])][currentImageIndex]} 
+                alt={selectedProduct.name} 
+                className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl border border-ochre/10"
+              />
             </motion.div>
           </motion.div>
         )}
