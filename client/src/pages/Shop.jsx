@@ -24,12 +24,20 @@ const Shop = () => {
 
   const handleShare = (product) => {
     const shareUrl = `${window.location.origin}/shop?id=${product._id}`;
-    navigator.clipboard.writeText(shareUrl)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch(err => console.error("Could not copy text: ", err));
+    if (navigator.share) {
+      navigator.share({
+        title: product.name || 'Heritage Masterpiece',
+        text: 'Check out this luxury ornament from Brahmani Jewellers:',
+        url: shareUrl
+      }).catch(err => console.error("Error sharing: ", err));
+    } else {
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch(err => console.error("Could not copy text: ", err));
+    }
   };
 
   // Local Wishlist State (persisted in localStorage)
@@ -342,7 +350,7 @@ const Shop = () => {
                   className="flex-1 py-4 bg-cream-alt text-coffee border border-ochre/30 font-bold uppercase tracking-widest rounded-sm hover:bg-ochre hover:text-coffee transition-all flex items-center justify-center gap-3 shadow-md"
                 >
                   <Share2 size={20} className="text-ochre" />
-                  {copied ? "Link Copied!" : "Copy Link"}
+                  {copied ? "Link Copied!" : "Share"}
                 </button>
               </div>
             </div>
@@ -532,7 +540,7 @@ const Shop = () => {
                           className="flex-1 py-4 bg-cream-alt text-coffee border border-ochre/30 font-bold uppercase tracking-widest rounded-sm hover:bg-ochre hover:text-coffee transition-all flex items-center justify-center gap-3 shadow-md"
                         >
                           <Share2 size={20} className="text-ochre" />
-                          {copied ? "Link Copied!" : "Copy Link"}
+                          {copied ? "Link Copied!" : "Share"}
                         </button>
                       </div>
                     </>

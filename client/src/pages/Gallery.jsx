@@ -27,12 +27,20 @@ const Gallery = () => {
 
   const handleShare = (item) => {
     const shareUrl = `${window.location.origin}/gallery?id=${item._id}`;
-    navigator.clipboard.writeText(shareUrl)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch(err => console.error("Could not copy text: ", err));
+    if (navigator.share) {
+      navigator.share({
+        title: item.name || 'Heritage Masterpiece',
+        text: 'Check out this luxury ornament from Brahmani Jewellers:',
+        url: shareUrl
+      }).catch(err => console.error("Error sharing: ", err));
+    } else {
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch(err => console.error("Could not copy text: ", err));
+    }
   };
 
   const closeLightbox = () => {
@@ -241,7 +249,7 @@ const Gallery = () => {
                       className="flex-1 py-4 px-8 bg-cream-alt text-coffee border border-ochre/30 text-center font-bold uppercase tracking-widest text-xs rounded-lg hover:bg-ochre hover:text-coffee transition-all shadow-md flex items-center justify-center gap-3"
                     >
                       <Share2 size={16} className="text-ochre" />
-                      {copied ? "Link Copied!" : "Copy Link"}
+                      {copied ? "Link Copied!" : "Share"}
                     </button>
                   </div>
                 );
@@ -490,7 +498,7 @@ const Gallery = () => {
                         className="flex-1 border border-ochre/30 bg-cream text-coffee px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-ochre hover:text-coffee transition-all text-center rounded-sm shadow-md flex items-center justify-center gap-2"
                       >
                         <Share2 size={14} className="text-ochre" />
-                        {copied ? "Link Copied!" : "Copy Link"}
+                        {copied ? "Link Copied!" : "Share"}
                       </button>
                     </div>
                   );
