@@ -14,6 +14,46 @@ const Shop = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 });
+
+  const handleMouseMove = (e) => {
+    if (!isZoomed) return;
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setZoomOrigin({ x, y });
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isZoomed) return;
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+      const x = Math.max(0, Math.min(100, ((touch.clientX - left) / width) * 100));
+      const y = Math.max(0, Math.min(100, ((touch.clientY - top) / height) * 100));
+      setZoomOrigin({ x, y });
+    }
+  };
+
+  const handleImageClick = (e) => {
+    e.stopPropagation();
+    if (isZoomed) {
+      setIsZoomed(false);
+    } else {
+      const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+      const clientX = e.clientX || (e.touches && e.touches[0]?.clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0]?.clientY);
+      if (clientX && clientY) {
+        const x = ((clientX - left) / width) * 100;
+        const y = ((clientY - top) / height) * 100;
+        setZoomOrigin({ x, y });
+      } else {
+        setZoomOrigin({ x: 50, y: 50 });
+      }
+      setIsZoomed(true);
+    }
+  };
 
   const handleProductSelect = (product) => {
     setSelectedProduct(product);
@@ -225,6 +265,8 @@ const Shop = () => {
 
   const handleBackToShop = () => {
     setSelectedProduct(null);
+    setIsZoomed(false);
+    setZoomOrigin({ x: 50, y: 50 });
     window.history.pushState({}, '', window.location.pathname);
   };
 
@@ -252,11 +294,20 @@ const Shop = () => {
           <div className="flex flex-col lg:flex-row gap-12 bg-cream-alt p-8 md:p-12 rounded-2xl border border-ochre/10 shadow-xl">
             {/* Left Side: Product Images */}
             <div className="w-full lg:w-1/2 flex flex-col items-center">
-              <div className="w-full aspect-[4/5] bg-cream rounded-xl overflow-hidden relative flex items-center justify-center p-4 border border-ochre/15">
+              <div 
+                className="w-full aspect-[4/5] bg-cream rounded-xl overflow-hidden relative flex items-center justify-center p-4 border border-ochre/15"
+                onMouseMove={handleMouseMove}
+                onTouchMove={handleTouchMove}
+                onClick={handleImageClick}
+              >
                 <img 
                   src={allImages[currentImageIndex]} 
                   alt={selectedProduct.name} 
-                  className="max-w-full max-h-full object-contain"
+                  className={`max-w-full max-h-full object-contain transition-transform duration-200 ease-out ${isZoomed ? 'cursor-zoom-out font-bold' : 'cursor-zoom-in'}`}
+                  style={{
+                    transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
+                    transform: isZoomed ? 'scale(2.5)' : 'scale(1)'
+                  }}
                 />
                 
                 {/* Wishlist Heart Icon */}
@@ -273,7 +324,7 @@ const Shop = () => {
                 </div>
                 
                 {/* Left/Right Carousel Controls */}
-                {allImages.length > 1 && (
+                {allImages.length > 1 && !isZoomed && (
                   <>
                     <button
                       type="button"
@@ -442,22 +493,31 @@ const Shop = () => {
 
       <AnimatePresence>
         {selectedProduct && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-coffee/95 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setSelectedProduct(null)}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-coffee/95 backdrop-blur-md flex items-center justify-center p-4" onClick={() => { setSelectedProduct(null); setIsZoomed(false); }}>
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="bg-cream max-w-5xl w-full max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl relative flex flex-col md:flex-row scrollbar-hide" onClick={e => e.stopPropagation()}>
-              <button onClick={() => setSelectedProduct(null)} className="absolute top-6 right-6 z-10 p-2 bg-coffee/10 hover:bg-ochre hover:text-cream rounded-full transition-all"><X size={24} /></button>
+              <button onClick={() => { setSelectedProduct(null); setIsZoomed(false); }} className="absolute top-6 right-6 z-10 p-2 bg-coffee/10 hover:bg-ochre hover:text-cream rounded-full transition-all"><X size={24} /></button>
               {(() => {
                 const allImages = [selectedProduct.imageUrl, ...(selectedProduct.additionalImages || [])];
                 return (
                   <div className="w-full md:w-1/2 bg-cream-alt flex flex-col items-center justify-center p-4 min-h-[40vh] relative">
-                    <div className="w-full h-full flex items-center justify-center relative">
+                    <div 
+                      className="w-full h-full flex items-center justify-center relative overflow-hidden bg-cream rounded-xl border border-ochre/10 min-h-[40vh]"
+                      onMouseMove={handleMouseMove}
+                      onTouchMove={handleTouchMove}
+                      onClick={handleImageClick}
+                    >
                       <img 
                         src={allImages[currentImageIndex]} 
                         alt="Product" 
-                        className="max-w-full max-h-[50vh] object-contain" 
+                        className={`max-w-full max-h-[50vh] object-contain transition-transform duration-200 ease-out ${isZoomed ? 'cursor-zoom-out font-bold' : 'cursor-zoom-in'}`}
+                        style={{
+                          transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
+                          transform: isZoomed ? 'scale(2.5)' : 'scale(1)'
+                        }}
                       />
 
                       {/* Left/Right Carousel Controls */}
-                      {allImages.length > 1 && (
+                      {allImages.length > 1 && !isZoomed && (
                         <>
                           <button
                             type="button"
