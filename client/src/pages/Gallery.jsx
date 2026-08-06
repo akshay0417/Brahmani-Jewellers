@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 const Gallery = () => {
@@ -16,12 +16,31 @@ const Gallery = () => {
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 });
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  const handleItemSelect = (item) => {
+    setSelectedItem(item);
+    setCurrentImageIndex(0);
+    const newUrl = `${window.location.pathname}?id=${item._id}`;
+    window.history.pushState({ id: item._id }, '', newUrl);
+  };
+
+  const handleShare = (item) => {
+    const shareUrl = `${window.location.origin}/gallery?id=${item._id}`;
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(err => console.error("Could not copy text: ", err));
+  };
 
   const closeLightbox = () => {
     setSelectedItem(null);
     setIsZoomed(false);
     setZoomOrigin({ x: 50, y: 50 });
     setCurrentImageIndex(0);
+    window.history.pushState({}, '', window.location.pathname);
   };
 
   const handleMouseMove = (e) => {
@@ -74,6 +93,16 @@ const Gallery = () => {
       try {
         const res = await api.get('/gallery');
         setItems(res.data);
+
+        // Check if id parameter is in URL for deep linking
+        const params = new URLSearchParams(window.location.search);
+        const itemId = params.get('id');
+        if (itemId) {
+          const matched = res.data.find(i => i._id === itemId);
+          if (matched) {
+            setSelectedItem(matched);
+          }
+        }
       } catch (err) {
         setItems([]);
       } finally {
@@ -198,14 +227,23 @@ const Gallery = () => {
 
                 const whatsappUrl = `https://wa.me/917621967577?text=${encodeURIComponent(text)}`;
                 return (
-                  <a
-                    href={whatsappUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full md:w-fit py-4 px-8 bg-ochre text-coffee border border-ochre text-center font-bold uppercase tracking-widest text-xs rounded-lg hover:bg-ochre/90 transition-colors shadow-md block"
-                  >
-                    Inquire Design
-                  </a>
+                  <div className="flex flex-col sm:flex-row gap-4 w-full">
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-4 px-8 bg-[#25D366] text-white border border-[#25D366] text-center font-bold uppercase tracking-widest text-xs rounded-lg hover:bg-[#20ba5a] transition-all shadow-md block animate-pulse hover:animate-none"
+                    >
+                      Inquire Design
+                    </a>
+                    <button
+                      onClick={() => handleShare(selectedItem)}
+                      className="flex-1 py-4 px-8 bg-cream-alt text-coffee border border-ochre/30 text-center font-bold uppercase tracking-widest text-xs rounded-lg hover:bg-ochre hover:text-coffee transition-all shadow-md flex items-center justify-center gap-3"
+                    >
+                      <Share2 size={16} className="text-ochre" />
+                      {copied ? "Link Copied!" : "Copy Link"}
+                    </button>
+                  </div>
                 );
               })()}
             </div>
@@ -283,7 +321,7 @@ const Gallery = () => {
                   exit={{ opacity: 0, scale: 0.9 }}
                   whileHover={{ scale: 1.02 }}
                   className="group relative cursor-zoom-in overflow-hidden rounded-lg break-inside-avoid shadow-xl border border-ochre/10"
-                  onClick={() => { setSelectedItem(item); setCurrentImageIndex(0); }}
+                  onClick={() => handleItemSelect(item)}
                 >
                   <img
                     src={item.imageUrl}
@@ -438,14 +476,23 @@ const Gallery = () => {
 
                   const whatsappUrl = `https://wa.me/917621967577?text=${encodeURIComponent(text)}`;
                   return (
-                    <a
-                      href={whatsappUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-6 border border-ochre text-cream px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-ochre hover:text-coffee transition-colors text-center w-full md:w-fit"
-                    >
-                      Inquire Design
-                    </a>
+                    <div className="flex flex-col sm:flex-row gap-4 mt-6 w-full">
+                      <a
+                        href={whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 border border-[#25D366] bg-[#25D366] text-white px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-[#20ba5a] hover:border-[#20ba5a] transition-all text-center rounded-sm shadow-md block"
+                      >
+                        Inquire Design
+                      </a>
+                      <button
+                        onClick={() => handleShare(selectedItem)}
+                        className="flex-1 border border-ochre/30 bg-cream text-coffee px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-ochre hover:text-coffee transition-all text-center rounded-sm shadow-md flex items-center justify-center gap-2"
+                      >
+                        <Share2 size={14} className="text-ochre" />
+                        {copied ? "Link Copied!" : "Copy Link"}
+                      </button>
+                    </div>
                   );
                 })()}
               </motion.div>

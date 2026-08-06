@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBag, Heart, ShieldCheck, Truck, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ShoppingBag, Heart, ShieldCheck, Truck, MessageCircle, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 const Shop = () => {
@@ -13,6 +13,24 @@ const Shop = () => {
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  const handleProductSelect = (product) => {
+    setSelectedProduct(product);
+    setCurrentImageIndex(0);
+    const newUrl = `${window.location.pathname}?id=${product._id}`;
+    window.history.pushState({ id: product._id }, '', newUrl);
+  };
+
+  const handleShare = (product) => {
+    const shareUrl = `${window.location.origin}/shop?id=${product._id}`;
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(err => console.error("Could not copy text: ", err));
+  };
 
   // Local Wishlist State (persisted in localStorage)
   const [wishlist, setWishlist] = useState(() => {
@@ -138,7 +156,7 @@ const Shop = () => {
         exit={{ opacity: 0, scale: 0.9 }}
         whileHover={{ y: -8 }}
         className="royal-card rounded-xl overflow-hidden group cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-300 border border-ochre/10"
-        onClick={() => { setSelectedProduct(item); setCurrentImageIndex(0); }}
+        onClick={() => handleProductSelect(item)}
       >
         <div className="aspect-[3/4] overflow-hidden relative bg-cream-alt">
           <img 
@@ -309,15 +327,22 @@ const Shop = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button 
                   onClick={() => addToCart(selectedProduct._id)} 
-                  className="w-full sm:w-1/2 py-4 bg-ochre text-coffee font-bold uppercase tracking-widest rounded-sm hover:bg-ochre/90 transition-all flex items-center justify-center gap-3 shadow-md"
+                  className="flex-1 py-4 bg-ochre text-coffee font-bold uppercase tracking-widest rounded-sm hover:bg-ochre/90 transition-all flex items-center justify-center gap-3 shadow-md"
                 >
                   <ShoppingBag size={20} /> Add to Cart
                 </button>
                 <button 
                   onClick={() => handleWhatsAppInquiry(selectedProduct)} 
-                  className="w-full sm:w-1/2 py-4 bg-[#25D366] text-white font-bold uppercase tracking-widest rounded-sm hover:bg-[#20ba5a] transition-all flex items-center justify-center gap-3 shadow-md"
+                  className="flex-1 py-4 bg-[#25D366] text-white font-bold uppercase tracking-widest rounded-sm hover:bg-[#20ba5a] transition-all flex items-center justify-center gap-3 shadow-md"
                 >
                   <MessageCircle size={20} /> WhatsApp Inquiry
+                </button>
+                <button 
+                  onClick={() => handleShare(selectedProduct)} 
+                  className="flex-1 py-4 bg-cream-alt text-coffee border border-ochre/30 font-bold uppercase tracking-widest rounded-sm hover:bg-ochre hover:text-coffee transition-all flex items-center justify-center gap-3 shadow-md"
+                >
+                  <Share2 size={20} className="text-ochre" />
+                  {copied ? "Link Copied!" : "Copy Link"}
                 </button>
               </div>
             </div>
@@ -489,18 +514,25 @@ const Shop = () => {
                         {pData.breakdown && <div className="px-3 py-1 bg-ochre/10 text-ochre text-[10px] font-bold uppercase tracking-widest rounded-sm border border-ochre/20 mb-1">Live Rate Verified</div>}
                       </div>
                       
-                      <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="flex flex-col sm:flex-row gap-4 w-full">
                         <button 
                           onClick={() => { addToCart(selectedProduct._id); setSelectedProduct(null); }} 
-                          className="w-full sm:w-1/2 py-4 bg-ochre text-coffee font-bold uppercase tracking-widest rounded-sm hover:bg-ochre/90 transition-all flex items-center justify-center gap-3 shadow-md"
+                          className="flex-1 py-4 bg-ochre text-coffee font-bold uppercase tracking-widest rounded-sm hover:bg-ochre/90 transition-all flex items-center justify-center gap-3 shadow-md"
                         >
                           <ShoppingBag size={20} /> Add to Cart
                         </button>
                         <button 
                           onClick={() => handleWhatsAppInquiry(selectedProduct)} 
-                          className="w-full sm:w-1/2 py-4 bg-[#25D366] text-white font-bold uppercase tracking-widest rounded-sm hover:bg-[#20ba5a] transition-all flex items-center justify-center gap-3 shadow-md"
+                          className="flex-1 py-4 bg-[#25D366] text-white font-bold uppercase tracking-widest rounded-sm hover:bg-[#20ba5a] transition-all flex items-center justify-center gap-3 shadow-md"
                         >
                           <MessageCircle size={20} /> WhatsApp Inquiry
+                        </button>
+                        <button 
+                          onClick={() => handleShare(selectedProduct)} 
+                          className="flex-1 py-4 bg-cream-alt text-coffee border border-ochre/30 font-bold uppercase tracking-widest rounded-sm hover:bg-ochre hover:text-coffee transition-all flex items-center justify-center gap-3 shadow-md"
+                        >
+                          <Share2 size={20} className="text-ochre" />
+                          {copied ? "Link Copied!" : "Copy Link"}
                         </button>
                       </div>
                     </>
