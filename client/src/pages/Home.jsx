@@ -6,7 +6,7 @@ import GoogleReviews from '../components/GoogleReviews';
 import InstagramFeed from '../components/InstagramFeed';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { MapPin, Phone, MessageSquare, CheckCircle, Map, Star, Send, User, Mail, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, Phone, MessageSquare, CheckCircle, Map, Star, Send, User, Mail, X, ChevronLeft, ChevronRight, Smartphone } from 'lucide-react';
 
 const About = () => (
   <section className="py-10 md:py-12 bg-cream transition-colors duration-300" id="about">
