@@ -65,6 +65,11 @@ const AdminDashboard = () => {
   const [broadcastSubject, setBroadcastSubject] = useState('');
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [broadcasting, setBroadcasting] = useState(false);
+  const [userBroadcastSubject, setUserBroadcastSubject] = useState('');
+  const [userBroadcastMessage, setUserBroadcastMessage] = useState('');
+  const [userBroadcastSendEmail, setUserBroadcastSendEmail] = useState(true);
+  const [userBroadcastSendPush, setUserBroadcastSendPush] = useState(true);
+  const [userBroadcasting, setUserBroadcasting] = useState(false);
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('rates');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -617,6 +622,35 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleUserBroadcastSubmit = async (e) => {
+    e.preventDefault();
+    if (!userBroadcastSubject || !userBroadcastMessage) {
+      alert("Please fill in both subject/title and message content.");
+      return;
+    }
+    const targetCount = users.filter(u => u.role === 'user').length;
+    if (!window.confirm(`Are you sure you want to send this broadcast to all ${targetCount} registered users?`)) return;
+
+    setUserBroadcasting(true);
+    setStatus({ type: 'success', message: 'Processing broadcast campaign... Please wait.' });
+    try {
+      const res = await api.post('/users/broadcast', {
+        subject: userBroadcastSubject,
+        message: userBroadcastMessage,
+        sendEmail: userBroadcastSendEmail,
+        sendPush: userBroadcastSendPush
+      }, config);
+      setStatus({ type: 'success', message: res.data.message || 'Broadcast campaign launched successfully!' });
+      setUserBroadcastSubject('');
+      setUserBroadcastMessage('');
+    } catch (err) {
+      setStatus({ type: 'error', message: err.response?.data?.message || 'Failed to send user broadcast.' });
+    } finally {
+      setUserBroadcasting(false);
+      setTimeout(() => setStatus({ type: '', message: '' }), 5000);
+    }
+  };
+
   const handlePasswordChange = async (e) => {
     e.preventDefault();
     if (!passwordData.currentPassword || !passwordData.newPassword) return;
@@ -698,6 +732,7 @@ const AdminDashboard = () => {
             { id: 'investments', label: 'Vault Investments', icon: TrendingUp },
             { id: 'users', label: 'Registered Users', icon: User },
             { id: 'subscribers', label: 'Subscribers & Campaign', icon: Mail },
+            { id: 'userBroadcast', label: 'User Broadcast', icon: Mail },
             { id: 'messages', label: 'Customer Messages', icon: MessageSquare },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -747,6 +782,7 @@ const AdminDashboard = () => {
                 {activeTab === 'investments' && 'Digital Vault Investments'}
                 {activeTab === 'users' && 'Registered Users'}
                 {activeTab === 'subscribers' && 'VIP Subscribers & Campaign'}
+                {activeTab === 'userBroadcast' && 'User Broadcast'}
                 {activeTab === 'messages' && 'Direct Messages'}
               </h1>
               <p className="text-ochre/80 tracking-[0.2em] text-[10px] mt-0.5 uppercase font-semibold">
@@ -2071,6 +2107,82 @@ const AdminDashboard = () => {
                       </button>
                     </form>
                   </div>
+                </div>
+              </section>
+            )}
+
+            {activeTab === 'userBroadcast' && (
+              <section className="bg-cream-alt p-6 border border-ochre/10 rounded-lg shadow-sm transition-colors duration-300">
+                <div className="flex items-center justify-between mb-6 border-b border-ochre/10 pb-3">
+                  <div className="flex items-center gap-3">
+                    <Mail className="text-ochre" size={28} />
+                    <h2 className="text-2xl font-serif font-bold text-coffee transition-colors duration-300">
+                      User Broadcast <span className="text-ochre">Campaign</span>
+                    </h2>
+                  </div>
+                  <div className="bg-ochre/10 text-ochre px-4 py-2 rounded-full font-bold text-sm tracking-widest uppercase">
+                    Total Registered Users: {users.filter(u => u.role === 'user').length}
+                  </div>
+                </div>
+
+                <div className="max-w-xl mx-auto bg-cream border border-ochre/20 p-8 rounded-lg shadow-sm">
+                  <p className="text-xs text-coffee/60 mb-6 uppercase tracking-wider text-center">
+                    Send updates, announcements, or notifications directly to all registered app/website users.
+                  </p>
+
+                  <form onSubmit={handleUserBroadcastSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-xs text-coffee/70 uppercase tracking-widest font-bold">Broadcast Subject / Title</label>
+                      <input
+                        type="text"
+                        value={userBroadcastSubject}
+                        onChange={(e) => setUserBroadcastSubject(e.target.value)}
+                        required
+                        className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre transition-colors"
+                        placeholder="e.g. Special Gold Rates Alert! ✨"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-coffee/70 uppercase tracking-widest font-bold">Message Content</label>
+                      <textarea
+                        value={userBroadcastMessage}
+                        onChange={(e) => setUserBroadcastMessage(e.target.value)}
+                        required
+                        rows="6"
+                        className="w-full bg-cream-alt border border-ochre/20 p-3 rounded-sm text-coffee outline-none focus:border-ochre resize-none transition-colors"
+                        placeholder="Dear Customer, we are pleased to announce..."
+                      />
+                    </div>
+
+                    <div className="flex gap-6 border-t border-ochre/10 pt-4">
+                      <label className="flex items-center gap-2 text-sm text-coffee font-bold cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={userBroadcastSendEmail}
+                          onChange={(e) => setUserBroadcastSendEmail(e.target.checked)}
+                          className="w-4 h-4 accent-ochre"
+                        />
+                        Send via Email
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-coffee font-bold cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={userBroadcastSendPush}
+                          onChange={(e) => setUserBroadcastSendPush(e.target.checked)}
+                          className="w-4 h-4 accent-ochre"
+                        />
+                        Send Mobile Push Notification
+                      </label>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={userBroadcasting || (!userBroadcastSendEmail && !userBroadcastSendPush)}
+                      className="w-full py-3 bg-ochre text-cream font-bold uppercase tracking-widest hover:bg-ochre/90 rounded-sm transition-all disabled:opacity-50"
+                    >
+                      {userBroadcasting ? 'Broadcasting Announcement...' : 'Launch Broadcast Campaign 🚀'}
+                    </button>
+                  </form>
                 </div>
               </section>
             )}

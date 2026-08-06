@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Gem, Instagram, Facebook, Twitter, Mail } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Gem, Instagram, Facebook, Twitter, Mail, Smartphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../api';
 
@@ -8,6 +8,21 @@ const Footer = () => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
+  const [apkUrl, setApkUrl] = useState('https://brahmani-jewellers.vercel.app/download');
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await api.get('/rates');
+        if (res.data && res.data.apkDownloadUrl) {
+          setApkUrl(res.data.apkDownloadUrl);
+        }
+      } catch (err) {
+        console.error("Error fetching settings for footer", err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const handleSubscribe = async (e) => {
     e.preventDefault();
@@ -116,6 +131,22 @@ const Footer = () => {
               <p className={`text-[10px] mt-2 font-bold uppercase tracking-wider ${status.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
                 {status.message}
               </p>
+            )}
+
+            {/* Download Mobile App Button */}
+            {apkUrl && (
+              <div className="mt-8 border-t border-ochre/10 pt-6">
+                <h5 className="text-coffee font-serif text-sm font-bold uppercase tracking-wider mb-3">Download App</h5>
+                <a
+                  href={apkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-coffee text-cream hover:bg-ochre hover:text-coffee transition-all rounded-sm text-xs font-bold uppercase tracking-wider border border-ochre/25 w-full justify-center shadow-sm"
+                >
+                  <Smartphone size={16} className="text-ochre" />
+                  Download Android APK
+                </a>
+              </div>
             )}
           </div>
         </div>
