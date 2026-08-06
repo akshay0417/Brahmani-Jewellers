@@ -523,7 +523,7 @@ const Contact = () => {
 };
 
 const MobileAppShowcase = () => {
-  const [apkUrl, setApkUrl] = useState('https://expo.dev/accounts/akshay0417/projects/mobile/builds/b1a7a50e-a949-4f9b-8d21-e760a9e4f787');
+  const [apkUrl, setApkUrl] = useState('https://expo.dev/artifacts/eas/PwLd0rOzD_rw5Cg7laZdVjoNvBy2ZYOHVQekZb6NuS4.apk');
 
   useEffect(() => {
     const fetchSettings = async () => {
