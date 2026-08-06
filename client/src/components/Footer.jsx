@@ -8,7 +8,7 @@ const Footer = () => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
-  const [apkUrl, setApkUrl] = useState('https://brahmani-jewellers.vercel.app/download');
+  const [apkUrl, setApkUrl] = useState('https://expo.dev/accounts/akshay0417/projects/mobile/builds/b1a7a50e-a949-4f9b-8d21-e760a9e4f787');
 
   useEffect(() => {
     const fetchSettings = async () => {

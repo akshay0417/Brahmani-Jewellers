@@ -1142,7 +1142,7 @@ router.put('/users/:id/approve', auth, isAdmin, async (req, res) => {
 router.get('/rates', async (req, res) => {
   try {
     const rate = await Rate.findOne().sort({ lastUpdated: -1 });
-    res.json(rate || { gold22K: 0, gold18K: 0, silver90: 0, isManual: true, freeDeliveryKmLimit: 10, deliveryChargePerKm: 15, codEnabled: true, investEnabled: false, latestAppVersion: '1.0.0', apkDownloadUrl: 'https://brahmani-jewellers.vercel.app/download' });
+    res.json(rate || { gold22K: 0, gold18K: 0, silver90: 0, isManual: true, freeDeliveryKmLimit: 10, deliveryChargePerKm: 15, codEnabled: true, investEnabled: false, latestAppVersion: '1.0.0', apkDownloadUrl: 'https://expo.dev/accounts/akshay0417/projects/mobile/builds/b1a7a50e-a949-4f9b-8d21-e760a9e4f787' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
