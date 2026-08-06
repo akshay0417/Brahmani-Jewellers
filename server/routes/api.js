@@ -1142,7 +1142,7 @@ router.put('/users/:id/approve', auth, isAdmin, async (req, res) => {
 router.get('/rates', async (req, res) => {
   try {
     const rate = await Rate.findOne().sort({ lastUpdated: -1 });
-    res.json(rate || { gold22K: 0, gold18K: 0, silver90: 0, isManual: true, freeDeliveryKmLimit: 10, deliveryChargePerKm: 15, codEnabled: true, investEnabled: false, latestAppVersion: '1.0.0', apkDownloadUrl: 'https://expo.dev/artifacts/eas/PwLd0rOzD_rw5Cg7laZdVjoNvBy2ZYOHVQekZb6NuS4.apk' });
+    res.json(rate || { gold22K: 0, gold18K: 0, silver90: 0, isManual: true, freeDeliveryKmLimit: 10, deliveryChargePerKm: 15, codEnabled: true, investEnabled: false, latestAppVersion: '1.0.0', apkDownloadUrl: 'https://brahmanijewellers.com/brahmani-jewellers.apk' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

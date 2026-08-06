@@ -523,7 +523,7 @@ const Contact = () => {
 };
 
 const MobileAppShowcase = () => {
-  const [apkUrl, setApkUrl] = useState('https://expo.dev/artifacts/eas/PwLd0rOzD_rw5Cg7laZdVjoNvBy2ZYOHVQekZb6NuS4.apk');
+  const [apkUrl, setApkUrl] = useState('/brahmani-jewellers.apk');
 
   useEffect(() => {
     const fetchSettings = async () => {
