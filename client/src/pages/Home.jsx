@@ -6,7 +6,7 @@ import GoogleReviews from '../components/GoogleReviews';
 import InstagramFeed from '../components/InstagramFeed';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { MapPin, Phone, MessageSquare, CheckCircle, Map, Star, Send, User, Mail, X, ChevronLeft, ChevronRight, Smartphone } from 'lucide-react';
+import { MapPin, Phone, MessageSquare, CheckCircle, Map, Star, Send, User, Mail, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const About = () => (
   <section className="py-10 md:py-12 bg-cream transition-colors duration-300" id="about">
@@ -522,136 +522,6 @@ const Contact = () => {
   );
 };
 
-const MobileAppShowcase = () => {
-  const [apkUrl, setApkUrl] = useState('/brahmani-jewellers.apk');
-
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const res = await api.get('/rates');
-        if (res.data && res.data.apkDownloadUrl) {
-          setApkUrl(res.data.apkDownloadUrl);
-        }
-      } catch (err) {
-        console.error("Error fetching settings for mobile app banner", err);
-      }
-    };
-    fetchSettings();
-  }, []);
-
-  return (
-    <section className="py-16 md:py-24 bg-cream transition-colors duration-300 relative overflow-hidden" id="download-app">
-      {/* Decorative background elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-ochre/5 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-ochre/5 rounded-full blur-3xl pointer-events-none"></div>
-
-      <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-16 items-center">
-        
-        {/* Left Side: Mockup of Phone using CSS */}
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="md:col-span-5 flex justify-center order-2 md:order-1"
-        >
-          {/* Elegant CSS Phone Frame */}
-          <div className="relative w-[280px] h-[540px] bg-[#0A0A0A] rounded-[40px] p-3 shadow-2xl border-4 border-ochre/25 ring-1 ring-ochre/40 overflow-hidden flex flex-col justify-between">
-            {/* Speaker & Camera notch */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#0A0A0A] rounded-b-2xl z-20 flex justify-center items-center gap-1.5 border-b border-ochre/15">
-              <div className="w-1.5 h-1.5 bg-zinc-800 rounded-full"></div>
-              <div className="w-8 h-1 bg-zinc-800 rounded-full"></div>
-            </div>
-
-            {/* Screen Content */}
-            <div className="relative flex-1 w-full bg-[#0F0F0F] rounded-[30px] p-4 flex flex-col justify-between border border-ochre/10 overflow-hidden pt-8 select-none">
-              {/* App Header */}
-              <div className="text-center border-b border-ochre/10 pb-3">
-                <h4 className="text-[14px] font-serif font-bold text-cream tracking-widest uppercase">Brahmani</h4>
-                <p className="text-[7px] text-ochre tracking-[0.3em] uppercase -mt-0.5 font-bold">Jewellers</p>
-              </div>
-
-              {/* Live Rate Screen Card */}
-              <div className="my-auto space-y-4">
-                <div className="bg-cream-alt/5 border border-ochre/15 p-3 rounded-xl text-center shadow-inner backdrop-blur-md">
-                  <p className="text-[8px] text-ochre/80 uppercase tracking-widest mb-1 font-bold">Live Market Rate</p>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-lg font-serif font-bold text-cream">₹76,450</span>
-                    <span className="text-[8px] text-cream/60">/10g</span>
-                  </div>
-                  <p className="text-[6px] text-green-500 font-bold uppercase tracking-wider mt-0.5">▲ Live Gold 24K</p>
-                </div>
-
-                <div className="bg-cream-alt/5 border border-ochre/15 p-3 rounded-xl text-center shadow-inner backdrop-blur-md">
-                  <p className="text-[8px] text-ochre/80 uppercase tracking-widest mb-1 font-bold">Digital Gold Vault</p>
-                  <p className="text-[7px] text-cream/70">Invest in Gold starting from ₹100</p>
-                  <div className="mt-2 py-1 px-3 bg-ochre/90 hover:bg-ochre text-coffee text-[8px] font-bold rounded-full uppercase tracking-wider inline-block">
-                    Buy Gold
-                  </div>
-                </div>
-              </div>
-
-              {/* App Nav Bar Simulation */}
-              <div className="border-t border-ochre/10 pt-2 flex justify-around items-center text-[7px] text-cream/50">
-                <span className="text-ochre font-bold flex flex-col items-center">⭐ <span>Home</span></span>
-                <span className="flex flex-col items-center">💎 <span>Gallery</span></span>
-                <span className="flex flex-col items-center">💼 <span>Vault</span></span>
-                <span className="flex flex-col items-center">👤 <span>Profile</span></span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Right Side: Text Content */}
-        <motion.div
-          initial={{ opacity: 0, x: 30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="md:col-span-7 order-1 md:order-2 space-y-6"
-        >
-          <span className="text-ochre tracking-[0.4em] uppercase text-xs font-bold block">Exclusive Mobile App</span>
-          <h2 className="text-3xl md:text-5xl font-serif font-bold text-coffee leading-tight transition-colors duration-300">
-            Timeless Luxury, <br/>Now <span className="text-ochre">In Your Pocket</span>
-          </h2>
-          <div className="w-20 h-1 bg-ochre"></div>
-          
-          <p className="text-coffee/80 text-base leading-relaxed transition-colors duration-300">
-            Get the full Brahmani Jewellers experience right on your Android phone. Track live daily gold and silver rates with instant push alerts, purchase digital gold, manage your virtual jewellery vault, and browse our entire luxury catalogue anywhere.
-          </p>
-
-          <div className="grid grid-cols-2 gap-4 pb-2">
-            <div>
-              <h4 className="text-ochre font-serif font-bold text-sm mb-1">🔔 Live Price Alerts</h4>
-              <p className="text-coffee/70 text-xs">Receive instant notifications for sudden drops or changes in live rates.</p>
-            </div>
-            <div>
-              <h4 className="text-ochre font-serif font-bold text-sm mb-1">🔒 Digital Gold Vault</h4>
-              <p className="text-coffee/70 text-xs">Invest, resell, or redeem 24K pure digital gold securely from your device.</p>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
-            <a
-              href={apkUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-3 px-8 py-3.5 bg-coffee hover:bg-ochre text-cream hover:text-coffee border border-ochre/25 rounded transition-all duration-300 font-bold uppercase tracking-widest text-xs shadow-lg hover:shadow-xl w-full sm:w-auto"
-            >
-              <Smartphone size={16} />
-              Download Android APK
-            </a>
-            <span className="text-coffee/50 text-[10px] uppercase tracking-wider text-center sm:text-left">
-              * Direct download. Secure installation link.
-            </span>
-          </div>
-        </motion.div>
-
-      </div>
-    </section>
-  );
-};
-
 const Home = () => {
   return (
     <motion.div
@@ -663,7 +533,6 @@ const Home = () => {
       <RatesSection />
       <Categories />
       <About />
-      <MobileAppShowcase />
       <GoogleReviews />
       <InstagramFeed />
       <Contact />
